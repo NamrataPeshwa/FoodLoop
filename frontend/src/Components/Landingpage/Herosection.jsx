@@ -2,10 +2,12 @@ import Carousel from "./Carousal";
 import React, { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const sectionRef = useRef(null);
   const carousalRef = useRef(null);
   useEffect(() => {
@@ -58,11 +60,15 @@ const HeroSection = () => {
             Where Surplus meets Purpose !
           </p>
           <button
-            Style="clip-path: polygon(75% 0%, 94% 50%, 75% 100%, 0% 100%, 19% 50%, 0% 0%);"
-            className="mt-6 px-6 shadow-md z-3 py-3 w-48 bg-colour3 hover:bg-colour4  hover:text-white hover:shadow-md text-black rounded-lg text-lg font-semibold transition duration-300 ease-in-out transform hover:scale-105"
-          >
-            Get Started
-          </button>
+      onClick={() => navigate("/login")}
+      style={{
+        clipPath:
+          "polygon(75% 0%, 94% 50%, 75% 100%, 0% 100%, 19% 50%, 0% 0%)",
+      }}
+      className="mt-6 px-6 shadow-md z-3 py-3 w-48 bg-colour3 hover:bg-colour4 hover:text-white hover:shadow-md text-black rounded-lg text-lg font-semibold transition duration-300 ease-in-out transform hover:scale-105"
+    >
+      Get Started
+    </button>
         </div>
       </div>
       <div
