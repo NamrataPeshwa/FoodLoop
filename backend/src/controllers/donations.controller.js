@@ -18,3 +18,11 @@ export const getDonations = async (req, res) => {
         res.status(500).json({ error: 'Error fetching donations' });
     }
 };
+
+export const getUserDonations = async (req, res) => {
+    const userId = req.user._id;
+    const donations = await Donation.find({ donorId: userId }).sort({ createdAt: -1 });
+    res.json(donations);
+  };
+
+  
