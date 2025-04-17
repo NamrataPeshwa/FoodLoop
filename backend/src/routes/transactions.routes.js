@@ -1,9 +1,11 @@
 import express from 'express';
-import { createTransaction, getTransactions } from '../controllers/transactions.controller.js'; 
+import { matchFoodListings, confirmDeliveryAndMintNFT } from '../controllers/transactions.controller.js'; 
+
 
 const router = express.Router();
 
-router.post('/create', createTransaction);
-router.get('/list', getTransactions);
+router.post('/confirm-delivery/:transactionId', authMiddleware, confirmDeliveryAndMintNFT);
+
+router.post('/match', matchFoodListings);
 
 export default router; 

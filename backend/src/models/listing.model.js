@@ -4,11 +4,18 @@ const { Schema, model } = mongoose;
 
 const foodListingSchema = new Schema(
   {
+    location: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number], required: true }, // [longitude, latitude]
+    },
+    isPerishable: { type: Boolean, default: false },
+    scheduledFor: { type: Date, default: null },
     donor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     foodType: { type: String, required: true, trim: true },
     weight: { type: String, required: true, trim: true },
     expirationDate: { type: Date, required: true },
     images: [{ type: String, trim: true }], // Store image URLs
+    ngoId: { type: Schema.Types.ObjectId, ref: 'User' }, // Claiming NGO
 
     location: {
       type: { type: String, enum: ['Point'], default: 'Point' },

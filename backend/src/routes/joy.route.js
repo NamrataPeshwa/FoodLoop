@@ -1,5 +1,5 @@
 import express from "express";
-import { getJoyMoments, getTopDonors, getJoySpreaders } from "../controllers/donations.controller.js";
+import { getJoyMoments, getTopDonors, getJoySpreaders } from "../controllers/joyloop.controller.js";
 import cache from "../middleware/cache.middleware.js";
 
 const router = express.Router();

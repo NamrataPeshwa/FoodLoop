@@ -3,12 +3,16 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
 // import { Server } from 'socket.io';
-import connectDB from './utils/db.connect.js'; // Ensure correct import path
+import connectDB from './utils/db.connect.js'; 
+import './jobs/matchListingsJob.js';
+
 
 // Importing Routes
 import authRoutes from './routes/auth.routes.js';
 import donationRoutes from './routes/donations.routes.js';
 import ngoRoutes from './routes/ngo.routes.js';
+import joyRoutes from './routes/joy.route.js';
+import transactionRoutes from './routes/transaction.routes.js';
 
 dotenv.config();
 const app = express();
