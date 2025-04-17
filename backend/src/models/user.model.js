@@ -21,12 +21,12 @@ const userSchema = new Schema(
       coordinates: { type: [Number], required: true }, // [longitude, latitude]
     },
     foodPreferences: {
-      type: [String], // Food types ngo doesn't ant
+      type: [String], // Food types ngo doesn't want
       default: []
     },
     needsVolunteer: {
-      type: Boolean,
-      default: false, // or true if most NGOs want volunteers by default
+      type: Boolean, //ngo wants volunteer service?
+      default: false,
     },
 
     // Donation history tracking

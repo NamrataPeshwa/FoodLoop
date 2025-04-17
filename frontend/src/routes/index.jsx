@@ -5,6 +5,8 @@ import Dashboard from "../pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import Landingpage from "../pages/Landingpage.jsx";
 import JoyLoops from "../Components/JoyLoops/Joyloop.jsx";
+import UserProfile from "../pages/UserProfile.jsx";
+import SettingsPage from "../pages/Settings.jsx";
 
 const AppRoutes = () => {
   return (
@@ -14,6 +16,8 @@ const AppRoutes = () => {
         <Route path="/" element={<Landingpage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/joyloop" element={<JoyLoops />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route
           path="/dashboard"
           element={
