@@ -12,7 +12,7 @@ import authRoutes from './routes/auth.routes.js';
 import donationRoutes from './routes/donations.routes.js';
 import ngoRoutes from './routes/ngo.routes.js';
 import joyRoutes from './routes/joy.route.js';
-import transactionRoutes from './routes/transaction.routes.js';
+import transactionRoutes from './routes/transactions.routes.js';
 
 dotenv.config();
 const app = express();

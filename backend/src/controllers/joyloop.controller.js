@@ -82,7 +82,6 @@ export const getTopDonors = async (req, res) => {
   }
 };
 
-import FoodListing from "../models/listing.model.js";
 
 export const getJoyMoments = async (req, res) => {
   try {

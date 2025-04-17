@@ -1,9 +1,23 @@
 import Transaction from '../models/transaction.model.js';
+import express from 'express';
+
 import FoodListing from '../models/listing.model.js';
 import User from '../models/user.model.js';
 import redis from '../utils/redis.js';
 import twilio from 'twilio';
 import { sendSMS } from '../services/notificationService.js';
+import Web3 from "web3";
+// import foodLoopAbi from "../blockchain/build/contracts/FoodLoop.json" assert { type: "json" };
+import { readFile } from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+// Load ABI manually
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const abiPath = path.join(__dirname, '../../blockchain/build/contracts/FoodLoop.json');
+const foodLoopAbi = JSON.parse(await readFile(abiPath, 'utf-8'));
+
+
 
 export const matchFoodListings = async (req, res) => {
   try {
@@ -116,8 +130,7 @@ await sendSMS(closestNGO.contactNumber, `Message for NGO`);
   }
 };
 
-import Web3 from "web3";
-import foodLoopAbi from "../blockchain/build/contracts/FoodLoop.json" assert { type: "json" };
+
 const web3 = new Web3(process.env.INFURA_URL);
 
 const router = express.Router();
