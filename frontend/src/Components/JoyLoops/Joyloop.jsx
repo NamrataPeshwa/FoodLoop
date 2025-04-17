@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Heart, Camera, Video, MessageCircle, ShareIcon, Plus, X, ArrowLeft } from "lucide-react";
-import Loader  from "../ui/loader";
+import Loader  from "../ui/Loader";
 
 const JoyLoops = () => {
   const [moments, setMoments] = useState([]);
@@ -265,70 +265,86 @@ const JoyLoops = () => {
       </div>
       
       {/* Tabs Navigation - Futuristic Style */}
-      <div className="flex justify-center mb-6 overflow-hidden relative">
-        <div className="absolute bottom-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent"></div>
+      <div className="flex justify-between max-w-md mx-auto relative">
+        {/* Child-like smiling arc with horizontal endings */}
+        <div className="absolute w-full" style={{ top: '100%', left: 0, height: '20px', overflow: 'visible' }}>
+          <svg width="100%" height="20" viewBox="0 0 100 20" preserveAspectRatio="none">
+            <path 
+              d="M0,0 H5 C25,15 75,15 95,0 H100" 
+              stroke="#FF6B00" 
+              strokeWidth="1.5" 
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.7"
+            />
+          </svg>
+        </div>
         
         <button 
-          className={`px-6 py-2 font-medium text-sm relative ${activeTab === 'joyMoments' ? 'text-orange-400' : 'text-gray-500'}`}
+          className={`px-4 py-2 font-medium text-sm relative ${activeTab === 'joyMoments' ? 'text-orange-400' : 'text-gray-400'}`}
           onClick={() => setActiveTab('joyMoments')}
         >
           Joy Moments
           {activeTab === 'joyMoments' && (
             <>
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500"></div>
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-500 rounded-full shadow-[0_0_5px_#ff8c00]"></div>
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-500 rounded-full"></div>
             </>
           )}
         </button>
         
         <button 
-          className={`px-6 py-2 font-medium text-sm relative ${activeTab === 'topDonors' ? 'text-orange-400' : 'text-gray-500'}`}
+          className={`px-4 py-2 font-medium text-sm relative ${activeTab === 'topDonors' ? 'text-orange-400' : 'text-gray-400'}`}
           onClick={() => setActiveTab('topDonors')}
         >
           Top Donors
           {activeTab === 'topDonors' && (
             <>
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500"></div>
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-500 rounded-full shadow-[0_0_5px_#ff8c00]"></div>
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-500 rounded-full"></div>
             </>
           )}
         </button>
         
         <button 
-          className={`px-6 py-2 font-medium text-sm relative ${activeTab === 'joySpreaders' ? 'text-orange-400' : 'text-gray-500'}`}
+          className={`px-4 py-2 font-medium text-sm relative ${activeTab === 'joySpreaders' ? 'text-orange-400' : 'text-gray-400'}`}
           onClick={() => setActiveTab('joySpreaders')}
         >
           Joy Spreaders
           {activeTab === 'joySpreaders' && (
             <>
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500"></div>
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-500 rounded-full shadow-[0_0_5px_#ff8c00]"></div>
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-orange-500 rounded-full"></div>
             </>
           )}
         </button>
       </div>
+
+
       
       {/* Actions Bar */}
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-200">
-          {activeTab === 'joyMoments' ? 'Recent Joy Stories' : 
-           activeTab === 'topDonors' ? 'Most Generous Donors' : 
-           'Top Joy Spreaders'}
-        </h3>
-        
-        <div className="flex gap-2">
-          <button 
-            onClick={toggleShareMode}
-            className="bg-orange-600 hover:bg-orange-500 text-white p-2 rounded-full shadow-[0_0_10px_rgba(255,140,0,0.3)] transition-all duration-300 transform hover:scale-105"
-          >
-            {shareMode ? <MessageCircle size={20} /> : <Plus size={20} />}
-          </button>
-          
-          <button className="bg-gray-800 text-orange-400 hover:text-orange-300 px-4 py-2 rounded-lg border border-orange-800 hover:border-orange-600 transition-colors">
-            View All
-          </button>
-        </div>
-      </div>
+  <h3 className="text-lg font-semibold text-gray-200">
+    {activeTab === 'joyMoments' ? 'Recent Joy Stories' : 
+     activeTab === 'topDonors' ? 'Most Generous Donors' : 
+     'Top Joy Spreaders'}
+  </h3>
+  
+  {activeTab === 'joyMoments' && (
+    <div className="flex gap-2">
+      <button 
+        onClick={toggleShareMode}
+        className="bg-orange-600 hover:bg-orange-500 text-white p-2 rounded-full shadow-[0_0_10px_rgba(255,140,0,0.3)] transition-all duration-300 transform hover:scale-105"
+      >
+        {shareMode ? <MessageCircle size={20} /> : <Plus size={20} />}
+      </button>
+      
+      <button className="bg-gray-800 text-orange-400 hover:text-orange-300 px-4 py-2 rounded-lg border border-orange-800 hover:border-orange-600 transition-colors">
+        View All
+      </button>
+    </div>
+  )}
+</div>
       
       {/* Share Component - conditionally rendered */}
       {shareMode && (
@@ -479,7 +495,7 @@ const JoyLoops = () => {
       )}
       
       {/* Content Area */}
-      <div className="bg-black/40 rounded-xl border border-gray-800 p-4">
+      <div className="bg-black/40 rounded-xl border h-fit border-gray-800 p-4">
         {activeTab === 'joyMoments' && (
           moments.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -528,30 +544,30 @@ const JoyLoops = () => {
         )}
         
         {activeTab === 'topDonors' && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {[1, 2, 3].map((index) => (
-              <div key={index} className={`p-4 rounded-lg ${index === 1 ? 'bg-gradient-to-br from-yellow-900/30 to-black border border-yellow-700/30' : 'bg-gray-900 border border-gray-800'}`}>
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className={`w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden ${index === 1 ? 'border-2 border-yellow-500' : 'border border-gray-700'}`}>
-                      <img src="/api/placeholder/64/64" alt="Donor avatar" className="w-full h-full object-cover" />
-                    </div>
-                    {index === 1 && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <span className="text-black text-xs font-bold">1</span>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-200">Donor Name</h3>
-                    <p className="text-sm text-gray-400">1,245 meals donated</p>
-                    {index === 1 && <p className="text-sm font-bold text-yellow-500 mt-1">Top Donor</p>}
-                  </div>
-                </div>
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    {[1, 2, 3].map((index) => (
+      <div key={index} className={`p-6 rounded-lg ${index === 1 ? 'bg-gradient-to-br from-yellow-900/30 to-black border border-yellow-700/30' : 'bg-gray-900 border border-gray-800'}`}>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className={`w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden ${index === 1 ? 'border-2 border-yellow-500' : 'border border-gray-700'}`}>
+              <img src="/api/placeholder/80/80" alt="Donor avatar" className="w-full h-full object-cover" />
+            </div>
+            {index === 1 && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                <span className="text-black text-xs font-bold">1</span>
               </div>
-            ))}
+            )}
           </div>
-        )}
+          <div>
+            <h3 className="font-medium text-lg text-gray-200">Donor Name</h3>
+            <p className="text-md text-gray-400">1,245 meals donated</p>
+            {index === 1 && <p className="text-md font-bold text-yellow-500 mt-2">Top Donor</p>}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
         
         {activeTab === 'joySpreaders' && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
