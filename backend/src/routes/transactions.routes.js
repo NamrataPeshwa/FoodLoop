@@ -13,6 +13,12 @@ router.post(
   confirmDeliveryAndMintNFT
 );
 
+router.patch(
+  '/:transactionId/status',
+  authMiddleware,
+  updateTransactionStatus
+);
+router.get('/', authMiddleware, getUserTransactions);
 router.post("/match", matchFoodListings);
 
 export default router;
