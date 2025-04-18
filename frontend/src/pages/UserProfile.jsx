@@ -20,7 +20,7 @@ const UserProfile = () => {
     const fetchUserData = async () => {
       try {
         // This would be a real API call in production
-        // await fetch('/api/user/profile')
+        // await fetch('/api/users/profile')
         
         // Mock user data based on role
         const mockUser = {
@@ -87,7 +87,7 @@ const UserProfile = () => {
   // In production, this would be a real API call
   const getUserDonations = async () => {
     try {
-      // const response = await fetch('/api/user/donations');
+      // const response = await fetch('/api/donations/my');
       // const data = await response.json();
       // setDonations(data);
     } catch (error) {
