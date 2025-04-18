@@ -3,6 +3,7 @@ import {
   matchFoodListings,
   confirmDeliveryAndMintNFT,
 } from "../controllers/transactions.controller.mjs";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 

@@ -1,6 +1,7 @@
-import Transaction from '../models/transaction.model.js';
+import dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
-
+import Transaction from '../models/transaction.model.js';
 import FoodListing from '../models/listing.model.js';
 import User from '../models/user.model.js';
 import redis from '../utils/redis.js';
@@ -140,7 +141,7 @@ const contract = new web3.eth.Contract(
     foodLoopAbi.abi,
     CONTRACT_ADDRESS
   );
-
+  console.log("Private Key ENV:", process.env.INFURA_PRIVATE_KEY);
   const account = web3.eth.accounts.privateKeyToAccount(process.env.INFURA_PRIVATE_KEY);
   web3.eth.accounts.wallet.add(account);
 
