@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import Loader from "../Components/ui/Loader";
 import InfoSidebar from "../Components/ui/InfoSidebar.jsx";
 import { FoodMeteors } from "../Components/ui/FoodMeteors";
-import MapPicker from "../Components/ui/MapPicker"; // Assuming you have this component
 
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("donor");
   const [showInfo, setShowInfo] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const navigate = useNavigate();
   const { completeSignup, getUserData } = useAuth();
 
@@ -28,7 +28,6 @@ const Onboarding = () => {
     },
     foodPreferences: [],
     needsVolunteer: false,
-    walletAddress: "",
     certificates: null,
     foodTypes: [],
     volunteerInterests: [],
@@ -102,15 +101,34 @@ const Onboarding = () => {
     }
   };
 
-  // Handle location selection
-  const handleLocationSelect = (coordinates) => {
-    setUserData({
-      ...userData,
-      location: {
-        type: "Point",
-        coordinates: coordinates
-      }
-    });
+  // Get current location
+  const getCurrentLocation = () => {
+    setLocationLoading(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coordinates = [position.coords.longitude, position.coords.latitude];
+          setUserData({
+            ...userData,
+            location: {
+              type: "Point",
+              coordinates: coordinates
+            }
+          });
+          setLocationLoading(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Unable to get your location. Please try again or enter your address manually.");
+          setLocationLoading(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser");
+      setLocationLoading(false);
+    }
   };
 
   // Render form fields based on current step
@@ -219,16 +237,32 @@ const Onboarding = () => {
           
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-medium mb-1">Location</label>
-            <div className="border border-gray-300 rounded-md h-48 mb-2">
-              {/* Replace with your map component */}
-              <MapPicker 
-                onLocationSelect={handleLocationSelect} 
-                currentLocation={userData.location.coordinates}
-              />
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                disabled={locationLoading}
+              >
+                {locationLoading ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2" /> Getting Location...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    Use My Current Location
+                  </>
+                )}
+              </button>
             </div>
-            <div className="text-xs text-gray-500">
-              Click on the map to select your location
-            </div>
+            {userData.location.coordinates[0] !== 0 && userData.location.coordinates[1] !== 0 && (
+              <p className="text-sm text-green-600 mt-2">
+                Location set successfully! ({userData.location.coordinates[1].toFixed(4)}, {userData.location.coordinates[0].toFixed(4)})
+              </p>
+            )}
           </div>
           
           {/* Role-specific fields */}
@@ -355,13 +389,13 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="flex h-screen relative overflow-hidden bg-gradient-to-br from-orange-200 to-yellow-50">
+    <div className="flex min-h-screen relative bg-gradient-to-br from-orange-200 to-yellow-50">
       {/* Food Meteors Animation Background */}
       <FoodMeteors number={15} />
       
       {/* Form Section (60%) */}
-      <div className="w-[60%] flex justify-center items-center z-10">
-        <div className="transform scale-90 relative bg-white/80 backdrop-blur-sm p-8 shadow-lg rounded-lg w-[32rem]">
+      <div className="w-full md:w-[60%] flex justify-center items-center z-10 py-8">
+      <div className="bg-white/80 backdrop-blur-sm p-6 shadow-lg rounded-lg w-full max-w-lg overflow-y-auto max-h-[90vh] custom-scrollbar">
           <form onSubmit={handleSubmit} className="relative z-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-green-600">
               Complete Your FoodLoop Profile
@@ -385,19 +419,19 @@ const Onboarding = () => {
         </div>
       </div>
       
-      {/* Logo in center */}
-      <div className="absolute z-50 top-8 left-1/2 transform -translate-x-1/2">
-        <div className="bg-white p-4 rounded-full shadow-lg">
-          <img 
-            src="/logo.png" 
-            alt="FoodLoop Logo" 
-            className="h-16 w-16 object-contain"
-          />
-        </div>
-      </div>
+      {/* Logo in center - visible on desktop only */}
+      <div className="absolute z-50 top-1/2 left-1/2 transform -translate-y-1/2">
+  <div className="bg-white p-4 rounded-full shadow-lg">
+    <img 
+      src="/logo.png" 
+      alt="FoodLoop Logo" 
+      className="h-20 w-20 object-contain"
+    />
+  </div>
+</div>
       
-      {/* Sidebar section (40%) with InfoSidebar button but no AppCard */}
-      <div className="w-[40%] relative">
+      {/* Sidebar section (40%) - hidden on mobile */}
+      <div className="hidden md:block w-[40%] relative">
         {!showInfo ? (
           <div className="p-10 h-full flex flex-col justify-center">
             {/* Content area without AppCard */}

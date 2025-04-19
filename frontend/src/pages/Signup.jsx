@@ -200,15 +200,15 @@ const Signup = () => {
       </div>
 
       {/* Logo in center */}
-      <div className="absolute z-50 top-8 left-1/2 transform -translate-x-1/2">
-        <div className="bg-white p-4 rounded-full shadow-lg">
-          <img 
-            src="/logo.png" 
-            alt="FoodLoop Logo" 
-            className="h-16 w-16 object-contain"
-          />
-        </div>
-      </div>
+      <div className="absolute z-50 top-1/2 left-1/2 transform -translate-y-1/2">
+  <div className="bg-white p-4 rounded-full shadow-lg">
+    <img 
+      src="/logo.png" 
+      alt="FoodLoop Logo" 
+      className="h-20 w-20 object-contain"
+    />
+  </div>
+</div>
 
       {/* Sidebar section with AppCard */}
       <div className="w-[40%] relative">
