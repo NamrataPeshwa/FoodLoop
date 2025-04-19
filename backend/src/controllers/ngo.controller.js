@@ -1,6 +1,6 @@
 import User from '../models/user.model.js';
 import FoodListing from '../models/listing.model.js';
-import Transaction from '../models/Transaction.js';
+import Transaction from '../models/transaction.model.js';
 
 // Claim a donation: sets listing to 'requested' and creates a Transaction with timeline
 export const claimDonation = async (req, res) => {
