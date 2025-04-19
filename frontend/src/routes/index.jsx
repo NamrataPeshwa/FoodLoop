@@ -8,6 +8,7 @@ import JoyLoops from "../Components/JoyLoops/Joyloop.jsx";
 import UserProfile from "../pages/UserProfile.jsx";
 import SettingsPage from "../pages/Settings.jsx";
 import ImpactReportPage from "../pages/ImpactReport.jsx";
+import Onboarding from "../pages/Onboarding.jsx";
 
 const AppRoutes = () => {
   return (
@@ -20,6 +21,7 @@ const AppRoutes = () => {
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/impact" element={<ImpactReportPage />} />
+        <Route path="/onboard" element={<Onboarding />} />
         <Route
           path="/dashboard"
           element={
