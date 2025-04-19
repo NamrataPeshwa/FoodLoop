@@ -5,7 +5,6 @@ import Transaction from '../models/transaction.model.js';
 import FoodListing from '../models/listing.model.js';
 import User from '../models/user.model.js';
 import redis from '../utils/redis.js';
-import twilio from 'twilio';
 import { sendSMS } from '../services/notificationService.js';
 import Web3 from "web3";
 // import foodLoopAbi from "../blockchain/build/contracts/FoodLoop.json" assert { type: "json" };
@@ -217,3 +216,87 @@ const contract = new web3.eth.Contract(
     }
   };
   
+  export const updateTransactionStatus = async (req, res) => {
+    try {
+      const { transactionId } = req.params;
+      const { status, note } = req.body;
+      const userId = req.user.userId;
+      const userRole = req.user.role.toLowerCase(); // 'donor', 'ngo', 'volunteer', 'admin'
+  
+      // Define which roles may set which status
+      const allowed = {
+        requested: ['ngo'],
+        picked_up: ['volunteer'],
+        in_transit: ['volunteer'],
+        delivered: ['ngo'],
+        confirmed: ['admin'],
+      };
+  
+      if (!allowed[status] || !allowed[status].includes(userRole)) {
+        return res.status(403).json({ error: 'You are not allowed to set this status' });
+      }
+  
+      // Fetch transaction
+      const tx = await Transaction.findById(transactionId);
+      if (!tx) {
+        return res.status(404).json({ error: 'Transaction not found' });
+      }
+  
+      // Append timeline event
+      tx.timeline.push({
+        status,
+        by: userRole,
+        note: note || ''
+      });
+  
+      // If it's a final confirmation, mark confirmed flag
+      if (status === 'confirmed') {
+        tx.confirmed = true;
+      }
+  
+      await tx.save();
+  
+      return res.status(200).json({ success: true, timeline: tx.timeline });
+    } catch (err) {
+      console.error('Status update error:', err);
+      return res.status(500).json({ error: 'Server error updating status' });
+    }
+  };
+  
+  export const getUserTransactions = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const role   = req.user.role.toLowerCase();
+  
+      // Build filter based on role
+      let filter = {};
+      if (role === 'donor') {
+        filter.donor = userId;
+      } else if (role === 'ngo') {
+        filter.ngo = userId;
+      } else if (role === 'volunteer') {
+        filter.volunteer = userId;
+      } else if (role === 'admin') {
+        // no filter → all transactions
+        filter = {};
+      } else {
+        return res.status(403).json({ success: false, message: 'Invalid role' });
+      }
+  
+      const transactions = await Transaction.find(filter)
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'foodListing',
+          select: 'foodDescription predictedCategory weight location expirationDate status',
+        })
+        .populate('donor',  'name email')
+        .populate('ngo',    'name email')
+        .populate('volunteer','name email')
+        .lean();
+  
+      return res.json({ success: true, transactions });
+    } catch (err) {
+      console.error('Error fetching user transactions:', err);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  };

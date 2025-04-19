@@ -1,22 +1,64 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 import FoodListing from '../models/listing.model.js';
 import Transaction from '../models/transaction.model.js';
+import { predictCategory } from '../services/mlClient.js';
 
 export const createDonation = async (req, res) => {
-    try {
-        const donation = new FoodListing({ ...req.body, donor: req.user.userId });
-        await donation.save();
+  try {
+    const {
+      foodDescription,
+      hoursOld,
+      storage,
+      weight,
+      expirationDate,
+      location,
+      images,
+      scheduledFor
+    } = req.body;
 
-        // Auto-trigger proximity-based matching
-        await axios.post('http://localhost:8000/api/transaction/match', {
-            listingId: donation._id,
-        });
+    // 1) Get ML prediction
+    const predictedCategory = await predictCategory(
+      foodDescription,
+      hoursOld,
+      storage
+    );
 
-        res.status(201).json(donation);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error creating donation' });
-    }
+    // 2) Determine perishability
+    // anything not shelf‑stable is perishable
+    const isPerishable = storage !== 'room temp';
+
+    // 3) Build & save the listing
+    const donation = await FoodListing.create({
+      donor:              req.user._id,
+      location,   
+      foodDescription,
+      predictedCategory,
+      hoursOld,
+      storage,
+      weight,
+      expirationDate,
+      images,
+      scheduledFor,
+      isPerishable
+      // listingCount, status, volunteer, ngoId — all defaults
+    });
+
+    await axios.post(
+      `${process.env.BACKEND_URL}/api/transactions/match`,
+      { listingId: donation._id }
+    );
+
+    return res.status(201).json({ success: true, donation });
+  } catch (error) {
+    console.error('Error creating donation:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Could not create donation',
+      details: error.message
+    });
+  }
 };
 
 export const getDonations = async (req, res) => {
