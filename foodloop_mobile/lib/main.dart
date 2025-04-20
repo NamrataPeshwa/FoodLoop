@@ -7,12 +7,17 @@ import 'package:foodloop_mobile/features/donations/pages/joyloopscreen.dart';
 import 'package:foodloop_mobile/features/home/pages/dashboard.dart';
 import 'package:foodloop_mobile/features/maps/FoodMapScreen.dart';
 
-void main() {
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+Future<void> main() async {
+  await dotenv.load(); // Load .env before app starts
   runApp(FoodLoopApp());
 }
 
 class FoodLoopApp extends StatelessWidget {
   final _authService = AuthService();
+
+  FoodLoopApp({super.key});
   
   @override
   Widget build(BuildContext context) {

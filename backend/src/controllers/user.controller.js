@@ -1,5 +1,4 @@
 import User from '../models/user.model.js';
-// import Transaction from '../models/Transaction.js';
 import transactionModel from '../models/transaction.model.js';
 
 export const getUserProfile = async (req, res) => {
