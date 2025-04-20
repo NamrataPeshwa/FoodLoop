@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { matchFoodListings } from "../controllers/transactions.controller.mjs";
+import { matchFoodListings } from "../controllers/transactions.controller.js";
 import express from "express";
 
 // Dummy req/res objects for standalone execution

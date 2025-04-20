@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 export const signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-
+    
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -15,16 +15,61 @@ export const signup = async (req, res) => {
         .json({ error: "User already exists. Please log in." });
     }
 
-    // Create and save new user
-    const user = new User({
+    // Extract profile data from request body
+    const {
+      organizationName,
+      contactNumber,
+      address,
+      website,
+      location,
+      foodPreferences,
+      needsVolunteer,
+      certificates,
+      foodTypes,
+      walletAddress,
+      volunteerInterests,
+      associatedNGO,
+    } = req.body;
+
+    // Create user object with basic and role-specific data
+    const userData = {
       name,
       email,
       password,
-      googleId: `${Math.random()}abc`, // fixing needed : googleID needs to be unique
       role,
-    });
+      profileCompleted: true
+    };
 
+    // Add common fields if provided
+    if (organizationName) userData.organizationName = organizationName;
+    if (contactNumber) userData.contactNumber = contactNumber;
+    if (address) userData.address = address;
+    if (website) userData.website = website;
+    if (location) userData.location = location;
+
+    // Add role-specific fields based on user role
+    switch (role) {
+      case 'donor':
+        if (foodTypes) userData.foodTypes = foodTypes;
+        if (walletAddress) userData.walletAddress = walletAddress;
+        break;
+      case 'NGO':
+        if (foodPreferences) userData.foodPreferences = foodPreferences;
+        if (needsVolunteer !== undefined) userData.needsVolunteer = needsVolunteer;
+        if (certificates) userData.certificates = certificates;
+        break;
+      case 'volunteer':
+        if (volunteerInterests) userData.volunteerInterests = volunteerInterests;
+        if (associatedNGO) userData.associatedNGO = associatedNGO;
+        break;
+      default:
+        break;
+    }
+
+    // Create and save new user
+    const user = new User(userData);
     await user.save();
+    
     console.log("User saved successfully:", user);
     res
       .status(201)

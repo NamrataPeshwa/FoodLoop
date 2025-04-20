@@ -27,5 +27,29 @@ export default {
     },
 
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.custom-scrollbar::-webkit-scrollbar': {
+          width: '8px',
+        },
+        '.custom-scrollbar::-webkit-scrollbar-track': {
+          background: '#f1f1f1',
+          borderRadius: '4px',
+        },
+        '.custom-scrollbar::-webkit-scrollbar-thumb': {
+          background: '#4ade80',
+          borderRadius: '4px',
+        },
+        '.custom-scrollbar::-webkit-scrollbar-thumb:hover': {
+          background: '#38a169',
+        },
+        '.custom-scrollbar': {
+          'scrollbar-width': 'thin',
+          'scrollbar-color': '#4ade80 #f1f1f1',
+        },
+      };
+      addUtilities(newUtilities, ['responsive', 'hover']);
+    },
+  ],
 };

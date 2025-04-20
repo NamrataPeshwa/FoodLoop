@@ -46,7 +46,7 @@ export function FoodDistributionSidebar() {
     },
     {
       label: "Impact Reports",
-      href: "/reports",
+      href: "/impact",
       icon: (
         <IconChartBar className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
@@ -62,9 +62,11 @@ export function FoodDistributionSidebar() {
       label: "Logout",
       href: "/logout",
       icon: (
-        <IconLogout className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconLogout className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200 group-hover:text-red-500" />
       ),
-    },
+      className: "group",
+      labelClassName: "group-hover:text-red-500"
+    }
   ];
   
   const [open, setOpen] = useState(false);
@@ -98,7 +100,12 @@ export function FoodDistributionSidebar() {
           {open ? <FoodShareLogo /> : <FoodShareIcon />}
           <div className="mt-8 flex flex-col gap-2">
             {links.map((link, idx) => (
-              <SidebarLink key={idx} link={link} />
+              <SidebarLink 
+                key={idx} 
+                link={link}
+                className={link.className || ""}
+                labelClassName={link.labelClassName || ""} 
+              />
             ))}
           </div>
         </div>
@@ -127,14 +134,14 @@ export const FoodShareLogo = () => {
       <Link
         to="/"
         className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600">
           <Img src= "/logo.png" className="h-5 w-5 text-white" width={50} height={50} alt="Logo" />     
         </div>
         <motion.span
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="font-medium whitespace-pre text-black dark:text-white">
-          FoodShare
+          FoodLoop
         </motion.span>
       </Link>
     );
@@ -143,10 +150,10 @@ export const FoodShareLogo = () => {
   export const FoodShareIcon = () => {
     return (
       <Link
-        to="/" // ✅ updated here too
+        to="/"
         className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600">
-          <Img src="/logo.png" className="h-5 w-5 text-white" width={50} height={50} alt="Logo" />
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600">
+          <Img src="/logo.png" className="h-5 w-5 text-white" width={100} height={100} alt="Logo" />
         </div>
       </Link>
     );

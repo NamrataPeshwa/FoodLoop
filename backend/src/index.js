@@ -13,6 +13,8 @@ import donationRoutes from './routes/donations.routes.js';
 import ngoRoutes from './routes/ngo.routes.js';
 import joyRoutes from './routes/joy.route.js';
 import transactionRoutes from './routes/transactions.routes.js';
+import impactRoutes from './routes/impact.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config();
 const app = express();
@@ -27,7 +29,9 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/ngo', ngoRoutes);
-
+app.use('/api/transaction', transactionRoutes);
+app.use('/api/impact', impactRoutes );
+app.use('/api/user', userRoutes);
 // Real-time Donation Tracking
 // io.on('connection', (socket) => {
 //     console.log('A user connected');

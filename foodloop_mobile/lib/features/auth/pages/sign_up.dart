@@ -12,26 +12,27 @@ class _SignupScreenState extends State<SignupScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final authService = AuthService();
   String selectedRole = 'donor';
   String message = '';
 
   void handleSignup() async {
-    final response = await AuthService.signup(
-      nameController.text,
-      emailController.text,
-      passwordController.text,
-      selectedRole,
-    );
+    final response = await authService.signup({
+      'name': nameController.text,
+      'email': emailController.text,
+      'password': passwordController.text,
+      'role': selectedRole,
+    });
     setState(
       () =>
           message =
-              response['success'] == true
-                  ? 'Signup Success'
-                  : response['error'],
+              // response == true
+                  'Signup Success'
+                  // : 'Signup Failed',
     );
-    if (response['success'] == true) {
+    // if (response == true) {
       Navigator.pushNamed(context, '/login');
-    }
+    // }
   }
 
   @override
