@@ -11,8 +11,7 @@ import ImpactReportPage from "../pages/ImpactReport.jsx";
 import Onboarding from "../pages/Onboarding.jsx";
 import DonationMap from "../pages/HeatMap.jsx";
 import DeliveryTimeline from "../pages/DeliveryTimeline.jsx";
-
-import DonationListing from "../Components/MainPage/example.jsx"
+import DonationForm from "../Components/MainPage/NewDonation.jsx";
 const AppRoutes = () => {
   return (
     <Router>
@@ -27,16 +26,9 @@ const AppRoutes = () => {
         <Route path="/onboard" element={<Onboarding />} />
         <Route path="/heatmap" element={<DonationMap />} />
         <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
-        <Route path="/example" element={<DonationListing
+        <Route path="/NewDonation" element={<DonationForm/>} />
 
-  globeConfig={{
-    ambientLight: "#ffffff",
-    directionalLeftLight: "#ffffff",
-    directionalTopLight: "#ffffff",
-    pointLight: "#ffffff",
-  }}
-/>
-} />
+
         <Route
           path="/dashboard"
           element={
