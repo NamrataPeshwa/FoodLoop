@@ -23,6 +23,9 @@ const AppRoutes = () => {
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/impact" element={<ImpactReportPage />} />
+        <Route path="/onboard" element={<Onboarding />} />
+        <Route path="/heatmap" element={<DonationMap />} />
+        <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
         <Route
           path="/dashboard"
           element={
