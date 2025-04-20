@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foodloop_mobile/features/auth/services/auth_service.dart';
 import '../services/donation_service.dart';
 import 'package:intl/intl.dart';
 
@@ -10,50 +11,63 @@ class DonateScreen extends StatefulWidget {
 class _DonateScreenState extends State<DonateScreen> {
   final _formKey = GlobalKey<FormState>();
   final _donationService = DonationService();
+  final authService = AuthService();
   bool _isSubmitting = false;
-  
+  late String token;
+  late String userId;
   String _foodDescription = '';
   double _hoursOld = 1.0;
   String _storage = 'room temp';
   String _weight = '';
   DateTime _expirationDate = DateTime.now().add(Duration(days: 1));
   List<double> _location = [0, 0]; // [lng, lat]
-  
+
   Future<void> _submitDonation() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     _formKey.currentState!.save();
-    
+
     setState(() => _isSubmitting = true);
-    
+
     try {
+      _loadUserData();
       final result = await _donationService.createDonation({
+        // 'donor': userId,
         'foodDescription': _foodDescription,
         'hoursOld': _hoursOld,
         'storage': _storage,
         'weight': _weight,
         'expirationDate': _expirationDate.toIso8601String(),
-        'location': {
-          'type': 'Point',
-          'coordinates': _location,
-        },
+        'location': {'type': 'Point', 'coordinates': _location},
       });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Donation created successfully!'))
-      );
-      
+      print('Donation created: $result');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Donation created successfully!')));
+
       // Clear the form or navigate back
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating donation: $e'))
-      );
+      print('Error creating donation: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error creating donation: $e')));
     } finally {
       setState(() => _isSubmitting = false);
     }
   }
-  
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    token = (await authService.getAuthToken())!;
+    userId = (await authService.getUserId())!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,12 +113,13 @@ class _DonateScreenState extends State<DonateScreen> {
                 border: OutlineInputBorder(),
               ),
               value: _storage,
-              items: ['room temp', 'refrigerated', 'frozen'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value.toUpperCase()),
-                );
-              }).toList(),
+              items:
+                  ['room temp', 'refrigerated', 'frozen'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value.toUpperCase()),
+                    );
+                  }).toList(),
               onChanged: (value) {
                 setState(() => _storage = value!);
               },
@@ -148,9 +163,10 @@ class _DonateScreenState extends State<DonateScreen> {
                 backgroundColor: Colors.orange,
                 padding: EdgeInsets.symmetric(vertical: 16),
               ),
-              child: _isSubmitting
-                ? CircularProgressIndicator(color: Colors.white)
-                : Text('DONATE NOW'),
+              child:
+                  _isSubmitting
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text('DONATE NOW'),
             ),
           ],
         ),

@@ -16,35 +16,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic> _userProfile = {};
   Map<String, dynamic> _impactStats = {};
   bool _isLoading = true;
-  
+  int _selectedIndex = 0; // For bottom navigation
+
   @override
   void initState() {
     super.initState();
     _loadData();
   }
-  
+
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     try {
-    final userProfile = await _authService.getUserProfile();
-    final impactStats = await _impactService.getImpactStats();
-    
-    print('User profile loaded: $userProfile'); // Debug output
-    
-    setState(() {
-      _userProfile = userProfile;
-      _impactStats = impactStats;
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error loading data: $e'))
-    );
-  } finally {
-    setState(() => _isLoading = false);
+      final userProfile = await _authService.getUserProfile();
+      final impactStats = await _impactService.getImpactStats();
+
+      print('User profile loaded: $userProfile'); // Debug output
+
+      setState(() {
+        _userProfile = userProfile;
+        _impactStats = impactStats;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
-  }
-  
+
   Widget _buildImpactCard() {
     return Card(
       elevation: 4,
@@ -87,149 +88,216 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-  
-  Widget _buildUserCard() {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your Profile',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.person, color: Colors.orange),
-              title: Text('Name'),
-              subtitle: Text(_userProfile['name'] ?? ''),
-            ),
-            ListTile(
-              leading: Icon(Icons.email, color: Colors.orange),
-              title: Text('Email'),
-              subtitle: Text(_userProfile['email'] ?? ''),
-            ),
-            ListTile(
-              leading: Icon(Icons.work, color: Colors.orange),
-              title: Text('Role'),
-              subtitle: Text(_userProfile['role'] ?? ''),
-            ),
-            if (_userProfile['role'] == 'donor')
+
+  // Handle navigation when a bottom navigation item is tapped
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex)
+      return; // No need to navigate if already on this page
+
+    switch (index) {
+      case 0: // Dashboard
+        setState(() {
+          _selectedIndex = 0;
+        });
+        break;
+      case 1: // Donate Food
+         if (_userProfile['role'] == 'donor'){
+        Navigator.pushNamed(context, '/donate');
+         }else{
+          Navigator.pushNamed(context, '/available-donation');
+         }
+        break;
+      case 2: // Food Map
+        Navigator.pushNamed(context, '/map');
+        break;
+      case 3: // Joy Loops
+        Navigator.pushNamed(context, '/joyloops');
+        break;
+      case 4: // Profile/More
+        _showProfileMenu();
+        break;
+    }
+  }
+
+  // Show modal bottom sheet for profile/more options
+  void _showProfileMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          child: Wrap(
+            children: <Widget>[
               ListTile(
-                leading: Icon(Icons.restaurant, color: Colors.orange),
-                title: Text('Total Donations'),
-                subtitle: Text('${_userProfile['totalDonations'] ?? 0}'),
+                leading: CircleAvatar(
+                  backgroundColor: Colors.orange,
+                  child: Text(
+                    _userProfile['name']?.substring(0, 1) ?? 'U',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                title: Text(_userProfile['name'] ?? 'User'),
+                subtitle: Text(_userProfile['email'] ?? ''),
               ),
-          ],
-        ),
-      ),
+              Divider(),
+              if (_userProfile['role'] == 'NGO')
+                ListTile(
+                  leading: Icon(Icons.settings),
+                  title: Text('Preferences'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/ngo-preferences');
+                  },
+                ),
+              ListTile(
+                leading: Icon(Icons.logout),
+                title: Text('Logout'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _authService.logout();
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('FoodLoop Dashboard'),
-        backgroundColor: Colors.orange,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await _authService.logout();
-              Navigator.pushReplacementNamed(context, '/login');
-            },
+        title: Center(
+          child: Text(
+            'FoodLoop Dashboard',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 24, 
+              fontWeight: FontWeight.w500
+              
+            ),
           ),
+        ),
+        backgroundColor: Colors.orange,
+      ),
+      body:
+          _isLoading
+              ? Center(child: CircularProgressIndicator(color: Colors.orange))
+              : RefreshIndicator(
+                onRefresh: _loadData,
+                child: ListView(
+                  padding: EdgeInsets.all(16),
+                  children: [
+                    // AvailableDonationsScreen(),
+                    Card(
+                      elevation: 4,
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Recent Donations',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Divider(),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Conditional rendering based on user role
+                    if (_userProfile['role'] == 'donor')
+                      // Donor-specific dashboard widget
+                      Card(
+                        elevation: 4,
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Your Donation Stats',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Divider(),
+                              ListTile(
+                                leading: Icon(Icons.volunteer_activism, color: Colors.orange),
+                                title: Text('Your Donations'),
+                                trailing: Text(
+                                  '${_impactStats['userDonations'] ?? 0}',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pushNamed(context, '/donate'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text('Make a Donation'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (_userProfile['role'] == 'NGO' || _userProfile['role'] == 'volunteer')
+                      // NGO-specific dashboard widget
+                      Card(
+                        elevation: 4,
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                leading: Icon(Icons.assignment_turned_in, color: Colors.orange),
+                                title: Text('Claimed Donations'),
+                                trailing: Text(
+                                  '${_impactStats['ngoClaimedDonations'] ?? 0}',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              
+                            ],
+                          ),
+                        ),
+                      ),
+                    SizedBox(height: 16),
+                    SizedBox(height: 16),
+                  ],
+                ),
+              ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed, // Required when more than 3 items
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.orange,
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        items: <BottomNavigationBarItem>[
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.restaurant),
+            label:  _userProfile['role'] == 'donor'? 'Donate' : 'Donations',
+          ),
+          const BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Map'),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: 'Joy Loops',
+          ),
+          const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.orange,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      _userProfile['name']?.substring(0, 1) ?? 'U',
-                      style: TextStyle(fontSize: 24, color: Colors.orange),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    _userProfile['name'] ?? 'User',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                  Text(
-                    _userProfile['email'] ?? '',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.dashboard),
-              title: Text('Dashboard'),
-              selected: true,
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: Icon(Icons.restaurant),
-              title: Text('Donate Food'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/donate');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.map),
-              title: Text('Food Map'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/map');
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.favorite),
-              title: Text('Joy Loops'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/joyloops');
-              },
-            ),
-            if (_userProfile['role'] == 'NGO')
-              ListTile(
-                leading: Icon(Icons.settings),
-                title: Text('Preferences'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/ngo-preferences');
-                },
-              ),
-          ],
-        ),
-      ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.orange))
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              child: ListView(
-                padding: EdgeInsets.all(16),
-                children: [
-                  _buildUserCard(),
-                  SizedBox(height: 16),
-                  _buildImpactCard(),
-                ],
-              ),
-            ),
     );
   }
 }
