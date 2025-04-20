@@ -1,3 +1,5 @@
+import googleapis from 'googleapis';
+const { google } = googleapis;
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -52,8 +54,6 @@ export const login = async (req, res) => {
   }
 };
 
-import jwt from "jsonwebtoken";
-import { google } from "googleapis";
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,

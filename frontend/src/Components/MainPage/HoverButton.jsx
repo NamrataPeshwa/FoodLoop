@@ -43,7 +43,7 @@ export default function ButtonWithAvatar() {
         className="relative flex rounded-full border content-center bg-black/20 hover:bg-black/10 transition duration-500 items-center flex-col gap-10 h-min justify-center overflow-visible p-px w-fit"
       >
         <div className="w-auto text-white z-10 bg-black px-4 py-2 rounded-full">
-        Full Hearts ❤️
+        Loops of Joy ❤️
         </div>
         
         <div

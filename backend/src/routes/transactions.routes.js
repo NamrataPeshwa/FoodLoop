@@ -1,9 +1,18 @@
-import express from 'express';
-import { createTransaction, getTransactions } from '../controllers/transactions.controller.js';  // Updated to ES module import
+import express from "express";
+import {
+  matchFoodListings,
+  confirmDeliveryAndMintNFT,
+} from "../controllers/transactions.controller.mjs";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post('/create', createTransaction);
-router.get('/list', getTransactions);
+router.post(
+  "/confirm-delivery/:transactionId",
+  authMiddleware,
+  confirmDeliveryAndMintNFT
+);
 
-export default router;  // Export as default
+router.post("/match", matchFoodListings);
+
+export default router;

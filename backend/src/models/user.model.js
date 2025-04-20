@@ -16,13 +16,25 @@ const userSchema = new Schema(
     contactNumber: { type: String },
     address: { type: String },
     website: { type: String },
+    location: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number], required: true }, // [longitude, latitude]
+    },
+    foodPreferences: {
+      type: [String], // Food types ngo doesn't want
+      default: []
+    },
+    needsVolunteer: {
+      type: Boolean, //ngo wants volunteer service?
+      default: false,
+    },
 
     // Donation history tracking
     averageMonthlyDonations: { type: Number, default: 0 },
     totalDonations: { type: Number, default: 0 },
     lastDonationDate: { type: Date }
   },
-  { timestamps: true } // Automatically manages createdAt & updatedAt
+  { timestamps: true }
 );
 
 // Hash password before saving

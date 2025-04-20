@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
 import ButtonWithAvatar from "../Components/MainPage/HoverButton";
 import { FoodDonationGlobe } from "../Components/MainPage/globe";
+import { useNavigate } from 'react-router-dom';
+import {User } from 'lucide-react';
 import { 
   IconHeartHandshake, 
   IconTruckDelivery, 
@@ -15,10 +17,43 @@ import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const comp = useRef(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const popupRef = useRef(null);
+  const buttonRef = useRef(null);
+  
+  const handleAvatarClick = () => {
+    navigate('/joyloop');
+  };
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+  const toggleWarningPopup = () => {
+    setShowPopup(!showPopup);
+  };
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (showPopup && 
+          popupRef.current && 
+          !popupRef.current.contains(event.target) &&
+          buttonRef.current &&
+          !buttonRef.current.contains(event.target)) {
+        setShowPopup(false);
+      }
+    }
+    
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPopup]);
 
   useLayoutEffect(() => {
     const introEl = comp.current;
@@ -238,10 +273,53 @@ useEffect(() => {
   <div className="flex items-center justify-between px-6">
     <h1 className="text-xl font-bold text-white">FoodLoop Dashboard</h1>
     <div className="flex items-center">
-      <button className=" rounded-full hover:bg-[#FFF5E4]/20">
-        <IconAlertCircle className="h-8 w-5 text-white" />
+    <div className="relative">
+    <button 
+          ref={buttonRef}
+          className="rounded-full p-2 hover:bg-orange-100/20 transition-all"
+          onClick={toggleWarningPopup}
+        >
+          <IconAlertCircle className="h-8 w-8 " />
+        </button>
+        
+        {showPopup && (
+          <div 
+            ref={popupRef}
+            className="absolute top-10 left-0 bg-white text-gray-800 p-4 rounded-lg shadow-lg w-72 z-10 border border-amber-200"
+          >
+            <h3 className="font-bold text-lg mb-2 text-amber-600">Security Policies</h3>
+            <ul className="space-y-2 text-sm">
+              <li>• All donations are verified by our team</li>
+              <li>• Food safety protocols must be followed</li>
+              <li>• Personal information is protected</li>
+              <li>• Report suspicious activity immediately</li>
+              <li>• Review our full guidelines before distributing</li>
+            </ul>
+            <button 
+              className="mt-3 text-xs text-amber-600 hover:text-amber-800"
+              onClick={() => setShowPopup(false)}
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </div>
+      
+      <button 
+        className="flex items-center text-white py-2 rounded-full transition-all"
+        onClick={handleAvatarClick}
+      >
+        <ButtonWithAvatar/>
       </button>
-      <ButtonWithAvatar/>
+      <div className="relative">
+      <button 
+        className="flex items-center bg-amber-500 hover:bg-amber-600 text-white py-2 px-1 rounded-full transition-all"
+        onClick={handleProfileClick}
+      >
+        <User className="h-8 w-8 px-1" />
+        <span>My Account</span>
+      </button>
+      </div>
     </div>
   </div>
 

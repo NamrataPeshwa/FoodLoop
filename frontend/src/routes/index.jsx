@@ -4,6 +4,10 @@ import Signup from "../pages/Signup";
 import Dashboard from "../pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import Landingpage from "../pages/Landingpage.jsx";
+import JoyLoops from "../Components/JoyLoops/Joyloop.jsx";
+import UserProfile from "../pages/UserProfile.jsx";
+import SettingsPage from "../pages/Settings.jsx";
+
 import DonationListing from "../Components/MainPage/example.jsx"
 const AppRoutes = () => {
   return (
@@ -12,6 +16,9 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Landingpage />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/joyloop" element={<JoyLoops />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/example" element={<DonationListing
 
   globeConfig={{
