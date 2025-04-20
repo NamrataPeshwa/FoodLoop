@@ -7,6 +7,9 @@ import { predictCategory } from '../services/mlClient.js';
 
 export const createDonation = async (req, res) => {
   try {
+    console.log('Authenticated User:', req.user);  // Log user info to verify
+    const donorId = req.user.userId;
+    console.log('Donor ID:', donorId);  // Log donor ID to verify
     const {
       foodDescription,
       hoursOld,
@@ -17,7 +20,9 @@ export const createDonation = async (req, res) => {
       images,
       scheduledFor
     } = req.body;
-
+    
+    // donor is already available as req.user.userId, no need to destructure it
+    
     // 1) Get ML prediction
     const predictedCategory = await predictCategory(
       foodDescription,
@@ -31,7 +36,7 @@ export const createDonation = async (req, res) => {
 
     // 3) Build & save the listing
     const donation = await FoodListing.create({
-      donor:              req.user._id,
+      donor: donorId,
       location,   
       foodDescription,
       predictedCategory,
@@ -45,10 +50,10 @@ export const createDonation = async (req, res) => {
       // listingCount, status, volunteer, ngoId — all defaults
     });
 
-    await axios.post(
-      `${process.env.BACKEND_URL}/api/transactions/match`,
-      { listingId: donation._id }
-    );
+    // await axios.post(
+    //   `${process.env.BACKEND_URL}/api/transactions/match`,
+    //   { listingId: donation.donorId }
+    // );
 
     return res.status(201).json({ success: true, donation });
   } catch (error) {
@@ -79,7 +84,7 @@ export const getDonations = async (req, res) => {
 
 export const getUserDonations = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user.userId;
 
         // Fetch donations and populate foodListing and certificateData
         const donations = await Transaction.find({ donor: userId })
