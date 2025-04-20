@@ -63,4 +63,4 @@ foodListingSchema.index(
   { expireAfterSeconds: 3600, partialFilterExpression: { status: 'confirmed' } }
 );
 
-export default model('FoodListing', foodListingSchema);
+export default model('FoodListing', foodListingSchema, 'foodlistings');

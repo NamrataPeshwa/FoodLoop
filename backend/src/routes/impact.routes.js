@@ -1,5 +1,5 @@
 import express from 'express';
-import { getImpactStats } from '../controllers/impactController.js';
+import { getImpactStats } from '../controllers/impact.controller.js';
 
 const router = express.Router();
 

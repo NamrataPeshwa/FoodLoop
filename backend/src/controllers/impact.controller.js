@@ -1,6 +1,6 @@
-import Transaction from '../models/Transaction.js';
-import FoodListing from '../models/FoodListing.js';
-import User from '../models/User.js';
+import Transaction from '../models/transaction.model.js';
+import FoodListing from '../models/listing.model.js';
+import User from '../models/user.model.js';
 
 export const getImpactStats = async (req, res) => {
   try {

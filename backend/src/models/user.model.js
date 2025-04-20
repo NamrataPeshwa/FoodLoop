@@ -6,33 +6,61 @@ const { Schema, model } = mongoose;
 const userSchema = new Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, },
+    email: { type: String, required: true },
     password: { type: String, required: true },
     googleId: { type: String, unique: true, sparse: true }, 
     role: { type: String, enum: ['donor', 'NGO', 'volunteer', 'admin'], required: true },
 
-    // Additional donor details (if applicable)
+    // Common fields for all roles
     organizationName: { type: String },
     contactNumber: { type: String },
     address: { type: String },
     website: { type: String },
     location: {
       type: { type: String, enum: ['Point'], default: 'Point' },
-      coordinates: { type: [Number], required: true }, // [longitude, latitude]
+      coordinates: { type: [Number], default: [0, 0] }, // [longitude, latitude]
     },
+    
+    // NGO specific fields
     foodPreferences: {
-      type: [String], // Food types ngo doesn't want
+      type: [String], // Food types NGO doesn't want
       default: []
     },
     needsVolunteer: {
-      type: Boolean, //ngo wants volunteer service?
+      type: Boolean, // NGO wants volunteer service?
       default: false,
     },
-
+    certificates: {
+      type: String, // URL to stored certificate file
+    },
+    
+    // Donor specific fields
+    foodTypes: {
+      type: [String], // Types of food usually donated
+      default: []
+    },
+    walletAddress: {
+      type: String, // Blockchain wallet address
+    },
+    
+    // Volunteer specific fields
+    volunteerInterests: {
+      type: [String], // Volunteer's interests
+      default: []
+    },
+    associatedNGO: {
+      type: String, // Name of NGO volunteer is associated with
+    },
+    
     // Donation history tracking
     averageMonthlyDonations: { type: Number, default: 0 },
     totalDonations: { type: Number, default: 0 },
-    lastDonationDate: { type: Date }
+    lastDonationDate: { type: Date },
+    
+    // System fields
+    isVerified: { type: Boolean, default: false },
+    profileCompleted: { type: Boolean, default: false },
+    active: { type: Boolean, default: true }
   },
   { timestamps: true }
 );
@@ -43,6 +71,7 @@ userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
+userSchema.index({ location: '2dsphere' });
 
-const User = model('User', userSchema);
+const User = model('User', userSchema, 'users');
 export default User;

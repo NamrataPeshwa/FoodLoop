@@ -8,6 +8,7 @@ import JoyLoops from "../Components/JoyLoops/Joyloop.jsx";
 import UserProfile from "../pages/UserProfile.jsx";
 import SettingsPage from "../pages/Settings.jsx";
 import ImpactReportPage from "../pages/ImpactReport.jsx";
+import Onboarding from "../pages/Onboarding.jsx";
 import DonationMap from "../pages/HeatMap.jsx";
 import DeliveryTimeline from "../pages/DeliveryTimeline.jsx";
 
@@ -22,8 +23,6 @@ const AppRoutes = () => {
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/impact" element={<ImpactReportPage />} />
-        <Route path="/heatmap" element={<DonationMap />} />
-        <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
         <Route
           path="/dashboard"
           element={

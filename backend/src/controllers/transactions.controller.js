@@ -141,7 +141,24 @@ const contract = new web3.eth.Contract(
     CONTRACT_ADDRESS
   );
   console.log("Private Key ENV:", process.env.INFURA_PRIVATE_KEY);
-  const account = web3.eth.accounts.privateKeyToAccount(process.env.INFURA_PRIVATE_KEY);
+
+  let account;
+
+  if (!/^([a-fA-F0-9]{64})$/.test(process.env.INFURA_PRIVATE_KEY)) {
+    throw new Error("Invalid private key format");
+  }
+  
+  try {
+     account = web3.eth.accounts.privateKeyToAccount(
+      process.env.INFURA_PRIVATE_KEY.startsWith('0x')
+        ? process.env.INFURA_PRIVATE_KEY
+        : '0x' + process.env.INFURA_PRIVATE_KEY
+    );
+  } catch (error) {
+    console.error("Error with private key:", error.message);
+    throw new Error("Invalid private key");
+  }
+
   web3.eth.accounts.wallet.add(account);
 
   export const confirmDeliveryAndMintNFT = async (req, res) => {
@@ -179,7 +196,9 @@ const contract = new web3.eth.Contract(
           data: txData.encodeABI(),
           gas: 500000,
         },
-        '0x' + process.env.INFURA_PRIVATE_KEY
+        process.env.INFURA_PRIVATE_KEY.startsWith('0x')
+          ? process.env.INFURA_PRIVATE_KEY
+          : '0x' + process.env.INFURA_PRIVATE_KEY
       );
   
       const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);

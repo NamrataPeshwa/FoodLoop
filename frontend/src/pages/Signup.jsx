@@ -1,29 +1,29 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import Loader from "../Components/ui/Loader";
-import AppCard from "../Components/ui/AppCard";
-import InfoSidebar from "../Components/ui/InfoSidebar.jsx";
 import { FoodMeteors } from "../Components/ui/FoodMeteors";
+import AppCard from "../Components/ui/AppCard";
 
 const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("Admin");
-  const [showInfo, setShowInfo] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const { signup } = useAuth();
+  const { initiateSignup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const success = await signup(name, email, password, role, navigate);
-    if (!success) {
+    
+    const success = await initiateSignup(name, email, password);
+    if (success) {
+      navigate("/onboard");
+    } else {
       alert("Signup failed! Try again.");
     }
     setLoading(false);
@@ -32,7 +32,7 @@ const Signup = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/auth/google-url');
+      const res = await fetch('http://localhost:5000/api/auth/google-url');
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url; // Redirect to Google OAuth
@@ -64,7 +64,7 @@ const Signup = () => {
       <FoodMeteors number={15} />
       
       <div className="w-[60%] flex justify-center items-center z-10">
-  <div className="transform scale-90 relative bg-white/80 backdrop-blur-sm p-8 shadow-lg rounded-lg w-[28rem]">
+        <div className="transform scale-90 relative bg-white/80 backdrop-blur-sm p-8 shadow-lg rounded-lg w-[28rem]">
           <form onSubmit={handleSubmit} className="relative z-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-green-600">Join FoodLoop</h2>
             <button
@@ -131,7 +131,7 @@ const Signup = () => {
             </div>
 
             {/* Password Field */}
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block text-gray-700 text-sm font-medium mb-1">Password</label>
               <div className="relative">
                 <input
@@ -183,29 +183,13 @@ const Signup = () => {
               </div>
             </div>
 
-            {/* Role Dropdown */}
-            <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-medium mb-1">I am a</label>
-              <select
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                required
-              >
-                <option value="admin">Admin</option>
-                <option value="donor">Donor</option>
-                <option value="NGO">NGO</option>
-                <option value="volunteer">Volunteer</option>
-              </select>
-            </div>
-
-            {/* Signup Button */}
+            {/* Continue Button */}
             <button 
               type="submit" 
               className="w-full bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition-colors flex justify-center"
               disabled={loading}
             >
-              {loading ? <Loader className="w-5 h-5" /> : "Sign Up"}
+              {loading ? <Loader className="w-5 h-5" /> : "Continue to Setup Profile"}
             </button>
             
             <p className="text-center mt-4 text-sm text-gray-600">
@@ -214,6 +198,8 @@ const Signup = () => {
           </form>
         </div>
       </div>
+
+      {/* Logo in center */}
       <div className="absolute z-50 top-1/2 left-1/2 transform -translate-y-1/2">
   <div className="bg-white p-4 rounded-full shadow-lg">
     <img 
@@ -223,25 +209,12 @@ const Signup = () => {
     />
   </div>
 </div>
-      {/* Sidebar section (45%) - increased to give more space to AppCard */}
-      <div className="w-[45%] relative">
-        {!showInfo ? (
-          <div className="p-10 h-full flex flex-col justify-center">
-            <AppCard />
-            
-            {/* Info button */}
-            <button 
-              onClick={() => setShowInfo(true)}
-              className="absolute bottom-6 right-6 bg-green-500 text-white p-2 rounded-full shadow-lg hover:bg-green-600 transition-all focus:outline-none"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </div>
-        ) : (
-          <InfoSidebar onClose={() => setShowInfo(false)} />
-        )}
+
+      {/* Sidebar section with AppCard */}
+      <div className="w-[40%] relative">
+        <div className="p-10 h-full flex flex-col justify-center">
+          <AppCard />
+        </div>
       </div>
     </div>
   );
