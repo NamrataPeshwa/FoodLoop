@@ -10,9 +10,9 @@ import {
   getDonationStats,
   getUserStats,
   getAuditLogs
-} from '../controllers/adminController.js';
+} from '../controllers/admin.controller.js';
 import { isAdmin, authMiddleware } from '../middleware/authMiddleware.js';
-import cache from '../middlewares/cache.middleware.js';
+import cache from '../middleware/cache.middleware.js';
 import redis from '../utils/redis.js';
 
 const router = express.Router();

@@ -1,5 +1,5 @@
 // controllers/adminController.js
-import User from '../models/User.js';
+import User from '../models/user.model.js';
 import FoodListing from '../models/listing.model.js';
 import DonationTransaction from '../models/transaction.model.js';
 import AuditLog from '../models/auditLog.model.js';
