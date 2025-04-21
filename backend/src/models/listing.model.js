@@ -17,7 +17,7 @@ const foodListingSchema = new Schema(
       trim: true 
     },
 
-    // 4) ML‐predicted meal category (snack, lunch, bfast, etc.)
+    // ML‐predicted meal category (snack, lunch, bfast, etc.)
     predictedCategory: {
       type: String,
       enum: ['breakfast', 'lunch', 'dinner', 'snack', 'dessert', 'other'],
@@ -53,6 +53,35 @@ const foodListingSchema = new Schema(
     volunteer: { type: Schema.Types.ObjectId, ref: 'User' },
 
     images: [{ type: String, trim: true }],
+    // Add these fields to foodListingSchema
+flagged: {
+  type: Boolean,
+  default: false
+},
+flagReason: {
+  type: String
+},
+items: [{
+  name: {
+    type: String,
+    required: true
+  },
+  quantity: {
+    type: Number,
+    required: true
+  },
+  weight: String,
+  volume: String,
+  expiryDate: Date,
+  description: String
+}],
+value: {
+  type: Number,  // Monetary value of donation
+  default: 0
+},
+completedAt: {
+  type: Date
+}
   },
   { timestamps: true }
 );

@@ -37,7 +37,14 @@ const Login = () => {
     setLoading(true);
     try {
       const success = await login(email, password);
-      if (success) navigate("/dashboard");
+      if (success) {
+        const userRole = sessionStorage.getItem('userRole');
+        if (userRole === 'admin') {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      }
     } catch (error) {
       console.error("Login error:", error);
       alert("Failed to log in. Please check your credentials and try again.");

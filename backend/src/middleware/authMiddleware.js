@@ -12,3 +12,17 @@ export const authMiddleware = (req, res, next) => {
         res.status(400).json({ error: 'Invalid token' });
     }
 };
+
+export const isAdmin = (req, res, next) => {
+    try {
+      // Ensure the user is authenticated and role is available
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied. Admins only.' });
+      }
+      next(); // Proceed if user is admin
+    } catch (error) {
+      console.error('Admin check failed:', error);
+      return res.status(500).json({ error: 'Server error during admin check.' });
+    }
+  };
+  
