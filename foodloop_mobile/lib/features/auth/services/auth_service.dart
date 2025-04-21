@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,6 +56,7 @@ class AuthService {
   
   Future<bool> isLoggedIn() async {
     final token = await getAuthToken();
+    log('token: $token');
     return token != null;
   }
   
@@ -72,5 +74,10 @@ class AuthService {
       return jsonDecode(response.body);
     }
     return {};
+  }
+
+  Future<String?> getUserId() async {
+    final profile = await getUserProfile();
+    return profile.containsKey('_id') ? profile['_id'] : null;
   }
 }

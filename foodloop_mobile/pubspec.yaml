@@ -43,6 +43,8 @@ dependencies:
   google_maps_flutter: ^2.6.0
   cached_network_image: ^3.3.1
   flutter_dotenv: ^5.2.1
+  flutter_native_splash: ^2.4.6
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
@@ -96,3 +98,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_native_splash:
+  color: "#ffffff"                # Background color
+  image:  assets/logo.png # Splash image (ideal: 512x512 or 1024x1024)
+  android: true
+  ios: true
+  web: false
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png" # Splash image (ideal: 512x512 or 1024x1024)

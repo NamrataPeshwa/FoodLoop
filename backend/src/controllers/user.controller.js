@@ -1,9 +1,9 @@
 import User from '../models/user.model.js';
-import transactionModel from '../models/transaction.model.js';
+import Transaction from '../models/transaction.model.js';
 
 export const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.userId;
 
     const user = await User.findById(userId).lean(); // lean for plain JS object
 
@@ -48,5 +48,35 @@ export const getUserProfile = async (req, res) => {
   } catch (error) {
     console.error('Error fetching user profile:', error);
     res.status(500).json({ error: 'Error fetching user profile' });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  const userId = req.user.id; // Retrieved from auth middleware
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Both current and new passwords are required' });
+  }
+
+  try {
+    const user = await User.findById(userId).select('+password');
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

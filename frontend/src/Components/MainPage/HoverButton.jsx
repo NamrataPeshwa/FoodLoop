@@ -34,7 +34,7 @@ export default function ButtonWithAvatar() {
   }, [hovered]);
   
   return (
-    <div className="flex flex-col items-center gap-8 p-8">
+    <div className="flex flex-col items-center gap-8 p-1">
            
       {/* HoverBorderGradient button */}
       <button

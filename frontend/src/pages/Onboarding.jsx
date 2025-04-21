@@ -30,6 +30,7 @@ const Onboarding = () => {
     needsVolunteer: false,
     certificates: null,
     foodTypes: [],
+    walletAddress: "",
     volunteerInterests: [],
     associatedNGO: ""
   });

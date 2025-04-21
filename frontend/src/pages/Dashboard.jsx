@@ -376,24 +376,24 @@ const Dashboard = () => {
                   Donations
                 </button>
                 <button
-                  onClick={() => setSelectedTab("distribution")}
+                  onClick={() => setSelectedTab("daily")}
                   className={`px-4 py-3 text-sm font-medium ${
-                    selectedTab === "distribution"
+                    selectedTab === "daily"
                       ? "border-b-2 border-white text-white"
                       : "text-[#FFF5E4]/80 hover:text-white"
                   }`}
                 >
-                  Distribution
+                  Feed Daily
                 </button>
                 <button
-                  onClick={() => setSelectedTab("reports")}
+                  onClick={() => setSelectedTab("camps")}
                   className={`px-4 py-3 text-sm font-medium ${
-                    selectedTab === "reports"
+                    selectedTab === "camps"
                       ? "border-b-2 border-white text-white"
                       : "text-[#FFF5E4]/80 hover:text-white"
                   }`}
                 >
-                  Impact Reports
+                  Relief Camps
                 </button>
               </div>
             </header>

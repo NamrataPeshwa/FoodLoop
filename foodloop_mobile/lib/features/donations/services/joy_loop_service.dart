@@ -45,7 +45,7 @@ class JoyLoopService {
     
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://localhost:8000/api/joyloop')
+      Uri.parse('http://10.0.2.2:5000/api/joyloop')
     );
     
     request.headers['Authorization'] = 'Bearer $token';
