@@ -5,7 +5,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    console.log("Received signup request:", req.body);
+    const { name, email, password, role, googleId } = req.body;
+
+    if (!name || !email || (!password && !googleId) || (!role && !googleId)) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
     
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -31,44 +36,51 @@ export const signup = async (req, res) => {
       associatedNGO,
     } = req.body;
 
-    // Create user object with basic and role-specific data
     const userData = {
       name,
       email,
       password,
       role,
-      profileCompleted: true
+      googleId,
+      profileCompleted: true,
+      ...(organizationName && { organizationName }),
+      ...(contactNumber && { contactNumber }),
+      ...(address && { address }),
+      ...(website && { website }),
+      ...(location && { location }),
+      ...(role === 'donor' && {
+        foodTypes,
+        walletAddress
+      }),
+      ...(role === 'NGO' && {
+        foodPreferences,
+        needsVolunteer,
+        certificates
+      }),
+      ...(role === 'volunteer' && {
+        volunteerInterests,
+        associatedNGO
+      })
     };
-
-    // Add common fields if provided
-    if (organizationName) userData.organizationName = organizationName;
-    if (contactNumber) userData.contactNumber = contactNumber;
-    if (address) userData.address = address;
-    if (website) userData.website = website;
-    if (location) userData.location = location;
-
-    // Add role-specific fields based on user role
-    switch (role) {
-      case 'donor':
-        if (foodTypes) userData.foodTypes = foodTypes;
-        if (walletAddress) userData.walletAddress = walletAddress;
-        break;
-      case 'NGO':
-        if (foodPreferences) userData.foodPreferences = foodPreferences;
-        if (needsVolunteer !== undefined) userData.needsVolunteer = needsVolunteer;
-        if (certificates) userData.certificates = certificates;
-        break;
-      case 'volunteer':
-        if (volunteerInterests) userData.volunteerInterests = volunteerInterests;
-        if (associatedNGO) userData.associatedNGO = associatedNGO;
-        break;
-      default:
-        break;
-    }
-
+    console.log("🔍 Final userData:", userData);
     // Create and save new user
     const user = new User(userData);
-    await user.save();
+   try {
+      await user.save();
+   } catch (error) {
+    console.error("Signup Error:", error);
+    console.error("🛠 FULL ERROR DUMP:", JSON.stringify(error, null, 2));
+    if (error.name === 'ValidationError') {
+      const details = {};
+      for (const field in error.errors) {
+        details[field] = error.errors[field].message;
+      }
+      console.error("❌ ValidationError Details:", details);
+      return res.status(400).json({ error: "Validation failed", details });
+    }
+  
+    return res.status(500).json({ error: "Signup failed", details: error.message });
+  }
     
     console.log("User saved successfully:", user);
     res
@@ -134,32 +146,33 @@ export const handleGoogleCallback = async (req, res) => {
 
     const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
     const { data: googleUser } = await oauth2.userinfo.get();
+    console.log("Google User Data:", googleUser);
 
-    let user = await User.findOne({ where: { email: googleUser.email } });
+    let user = await User.findOne({ email: googleUser.email });
     let isNewUser = false;
 
     if (!user) {
       isNewUser = true;
       user = new User({
-        username: googleUser.email.split('@')[0] + "_" + Math.floor(Math.random() * 10000),
+        // name: googleUser.email.split('@')[0] + "_" + Math.floor(Math.random() * 10000),
+        name : googleUser.name,
         email: googleUser.email,
         avatar: googleUser.picture,
         googleId: googleUser.id,
         authProvider: "google",
-        // tokens: { refreshToken: tokens.refresh_token }
+        profileCompleted: false, // 👈 forces onboarding flow
+        role: null            // 👈 role will be selected in onboarding
       });
     } else {
-      // Update if user already exists
       user.googleId = googleUser.id;
       user.authProvider = "google";
       user.avatar = googleUser.picture;
-    //   user.tokens.refreshToken = tokens.refresh_token;
     }
 
     await user.save();
 
     const jwtToken = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -170,10 +183,10 @@ export const handleGoogleCallback = async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        username: user.username,
-        bio: user.bio,
+        name: user.name,
         avatar: user.avatar,
-        isNewUser: isNewUser || !user.bio
+        googleId: user.googleId,
+        profileCompleted: user.profileCompleted
       }
     });
   } catch (error) {

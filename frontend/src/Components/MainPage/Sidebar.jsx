@@ -9,6 +9,7 @@ import {
   IconChartBar,
   IconSettings,
   IconLogout,
+  IconShieldCheck,
 } from "@tabler/icons-react";
 import {Link} from "react-router-dom";
 import { motion } from "motion/react";
@@ -16,7 +17,12 @@ import {Img} from "react-image";
 import { cn } from "../../lib/utils";
 import DonationForm from "./NewDonation";
 export function FoodDistributionSidebar() {
-  const links = [
+  const [open, setOpen] = useState(false);
+  const [userAvatar, setUserAvatar] = useState("/api/placeholder/50/50");
+  const [userRole, setUserRole] = useState("guest");
+  
+  // Common links for all users
+  const commonLinks = [
     {
       label: "Dashboard",
       href: "/dashboard",
@@ -32,8 +38,8 @@ export function FoodDistributionSidebar() {
       ),
     },
     {
-      label: "Distribution Routes",
-      href: "/routes",
+      label: "Delivery Status",
+      href: "/orderstatus",
       icon: (
         <IconTruckDelivery className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
@@ -70,31 +76,50 @@ export function FoodDistributionSidebar() {
     }
   ];
   
-  const [open, setOpen] = useState(false);
-  const [userAvatar, setUserAvatar] = useState("/api/placeholder/50/50");
-  const [userName, setUserName] = useState("Guest User");
+  // Admin link
+  const adminLink = {
+    label: "Admin Dashboard",
+    href: "/admin",
+    icon: (
+      <IconShieldCheck className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+    ),
+    className: "bg-emerald-50 dark:bg-emerald-900/20",
+    labelClassName: "font-medium text-emerald-600 dark:text-emerald-400"
+  };
   
-  // Fetch user data from localStorage on component mount
+  // Fetch user data from sessionStorage on component mount
   useEffect(() => {
-    // Get user data from localStorage if available
     try {
-      const user = localStorage.getItem('user');
+      const userRoleFromStorage = sessionStorage.getItem('userRole');
       
+      if (userRoleFromStorage) {
+        setUserRole(userRoleFromStorage);
+      }
+
+      const user = localStorage.getItem('user');
       if (user) {
         const userData = JSON.parse(user);
         if (userData.avatar) {
           setUserAvatar(userData.avatar);
         }
-        if (userData.name) {
-          setUserName(userData.name);
-        }
       }
     } catch (error) {
-      console.error("Error getting user data from localStorage:", error);
+      console.error("Error getting user data from storage:", error);
     }
   }, []);
 
+  // Construct links array based on user role
+  const links = [...commonLinks];
   
+  // Insert admin link before settings if user is admin
+  if (userRole === 'admin') {
+    const settingsIndex = links.findIndex(link => link.label === "Settings");
+    if (settingsIndex !== -1) {
+      links.splice(settingsIndex, 0, adminLink);
+    } else {
+      links.push(adminLink);
+    }
+  }
 
   return (
     <Sidebar open={open} setOpen={setOpen}>
@@ -115,7 +140,7 @@ export function FoodDistributionSidebar() {
         <div>
           <SidebarLink
             link={{
-              label: userName,
+              label: userRole.charAt(0).toUpperCase() + userRole.slice(1),
               href: "/profile",
               icon: (
                 <Img
@@ -133,31 +158,31 @@ export function FoodDistributionSidebar() {
 }
 
 export const FoodShareLogo = () => {
-    return (
-      <Link
-        to="/"
-        className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600">
-          <Img src= "/logo.png" className="h-5 w-5 text-white" width={50} height={50} alt="Logo" />     
-        </div>
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="font-medium whitespace-pre text-black dark:text-white">
-          FoodLoop
-        </motion.span>
-      </Link>
-    );
-  };
-  
-  export const FoodShareIcon = () => {
-    return (
-      <Link
-        to="/"
-        className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600">
-          <Img src="/logo.png" className="h-5 w-5 text-white" width={100} height={100} alt="Logo" />
-        </div>
-      </Link>
-    );
-  };
+  return (
+    <Link
+      to="/"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600">
+        <Img src= "/logo.png" className="h-5 w-5 text-white" width={50} height={50} alt="Logo" />     
+      </div>
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="font-medium whitespace-pre text-black dark:text-white">
+        FoodLoop
+      </motion.span>
+    </Link>
+  );
+};
+
+export const FoodShareIcon = () => {
+  return (
+    <Link
+      to="/"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600">
+        <Img src="/logo.png" className="h-5 w-5 text-white" width={100} height={100} alt="Logo" />
+      </div>
+    </Link>
+  );
+};

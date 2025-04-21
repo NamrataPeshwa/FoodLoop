@@ -12,6 +12,8 @@ import Onboarding from "../pages/Onboarding.jsx";
 import DonationMap from "../pages/HeatMap.jsx";
 import DeliveryTimeline from "../pages/DeliveryTimeline.jsx";
 import DonationForm from "../Components/MainPage/NewDonation.jsx";
+import AdminDashboard from "../pages/AdminDashboard.jsx";
+
 const AppRoutes = () => {
   return (
     <Router>
@@ -24,11 +26,12 @@ const AppRoutes = () => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/impact" element={<ImpactReportPage />} />
         <Route path="/onboard" element={<Onboarding />} />
-        <Route path="/heatmap" element={<DonationMap />} />
+        <Route path="/map" element={<DonationMap />} />
         <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
         <Route path="/NewDonation" element={<DonationForm/>} />
 
 
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="/dashboard"
           element={
