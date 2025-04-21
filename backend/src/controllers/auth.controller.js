@@ -11,16 +11,7 @@ export const signup = async (req, res) => {
     if (!name || !email || (!password && !googleId) || (!role && !googleId)) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-    
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ error: "User already exists. Please log in." });
-    }
 
-    // Extract profile data from request body
     const {
       organizationName,
       contactNumber,
@@ -36,6 +27,34 @@ export const signup = async (req, res) => {
       associatedNGO,
     } = req.body;
 
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+
+    // If user exists and it's a Google user who hasn't completed onboarding
+    if (existingUser && existingUser.googleId && !existingUser.profileCompleted) {
+      Object.assign(existingUser, {
+        name,
+        role,
+        profileCompleted: true,
+        ...(organizationName && { organizationName }),
+        ...(contactNumber && { contactNumber }),
+        ...(address && { address }),
+        ...(website && { website }),
+        ...(location && { location }),
+        ...(role === 'donor' && { foodTypes, walletAddress }),
+        ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates }),
+        ...(role === 'volunteer' && { volunteerInterests, associatedNGO }),
+      });
+
+      await existingUser.save();
+      return res.status(200).json({ success: true, message: "Google user profile updated" });
+    }
+
+    // If user exists and is not a Google user, block
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists. Please log in." });
+    }
+
     const userData = {
       name,
       email,
@@ -48,47 +67,18 @@ export const signup = async (req, res) => {
       ...(address && { address }),
       ...(website && { website }),
       ...(location && { location }),
-      ...(role === 'donor' && {
-        foodTypes,
-        walletAddress
-      }),
-      ...(role === 'NGO' && {
-        foodPreferences,
-        needsVolunteer,
-        certificates
-      }),
-      ...(role === 'volunteer' && {
-        volunteerInterests,
-        associatedNGO
-      })
+      ...(role === 'donor' && { foodTypes, walletAddress }),
+      ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates }),
+      ...(role === 'volunteer' && { volunteerInterests, associatedNGO }),
     };
-    console.log("🔍 Final userData:", userData);
-    // Create and save new user
+
     const user = new User(userData);
-   try {
-      await user.save();
-   } catch (error) {
-    console.error("Signup Error:", error);
-    console.error("🛠 FULL ERROR DUMP:", JSON.stringify(error, null, 2));
-    if (error.name === 'ValidationError') {
-      const details = {};
-      for (const field in error.errors) {
-        details[field] = error.errors[field].message;
-      }
-      console.error("❌ ValidationError Details:", details);
-      return res.status(400).json({ error: "Validation failed", details });
-    }
-  
-    return res.status(500).json({ error: "Signup failed", details: error.message });
-  }
-    
-    console.log("User saved successfully:", user);
-    res
-      .status(201)
-      .json({ message: "User registered successfully", success: true });
+    await user.save();
+
+    return res.status(201).json({ success: true, message: "User registered successfully" });
   } catch (error) {
     console.error("Signup Error:", error);
-    res.status(500).json({ error: "Signup failed", details: error.message });
+    return res.status(500).json({ error: "Signup failed", details: error.message });
   }
 };
 
