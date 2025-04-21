@@ -50,21 +50,24 @@ export const AuthProvider = ({ children }) => {
         console.error("No temporary user data found");
         return false;
       }
-      
+      console.log("Temporary user data:", tempData);
       // Combine the basic info with profile data
       const fullUserData = {
         ...tempData,
         ...profileData
       };
+      console.log("Full user data for signup:", fullUserData);
       
       // Send to server via API
       const response = await signupUser(
-        tempData.name,
-        tempData.email,
-        tempData.password,
-        profileData.role,
-        profileData
+        // tempData.name,
+        // tempData.email,
+        // tempData.password,
+        // profileData.role,
+        // profileData
+        fullUserData
       );
+      console.log("Signup response:", response);
       
       if (response.success) {
         // Clear temporary data
