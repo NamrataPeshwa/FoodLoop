@@ -6,12 +6,10 @@
   </head>
   <body>
     <script>
-      // Parse the authorization code from URL
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
 
       if (code) {
-        // Send code to backend
         fetch("http://localhost:5000/api/auth/google-callback", {
           method: "POST",
           headers: {
@@ -21,10 +19,33 @@
         })
           .then((res) => res.json())
           .then((data) => {
-            // Save token/user in localStorage or redirect
-            console.log("Google OAuth Success:", data);
-            // Redirect to homepage
-            window.location.href = "/dashboard";
+            if (!data.success) {
+              alert("Google login failed!");
+              window.location.href = "/";
+              return;
+            }
+
+            // Save token
+            localStorage.setItem("token", data.jwt);
+
+            // Save minimal user info (for onboarding)
+            sessionStorage.setItem(
+  "tempUserData",
+  JSON.stringify({
+    email: data.user.email,
+    googleId: data.user.googleId,
+    name: data.user.name || "",
+    avatar: data.user.avatar || "",
+  })
+);
+            //Check if onboarding is needed
+            if (!data.user.profileCompleted) {
+              window.location.href = "/onboard";
+            } else {
+              window.location.href = "/dashboard";
+
+            }
+            // window.location.href = "/onboard";
           })
           .catch((err) => {
             console.error("OAuth failed:", err);
