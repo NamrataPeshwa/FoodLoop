@@ -19,8 +19,8 @@ import { useLayoutEffect, useRef } from "react";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
-  const [visible, setVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  // const [visible, setVisible] = useState(true);
+  // const [lastScrollY, setLastScrollY] = useState(0);
   const comp = useRef(null);
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef(null);
