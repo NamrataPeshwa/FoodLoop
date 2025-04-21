@@ -4,6 +4,7 @@ import FoodListing from '../models/listing.model.js';
 import DonationTransaction from '../models/transaction.model.js';
 import AuditLog from '../models/auditLog.model.js';
 import mongoose from 'mongoose';
+import asyncHandler from '../utils/asynchandler.js';
 
 /**
  * Get users with filtering capabilities
@@ -952,3 +953,121 @@ export const getAuditLogs = async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   };
+
+
+export const getDashboardStats = asyncHandler(async (req, res) => {
+  const [totalDonatedAgg] = await DonationTransaction.aggregate([
+    { $group: { _id: null, totalKg: { $sum: "$value" } } }
+  ]);
+
+  const totalDonated = totalDonatedAgg?.totalKg || 0;
+
+  const totalRoutes = await User.countDocuments({ distributionsCount: { $gt: 0 } });
+
+  // Simulate "coverage areas" using unique coordinates if regions are not defined
+  const users = await User.find({}, 'location');
+  const locationSet = new Set(users.map(u => u.location?.coordinates?.join(',')));
+  const coverageAreas = locationSet.size;
+
+  // Impact Score: a dummy logic (customize)
+  const deliveredTx = await DonationTransaction.countDocuments({ confirmed: true });
+  const totalTx = await DonationTransaction.countDocuments();
+  const impactScore = totalTx ? ((deliveredTx / totalTx) * 100).toFixed(1) : 0;
+
+  res.json({
+    totalDonations: `${totalDonated} kg`,
+    distributionRoutes: `${totalRoutes} Active`,
+    coverageAreas: `${coverageAreas} Regions`,
+    impactScore: `${impactScore}%`
+  });
+});
+export const getDashboardAlerts = asyncHandler(async (req, res) => {
+  const alerts = [];
+
+  // Check for low food stock in certain areas (mock logic)
+  const lowStockRegions = await FoodRequest.aggregate([
+    { $match: { status: 'pending' } },
+    { $group: { _id: "$region", totalQty: { $sum: "$quantity" } } },
+    { $match: { totalQty: { $lt: 100 } } }
+  ]);
+
+  lowStockRegions.forEach(region => {
+    alerts.push({
+      title: `Low Food Supply in ${region._id}`,
+      description: `Supplies will last only a few more days in ${region._id}. Consider redirecting.`,
+      severity: 'high',
+      time: 'Just now'
+    });
+  });
+
+  // Mock: New Partner logic
+  const recentUsers = await User.find({ createdAt: { $gte: new Date(Date.now() - 24*60*60*1000) } });
+  if (recentUsers.length) {
+    alerts.push({
+      title: `New Partner Organization: ${recentUsers[0].organizationName}`,
+      description: `They've just onboarded. Consider initiating collaboration.`,
+      severity: 'info',
+      time: 'Today'
+    });
+  }
+
+  // Mock: Transport issue (based on timeline status)
+  const troubledRoutes = await Transaction.find({
+    'timeline.status': 'in_transit',
+    updatedAt: { $lt: new Date(Date.now() - 6*60*60*1000) }
+  });
+
+  if (troubledRoutes.length) {
+    alerts.push({
+      title: `Delayed Delivery Alert`,
+      description: `${troubledRoutes.length} deliveries have transport delays.`,
+      severity: 'medium',
+      time: 'Today'
+    });
+  }
+
+  res.json({ alerts });
+});
+export const getRecentDonations = asyncHandler(async (req, res) => {
+  const donations = await DonationTransaction.find()
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('donor', 'organizationName') // Only get donor name
+    .lean();
+
+  const formatted = donations.map(tx => ({
+    organization: tx.donor?.organizationName || 'Anonymous',
+    amount: `${tx.value} kg`,
+    type: tx.certificateData?.foodType || 'Mixed',
+    timestamp: formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true })
+  }));
+
+  res.json({ recentDonations: formatted });
+});
+
+export const getUpcomingDistributions = asyncHandler(async (req, res) => {
+  const now = new Date();
+
+  const upcoming = await Transaction.find({
+    'timeline.status': { $ne: 'delivered' },
+    createdAt: { $gte: now },
+  })
+    .sort({ createdAt: 1 })
+    .limit(5)
+    .populate('ngo', 'organizationName')
+    .lean();
+
+  const formatted = upcoming.map(item => ({
+    location: item.ngo?.organizationName || 'Unknown Location',
+    time: new Date(item.createdAt).toLocaleString(), // or use item.timeline timestamps
+    peopleServed: `~${item.peopleServed || 0} people`,
+    status: item.timeline?.slice(-1)[0]?.status === 'in_transit'
+      ? 'On schedule'
+      : item.timeline?.slice(-1)[0]?.status === 'pending'
+      ? 'Needs volunteers'
+      : 'Transport issue'
+  }));
+
+  res.json({ upcomingDistributions: formatted });
+});
+
