@@ -4,13 +4,31 @@ import 'package:foodloop_mobile/features/auth/pages/sign_up.dart';
 import 'package:foodloop_mobile/features/auth/services/auth_service.dart';
 import 'package:foodloop_mobile/features/donations/pages/donationscreen.dart';
 import 'package:foodloop_mobile/features/donations/pages/joyloopscreen.dart';
+import 'package:foodloop_mobile/features/donations/screens/available_donations_screen.dart';
 import 'package:foodloop_mobile/features/home/pages/dashboard.dart';
 import 'package:foodloop_mobile/features/maps/FoodMapScreen.dart';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
+void initApp() {
+  // Ensure Flutter is initialized
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  
+  // Keep the splash screen visible while initializing
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  
+  // Set preferred orientations
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
+  // Remove the splash screen when initialization is complete
+  FlutterNativeSplash.remove();
+}
 Future<void> main() async {
-  await dotenv.load(); // Load .env before app starts
+  // await dotenv.load(); // Load .env before app starts
   runApp(FoodLoopApp());
 }
 
@@ -50,7 +68,7 @@ class FoodLoopApp extends StatelessWidget {
         ),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
-        '/dashboard': (context) => DashboardScreen(),
+        '/available-donation': (context) => AvailableDonationsScreen(),
         '/donate': (context) => DonateScreen(),
         '/joyloops': (context) => JoyLoopsScreen(),
          '/map': (context) => FoodMapScreen(),

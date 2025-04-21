@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
       
       // Set user in state and sessionStorage
       setUser(response.user);
-      sessionStorage.setItem("userData", JSON.stringify(response.user));
+      localStorage.setItem("userData", JSON.stringify(response.user));
       
       // Store role in sessionStorage if available
       if (response.user && response.user.role) {

@@ -19,6 +19,7 @@ const userSchema = new Schema(
       },
     },
     googleId: { type: String, unique: true, sparse: true }, 
+
     role: {
       type: String,
       enum: ['donor', 'NGO', 'volunteer', 'admin'],
@@ -76,7 +77,53 @@ const userSchema = new Schema(
     // System fields
     isVerified: { type: Boolean, default: false },
     profileCompleted: { type: Boolean, default: false },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
+    flagged: { 
+      type: Boolean, 
+      default: false 
+    },
+    flagReason: { 
+      type: String 
+    },
+    verificationNotes: {
+      type: String
+    },
+    verifiedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    verifiedAt: {
+      type: Date
+    },
+verificationStatus: {
+  type: String,
+  enum: ['verified', 'pending', 'flagged'],
+  default: 'pending'
+},
+lastActive: {
+  type: Date,
+  default: Date.now
+},
+donationsCount: {
+  type: Number,
+  default: 0
+},
+totalDonated: {
+  type: Number,  // Store as number for calculations
+  default: 0
+},
+volunteeredHours: {
+  type: Number,
+  default: 0
+},
+distributionsCount: {
+  type: Number,
+  default: 0
+},
+peopleHelped: {
+  type: Number,
+  default: 0
+}
   },
   { timestamps: true }
 );

@@ -19,6 +19,7 @@
         })
           .then((res) => res.json())
           .then((data) => {
+
             if (!data.success) {
               alert("Google login failed!");
               window.location.href = "/";
@@ -45,7 +46,7 @@
               window.location.href = "/dashboard";
 
             }
-            // window.location.href = "/onboard";
+ 
           })
           .catch((err) => {
             console.error("OAuth failed:", err);

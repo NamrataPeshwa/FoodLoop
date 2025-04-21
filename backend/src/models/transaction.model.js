@@ -53,6 +53,18 @@ const donationTransactionSchema = new Schema(
       timestamp: String,
       date: String,
     },
+value: {
+  type: Number,
+  default: 0
+},
+peopleServed: {
+  type: Number,
+  default: 0
+},
+distributionsCount: {
+  type: Number,
+  default: 0
+}
   },
   { timestamps: true }
 );

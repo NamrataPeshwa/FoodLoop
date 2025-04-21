@@ -12,15 +12,24 @@ class DonationService {
       throw Exception('Authentication required');
     }
     
+    // Get current user id
+    final user = await _authService.getUserProfile();
+    if (user == null) {
+      throw Exception('User information not available');
+    }
+    
+    // Add donor field to donation data
+    donationData['donor'] = user['_id'];
+    
     final response = await http.post(
       Uri.parse('$baseUrl/create'),
       headers: {
         'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json"
       },
       body: jsonEncode(donationData),
     );
-    
+    print('Response status: ${response}');
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
