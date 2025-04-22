@@ -3,7 +3,7 @@ import Transaction from '../models/transaction.model.js';
 
 export const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const user = await User.findById(userId).lean(); // lean for plain JS object
 
@@ -14,7 +14,7 @@ export const getUserProfile = async (req, res) => {
     let lastDonationDate = null;
 
     if (user.role === 'donor') {
-      const donations = await transactionModel.find({ donor: userId }).sort({ createdAt: -1 });
+      const donations = await Transaction.find({ donor: userId }).sort({ createdAt: -1 });
 
       totalDonations = donations.length;
 

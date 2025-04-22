@@ -37,6 +37,13 @@ const userSchema = new Schema(
       type: { type: String, enum: ['Point'], default: 'Point' },
       coordinates: { type: [Number], default: [0, 0] }, // [longitude, latitude]
     },
+    availability: [
+      {
+        day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
+        startHour: Number, // 0-23
+        endHour: Number    // 0-23
+      }
+    ],    
     
     // NGO specific fields
     foodPreferences: {
