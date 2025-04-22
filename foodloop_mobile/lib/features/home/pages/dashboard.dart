@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:foodloop_mobile/core/utils/app_loader.dart';
 import 'package:foodloop_mobile/features/auth/services/auth_service.dart';
 import 'package:foodloop_mobile/features/donations/services/impact_statistics.dart';
 
@@ -32,7 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final userProfile = await _authService.getUserProfile();
       final impactStats = await _impactService.getImpactStats();
-
+      
       log('User profile loaded: $userProfile'); // Debug output
       
       setState(() {
@@ -125,7 +126,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
   }
-
+  Widget _buildImpactCard() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Community Impact',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.restaurant, color: Colors.orange),
+              title: Text('Total Donations'),
+              trailing: Text(
+                '${_impactStats['totalDonations'] ?? 0}',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.scale, color: Colors.orange),
+              title: Text('Food Saved (kg)'),
+              trailing: Text(
+                '${_impactStats['totalWeight'] ?? 0}',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.eco, color: Colors.green),
+              title: Text('CO₂ Saved (kg)'),
+              trailing: Text(
+                '${_impactStats['estimatedCO2Saved'] ?? 0}',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,7 +187,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body:
           _isLoading
-              ? Center(child: CircularProgressIndicator(color: Colors.orange))
+              ? Center(child: FancyFoodLoader())
               : RefreshIndicator(
                 onRefresh: _loadData,
                 child: ListView(
@@ -194,7 +236,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 leading: Icon(Icons.volunteer_activism, color: Colors.orange),
                                 title: Text('Your Donations'),
                                 trailing: Text(
-                                  '${_impactStats['userDonations'] ?? 0}',
+                                  '${_impactStats['totalDonations']}',
                                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                 ),
                               ),
