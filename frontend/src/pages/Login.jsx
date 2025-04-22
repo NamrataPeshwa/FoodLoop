@@ -56,7 +56,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/google-url');
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/auth/google-url`);
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url; // Redirect to Google OAuth

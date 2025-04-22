@@ -22,5 +22,8 @@ router.patch(
 );
 router.get('/', authMiddleware, getUserTransactions);
 router.post("/match", matchFoodListings);
+router.post('/confirm/:transactionId/:userId', confirmParticipation);
+router.post('/reject/:transactionId/:userId', rejectParticipation);
+
 
 export default router;

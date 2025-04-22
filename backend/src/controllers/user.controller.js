@@ -3,7 +3,7 @@ import Transaction from '../models/transaction.model.js';
 
 export const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const user = await User.findById(userId).lean(); // lean for plain JS object
 
