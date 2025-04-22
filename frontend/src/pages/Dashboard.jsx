@@ -15,7 +15,7 @@ import {
 } from "@tabler/icons-react";
 import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
-
+import FloatingFormWidget from "../components/ui/FloatingFormWidget";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -564,6 +564,7 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    <FloatingFormWidget/>
   </>
 );
 };
