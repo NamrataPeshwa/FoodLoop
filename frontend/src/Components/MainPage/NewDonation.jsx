@@ -68,21 +68,29 @@ const DonationForm = () => {
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
+  
     if (name === "photo") {
       const file = files[0];
+  
+      // Check if file is provided and its size is greater than 1MB
       if (file && file.size > 1024 * 1024) {
         alert("Photo must be less than or equal to 1MB");
         return;
-      } else {
-        const imageUrl = URL.createObjectURL(file);
-        setPreview(imageUrl);
       }
-      setFormData({ ...formData, photo: file });
+  
+      // Preview the image
+      const imageUrl = file ? URL.createObjectURL(file) : null;
+      setPreview(imageUrl); // Show the preview of the image
+  
+      // Store the file in the formData
+      setFormData((prev) => ({ ...prev, photo: file }));
     } else if (name === "quantity") {
+      // Validate if quantity is a valid number (can also be a decimal)
       const isValidNumber = /^\d+(\.\d+)?$/.test(value);
-      if (!isValidNumber && value !== "") return;
+      if (!isValidNumber && value !== "") return; // Avoid setting invalid value
       setFormData({ ...formData, quantity: value });
     } else {
+      // Update the formData for other fields
       setFormData({ ...formData, [name]: value });
     }
   };
@@ -90,50 +98,62 @@ const DonationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    if (formData.title.length > 50) {
-      alert("Title should not exceed 50 characters.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (formData.description.length > 200) {
-      alert("Description should not exceed 200 characters.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (formData.photo && formData.photo.size > 1024 * 1024) {
-      alert("Photo must be less than or equal to 1MB");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!/^\d+(\.\d+)?$/.test(formData.quantity)) {
-      alert("Quantity must be a valid number in kg.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const submissionData = new FormData();
-    submissionData.append("donorType", donorType);
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value) submissionData.append(key, value);
-    });
-
+  
     try {
-      const response = await fetch(
-        "https://your-api-endpoint.com/food-donation", // URL to be added
-        {
-          method: "POST",
-          body: submissionData,
-        }
-      );
-
+      // ✅ Validation
+      if (formData.title.length > 50) {
+        alert("Title should not exceed 50 characters.");
+        return;
+      }
+  
+      if (formData.description.length > 200) {
+        alert("Description should not exceed 200 characters.");
+        return;
+      }
+  
+      if (formData.photo && formData.photo.size > 1024 * 1024) {
+        alert("Photo must be less than or equal to 1MB");
+        return;
+      }
+  
+      if (!/^\d+(\.\d+)?$/.test(formData.quantity)) {
+        alert("Quantity must be a valid number in kg.");
+        return;
+      }
+  
+      // ✅ Prepare FormData
+      const submissionData = new FormData();
+      submissionData.append("foodDescription", formData.description);
+      submissionData.append("hoursOld", 1); // Default fallback or add a UI field
+      submissionData.append("storage", "room temp"); // Optional UI-controlled
+      submissionData.append("weight", formData.quantity);
+      submissionData.append("expirationDate", new Date(formData.expiryTime).toISOString());
+      submissionData.append("lat", 12.9716); // You can pull this from state if needed
+      submissionData.append("lng", 77.5946);
+      submissionData.append("scheduledFor", new Date().toISOString()); // Placeholder
+  
+      if (formData.photo) {
+        submissionData.append("images", formData.photo);
+      }
+  
+      // ✅ Auth Token if needed
+      const token = localStorage.getItem("token");
+  
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/donations/create`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: submissionData,
+      });
+  
       if (!response.ok) throw new Error("Failed to submit");
-
+  
+      const data = await response.json();
+      console.log("✅ Submission successful:", data);
+  
+      // Reset form
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-
       setFormData({
         title: "",
         description: "",
@@ -145,9 +165,10 @@ const DonationForm = () => {
         photo: null,
       });
       setPreview(null);
-    } catch (err) {
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      console.error("❌ Submission error:", error);
       alert("Something went wrong. Please try again.");
-      console.error(err);
     } finally {
       setIsSubmitting(false);
     }

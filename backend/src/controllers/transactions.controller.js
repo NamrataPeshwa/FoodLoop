@@ -20,121 +20,168 @@ const abiPath = path.join(
 );
 const foodLoopAbi = JSON.parse(await readFile(abiPath, "utf-8"));
 
+import nodemailer from "nodemailer";
+import fs from "fs";
+
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+export const sendConfirmationEmail = async (email, name, message, confirmUrl, rejectUrl) => {
+  const htmlPath = path.join(__dirname, "../views/confirmation.html");
+  let html = fs.readFileSync(htmlPath, "utf8");
+
+  html = html
+    .replace("{{name}}", name)
+    .replace("{{message}}", message)
+    .replace("{{confirmUrl}}", confirmUrl)
+    .replace("{{rejectUrl}}", rejectUrl);
+
+  await transporter.sendMail({
+    from: `"FoodLoop Team" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Please Confirm Participation",
+    html,
+  });
+};
+
+
 export const matchFoodListings = async (req, res) => {
   try {
     const now = new Date();
 
+    // 1) Find all eligible listings
     const listings = await FoodListing.find({
-      status: "pending",
+      status: 'pending',
       scheduledFor: { $lte: now },
     })
       .sort({ isPerishable: -1, scheduledFor: 1 })
-      .populate("donor");
+      .populate('donor');
 
-    const matchedTransactions = [];
+    const matched = [];
 
     for (const listing of listings) {
-      const alreadyMatched = await Transaction.findOne({
+      // 2) Skip if already has a pending or confirmed transaction
+      const existingTx = await Transaction.findOne({
         foodListing: listing._id,
+        status:     { $in: ['requested', 'confirmed'] }
       });
-      if (alreadyMatched) continue;
+      if (existingTx) continue;
 
+      // 3) Find closest NGO (with simple Redis cache)
       const cacheKey = `ngo-near:${listing._id}`;
       let closestNGO = null;
 
-      const cachedNGO = await redis.get(cacheKey);
-      if (cachedNGO) {
-        const parsedNGO = JSON.parse(cachedNGO);
-        if (!parsedNGO.foodPreferences?.includes(listing.foodType)) {
-          closestNGO = parsedNGO;
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        const ngo = JSON.parse(cached);
+        if (!ngo.foodPreferences.includes(listing.foodType)) {
+          closestNGO = await User.findById(ngo._id);
         }
       }
 
       if (!closestNGO) {
-        const nearbyNGOs = await User.find({
-          role: "NGO",
+        const ngos = await User.find({
+          role: 'NGO',
           location: {
             $near: {
-              $geometry: {
-                type: "Point",
-                coordinates: listing.location.coordinates,
-              },
-              $maxDistance: 10000,
-            },
-          },
+              $geometry: listing.location,
+              $maxDistance: 10000
+            }
+          }
         });
-
-        for (const ngo of nearbyNGOs) {
+        for (const ngo of ngos) {
           if (!ngo.foodPreferences.includes(listing.foodType)) {
             closestNGO = ngo;
-            await redis.set(
-              cacheKey,
-              JSON.stringify({
-                _id: ngo._id,
-                foodPreferences: ngo.foodPreferences,
-                autoConfirm: ngo.autoConfirm,
-                needsVolunteer: ngo.needsVolunteer,
-              }),
-              "EX",
-              300
-            );
+            // cache minimal info
+            await redis.set(cacheKey, JSON.stringify({
+              _id: ngo._id.toString(),
+              foodPreferences: ngo.foodPreferences
+            }), 'EX', 300);
             break;
           }
         }
       }
-
       if (!closestNGO) continue;
 
-      // ✅ Find volunteer if needed by listing or NGO
+      // 4) Find closest available volunteer if needed
       let closestVolunteer = null;
-      const needsVolunteer =
-        listing.requiresVolunteer || closestNGO.needsVolunteer;
+      if (listing.requiresVolunteer || closestNGO.needsVolunteer) {
+        const day  = now.toLocaleDateString('en-US', { weekday: 'long' });
+        const hour = now.getHours();
 
-      if (needsVolunteer) {
         closestVolunteer = await User.findOne({
-          role: "volunteer",
+          role: 'volunteer',
           location: {
             $near: {
-              $geometry: {
-                type: "Point",
-                coordinates: listing.location.coordinates,
-              },
-              $maxDistance: 10000,
-            },
+              $geometry: listing.location,
+              $maxDistance: 10000
+            }
           },
+          availability: {
+            $elemMatch: {
+              day,
+              startHour: { $lte: hour },
+              endHour:   { $gte: hour }
+            }
+          }
         });
       }
 
-      const transaction = await Transaction.create({
+      // 5) Create the "requested" transaction
+      const tx = await Transaction.create({
         foodListing: listing._id,
-        donor: listing.donor._id,
-        ngo: closestNGO._id,
-        volunteer: closestVolunteer ? closestVolunteer._id : null,
-        status: closestNGO.autoConfirm ? "confirmed" : "requested",
-        confirmedAt: closestNGO.autoConfirm ? new Date() : null,
+        donor:       listing.donor._id,
+        ngo:         closestNGO._id,
+        volunteer:   closestVolunteer?._id || null,
+        status:      'requested',
+        confirmedBy: []          // will accumulate NGO/volunteer IDs on confirm
       });
 
-      listing.status = "requested";
-      listing.volunteer = closestVolunteer ? closestVolunteer._id : null;
+      // 6) Update the listing so it's no longer re-matched
+      listing.status    = 'requested';
+      listing.volunteer = closestVolunteer?._id || null;
       await listing.save();
 
-      matchedTransactions.push(transaction);
+      // 7) Send confirmation emails
+      const base = process.env.BASE_URL;
+      // NGO
+      await sendConfirmationEmail(
+        closestNGO.email,
+        closestNGO.name,
+        `A new food donation is available for you to claim.`,
+        `${base}/confirm/${tx._id}/${closestNGO._id}`,
+        `${base}/reject/${tx._id}/${closestNGO._id}`
+      );
+      // Volunteer (if any)
+      if (closestVolunteer) {
+        await sendConfirmationEmail(
+          closestVolunteer.email,
+          closestVolunteer.name,
+          `Please confirm you can deliver this donation.`,
+          `${base}/confirm/${tx._id}/${closestVolunteer._id}`,
+          `${base}/reject/${tx._id}/${closestVolunteer._id}`
+        );
+      }
 
-      await sendSMS(closestVolunteer?.contactNumber, `Message content here...`);
-      await sendSMS(listing.donor.contactNumber, `Message for donor`);
-      await sendSMS(closestNGO.contactNumber, `Message for NGO`);
+      matched.push(tx);
     }
 
     return res.status(200).json({
       success: true,
-      matched: matchedTransactions.length,
-      transactions: matchedTransactions,
+      matched: matched.length,
+      transactions: matched
     });
+
   } catch (err) {
-    console.error("Transaction matching error:", err);
+    console.error('matchFoodListings error:', err);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error'
     });
   }
 };
@@ -333,4 +380,91 @@ export const getUserTransactions = async (req, res) => {
     console.error("Error fetching user transactions:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
+};
+
+export const confirmParticipation = async (req, res) => {
+  try {
+    const { transactionId, userId } = req.params;
+
+    // 1) Load the transaction
+    const tx = await Transaction.findById(transactionId);
+    if (!tx) return res.status(404).json({ error: 'Transaction not found' });
+
+    // 2) Record this user's confirmation
+    const isNGO       = tx.ngo.toString() === userId;
+    const isVolunteer = tx.volunteer && tx.volunteer.toString() === userId;
+
+    if (!isNGO && !isVolunteer) {
+      return res.status(403).json({ error: 'Not authorised to confirm this transaction' });
+    }
+
+    // Avoid duplicate entries
+    if (!tx.confirmedBy.includes(userId)) {
+      tx.confirmedBy.push(userId);
+      await tx.save();
+    }
+
+    // 3) Check if all required parties have confirmed
+    const ngoConfirmed       = tx.confirmedBy.includes(tx.ngo.toString());
+    const volunteerConfirmed = !tx.volunteer || tx.confirmedBy.includes(tx.volunteer.toString());
+
+    if (ngoConfirmed && volunteerConfirmed) {
+      // 4) Finalize on-chain status
+      tx.status       = 'confirmed';
+      tx.confirmedAt  = new Date();
+      await tx.save();
+
+      // 5) Update the underlying listing
+      const listing = await FoodListing.findById(tx.foodListing).populate('donor');
+      listing.status = 'confirmed';
+      await listing.save();
+
+      // 6) Fetch users for SMS
+      const donor     = listing.donor;
+      const ngoUser   = await User.findById(tx.ngo);
+      const volunteer = tx.volunteer ? await User.findById(tx.volunteer) : null;
+
+      // 7) Send SMS notifications
+      await sendSMS(
+        donor.contactNumber,
+        `🎉 Hi ${donor.name}, your donation (ID: ${transactionId}) has been confirmed! Thank you for your generosity.`
+      );
+      await sendSMS(
+        ngoUser.contactNumber,
+        `✅ Hi ${ngoUser.name}, you’ve successfully claimed donation (ID: ${transactionId}).`
+      );
+      if (volunteer) {
+        await sendSMS(
+          volunteer.contactNumber,
+          `🚚 Hi ${volunteer.name}, you’ve been confirmed to deliver donation (ID: ${transactionId}).`
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Confirmation received',
+      status: tx.status
+    });
+
+  } catch (err) {
+    console.error('confirmParticipation error:', err);
+    return res.status(500).json({ error: 'Server error confirming participation' });
+  }
+};
+
+export const rejectParticipation = async (req, res) => {
+  const { transactionId, userId } = req.params;
+  const transaction = await Transaction.findById(transactionId);
+  if (!transaction) return res.status(404).send("Transaction not found");
+
+  await Transaction.findByIdAndDelete(transactionId);
+
+  // Re-run matching for this foodListing
+  const listing = await FoodListing.findById(transaction.foodListing);
+  listing.status = "pending";
+  await listing.save();
+  await matchFoodListings(); // run again
+
+  return res.send("Sorry to hear that. We’ll look for another match.");
 };

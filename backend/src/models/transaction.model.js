@@ -28,45 +28,55 @@ const timelineEventSchema = new Schema({
   note: { type: String } // optional free‐text
 }, { _id: false });
 
-const donationTransactionSchema = new Schema(
-  {
-    foodListing: { type: Schema.Types.ObjectId, ref: 'FoodListing', required: true },
-    donor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    ngo: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    volunteer: { type: Schema.Types.ObjectId, ref: 'User', default: null }, // Optional
-    transactionHash: { type: String, default: null }, // Stores blockchain transaction hash
-    confirmed: { type: Boolean, default: false }, // Indicates successful blockchain confirmation
-    timeline: {
-      type: [timelineEventSchema],
-      default: [
-        { status: 'pending', by: 'system' }
-      ]
-    },
-    certificateData: {
-      transactionHash: String,
-      nftTokenId: String,
-      donorName: String,
-      donorEmail: String,
-      foodType: String,
-      weight: Number,
-      location: String,
-      timestamp: String,
-      date: String,
-    },
-value: {
-  type: Number,
-  default: 0
-},
-peopleServed: {
-  type: Number,
-  default: 0
-},
-distributionsCount: {
-  type: Number,
-  default: 0
-}
+const donationTransactionSchema = new Schema({
+  foodListing:     { type: Schema.Types.ObjectId, ref: 'FoodListing', required: true },
+  donor:           { type: Schema.Types.ObjectId, ref: 'User',        required: true },
+  ngo:             { type: Schema.Types.ObjectId, ref: 'User',        required: true },
+  volunteer:       { type: Schema.Types.ObjectId, ref: 'User',        default: null },
+
+  // tracks who clicked “Accept”
+  confirmedBy:     [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  // tracks who clicked “Reject”
+  rejectedBy:      [{ type: Schema.Types.ObjectId, ref: 'User' }],
+
+  // high‑level status for quick queries
+  status: {
+    type: String,
+    enum: ['pending','requested','confirmed','rejected','on_chain'],
+    default: 'pending'
   },
-  { timestamps: true }
-);
+
+  // your blockchain proof fields
+  transactionHash: { type: String, default: null },
+  blockchainConfirmed: { // indicates NFT mint succeeded
+    type: Boolean,
+    default: false
+  },
+
+  // full history of this transaction
+  timeline: {
+    type: [timelineEventSchema],
+    default: [{ status: 'pending', by: 'system' }]
+  },
+
+  // data you embed in the certificate/NFT
+  certificateData: {
+    transactionHash: String,
+    nftTokenId:      String,
+    donorName:       String,
+    donorEmail:      String,
+    foodType:        String,
+    weight:          Number,
+    location:        String,
+    timestamp:       String,
+    date:            String,
+  },
+
+  // impact metrics
+  value:             { type: Number, default: 0 },   // e.g. estimated meal value
+  peopleServed:      { type: Number, default: 0 },
+  distributionsCount:{ type: Number, default: 0 }
+
+}, { timestamps: true });
 
 export default model('Transaction', donationTransactionSchema);

@@ -17,83 +17,93 @@ const UserProfile = () => {
 
   useEffect(() => {
     // Simulate fetching user data
+    // const fetchUserData = async () => {
+    //   try {
+    //     // This would be a real API call in production
+    //     // await fetch('/api/users/profile')
+        
+    //     // Mock user data based on role
+    //     const mockUser = {
+    //       name: userRole === 'donor' ? 'John Smith' : 'Food For All',
+    //       email: userRole === 'donor' ? 'john.smith@example.com' : 'contact@foodforall.org',
+    //       role: userRole,
+    //       organizationName: userRole === 'donor' ? 'Tech Solutions Inc.' : 'Food For All NGO',
+    //       contactNumber: '+1 (555) 123-4567',
+    //       address: '123 Charity Lane, Giving City, GC 12345',
+    //       website: userRole === 'donor' ? 'techsolutions.com' : 'foodforall.org',
+    //       location: {
+    //         coordinates: [-73.9857, 40.7484]
+    //       },
+    //       foodPreferences: userRole === 'NGO' ? ['Expired Items', 'Raw Meat'] : [],
+    //       needsVolunteer: userRole === 'NGO' ? true : false,
+    //       averageMonthlyDonations: userRole === 'donor' ? 3 : null,
+    //       totalDonations: userRole === 'donor' ? 36 : null,
+    //       lastDonationDate: userRole === 'donor' ? '2025-04-10T14:30:00Z' : null
+    //     };
+        
+    //     setUser(mockUser);
+        
+    //     // Mock donations data
+    //     const mockDonations = [];
+    //     if (userRole === 'donor') {
+    //       for (let i = 1; i <= 12; i++) {
+    //         mockDonations.push({
+    //           _id: `txn${i}`,
+    //           foodListing: {
+    //             foodType: i % 3 === 0 ? 'Vegetables' : i % 2 === 0 ? 'Canned Goods' : 'Prepared Meals',
+    //             weight: (Math.random() * 10 + 5).toFixed(1)
+    //           },
+    //           ngo: {
+    //             name: i % 2 === 0 ? 'Food For All' : 'Community Kitchen',
+    //             address: i % 2 === 0 ? '123 Charity Lane' : '456 Helping Street'
+    //           },
+    //           transactionHash: `0x${Math.random().toString(16).substring(2, 18)}`,
+    //           certificateData: {
+    //             transactionHash: `0x${Math.random().toString(16).substring(2, 18)}`,
+    //             nftTokenId: `0x${Math.random().toString(16).substring(2, 18)}`,
+    //             donorName: 'John Smith',
+    //             donorEmail: 'john.smith@example.com',
+    //             foodType: i % 3 === 0 ? 'Vegetables' : i % 2 === 0 ? 'Canned Goods' : 'Prepared Meals',
+    //             weight: (Math.random() * 10 + 5).toFixed(1),
+    //             location: 'New York, NY',
+    //             timestamp: Date.now() - i * 86400000,
+    //             date: new Date(Date.now() - i * 86400000).toLocaleString()
+    //           }
+    //         });
+    //       }
+    //     }
+        
+    //     setDonations(mockDonations);
+    //     setLoading(false);
+    //   } catch (error) {
+    //     console.error('Error fetching user data:', error);
+    //     setLoading(false);
+    //   }
+    // };
     const fetchUserData = async () => {
       try {
-        // This would be a real API call in production
-        // await fetch('/api/users/profile')
-        
-        // Mock user data based on role
-        const mockUser = {
-          name: userRole === 'donor' ? 'John Smith' : 'Food For All',
-          email: userRole === 'donor' ? 'john.smith@example.com' : 'contact@foodforall.org',
-          role: userRole,
-          organizationName: userRole === 'donor' ? 'Tech Solutions Inc.' : 'Food For All NGO',
-          contactNumber: '+1 (555) 123-4567',
-          address: '123 Charity Lane, Giving City, GC 12345',
-          website: userRole === 'donor' ? 'techsolutions.com' : 'foodforall.org',
-          location: {
-            coordinates: [-73.9857, 40.7484]
-          },
-          foodPreferences: userRole === 'NGO' ? ['Expired Items', 'Raw Meat'] : [],
-          needsVolunteer: userRole === 'NGO' ? true : false,
-          averageMonthlyDonations: userRole === 'donor' ? 3 : null,
-          totalDonations: userRole === 'donor' ? 36 : null,
-          lastDonationDate: userRole === 'donor' ? '2025-04-10T14:30:00Z' : null
-        };
-        
-        setUser(mockUser);
-        
-        // Mock donations data
-        const mockDonations = [];
-        if (userRole === 'donor') {
-          for (let i = 1; i <= 12; i++) {
-            mockDonations.push({
-              _id: `txn${i}`,
-              foodListing: {
-                foodType: i % 3 === 0 ? 'Vegetables' : i % 2 === 0 ? 'Canned Goods' : 'Prepared Meals',
-                weight: (Math.random() * 10 + 5).toFixed(1)
-              },
-              ngo: {
-                name: i % 2 === 0 ? 'Food For All' : 'Community Kitchen',
-                address: i % 2 === 0 ? '123 Charity Lane' : '456 Helping Street'
-              },
-              transactionHash: `0x${Math.random().toString(16).substring(2, 18)}`,
-              certificateData: {
-                transactionHash: `0x${Math.random().toString(16).substring(2, 18)}`,
-                nftTokenId: `0x${Math.random().toString(16).substring(2, 18)}`,
-                donorName: 'John Smith',
-                donorEmail: 'john.smith@example.com',
-                foodType: i % 3 === 0 ? 'Vegetables' : i % 2 === 0 ? 'Canned Goods' : 'Prepared Meals',
-                weight: (Math.random() * 10 + 5).toFixed(1),
-                location: 'New York, NY',
-                timestamp: Date.now() - i * 86400000,
-                date: new Date(Date.now() - i * 86400000).toLocaleString()
-              }
-            });
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           }
-        }
-        
-        setDonations(mockDonations);
+        });
+  
+        if (!res.ok) throw new Error("Failed to fetch user data");
+  
+        const { user, donations } = await res.json();
+        setUser(user);
+        setDonations(donations);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, [userRole]);
 
-  // In production, this would be a real API call
-  const getUserDonations = async () => {
-    try {
-      // const response = await fetch('/api/donations/my');
-      // const data = await response.json();
-      // setDonations(data);
-    } catch (error) {
-      console.error('Error fetching donations:', error);
-    }
-  };
+  
 
   const handleViewCertificate = (certificate) => {
     setSelectedCertificate(certificate);

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = `${import.meta.env.VITE_BACKEND_API}/api/auth`;
 
 export const signupUser = async (userData) => {
   try {
