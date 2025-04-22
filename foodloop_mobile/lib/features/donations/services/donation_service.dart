@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'package:foodloop_mobile/core/constants/api_constants.dart';
 import 'package:foodloop_mobile/features/auth/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 
 class DonationService {
-  static const String baseUrl = 'http://10.0.2.2:5000/api/donations';
   final AuthService _authService = AuthService();
   
   Future<Map<String, dynamic>> createDonation(Map<String, dynamic> donationData) async {
@@ -22,7 +22,7 @@ class DonationService {
     donationData['donor'] = user['_id'];
     
     final response = await http.post(
-      Uri.parse('$baseUrl/create'),
+      Uri.parse(ApiConstants.createDonation),
       headers: {
         'Authorization': 'Bearer $token',
         "Content-Type": "application/json"
@@ -38,7 +38,7 @@ class DonationService {
   }
   
   Future<List<dynamic>> getAvailableDonations() async {
-    final response = await http.get(Uri.parse('$baseUrl/list'));
+    final response = await http.get(Uri.parse(ApiConstants.listDonations));
     
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -54,7 +54,7 @@ class DonationService {
     }
     
     final response = await http.get(
-      Uri.parse('$baseUrl/my'),
+      Uri.parse(ApiConstants.myDonations),
       headers: {'Authorization': 'Bearer $token'},
     );
     
