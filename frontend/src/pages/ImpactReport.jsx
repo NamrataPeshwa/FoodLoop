@@ -3,68 +3,55 @@ import { ArrowUpRight, Users, Leaf, Globe, Star } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import Card from '../Components/ui/Card'; 
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
+import { getImpactStats, getDonationTrends , getDonationGrowth, getUserTrust} from '../services/impactReportService';
 
-const donationStats = [
-  { month: 'Jan', donations: 120 },
-  { month: 'Feb', donations: 160 },
-  { month: 'Mar', donations: 220 },
-  { month: 'Apr', donations: 310 },
-];
-
-const StyledCard = ({ className, children }) => {
-  return (
-    <div className={`rounded-lg shadow-xl ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-const StyledCardContent = ({ className, children }) => {
-  return (
-    <div className={`p-6 ${className}`}>
-      {children}
-    </div>
-  );
-};
 
 const ImpactReportPage = () => {
-  // State for the dynamic stats that will come from backend
-  const [impactStats, setImpactStats] = useState({
-    totalDonations: 12340,
-    totalWeight: 34000,
-    estimatedCO2Saved: 12000,
-    blockchainTransactions: 350,
-    connectedNGOs: 80,
-    testimonials: [
-      { name: "Grace Home NGO", quote: "The donations from FoodLoop helped us feed 150 people last month. We feel seen and supported." },
-      { name: "Akhil", role: "Volunteer", quote: "We've never had such transparency and ease with food donations before. The blockchain proof is game-changing." },
-      { name: "John Doe", organizationName: "Food For All Foundation", quote: "The platform has transformed how we receive food donations, making the process more efficient and transparent." },
-    ]
-  });
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch stats from the backend
-  const fetchImpactStats = async () => {
-    setIsLoading(true);
-    try {
-      // Commented out for now - will use when connecting to real backend
-      // const response = await fetch('/api/impact/stats');
-      // const data = await response.json();
-      // setImpactStats(data);
-      
-      // Simulating API call delay
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Error fetching impact stats:", error);
-      setIsLoading(false);
-    }
+  const StyledCard = ({ className, children }) => {
+    return (
+      <div className={`rounded-lg shadow-xl ${className}`}>
+        {children}
+      </div>
+    );
   };
 
+  const StyledCardContent = ({ className, children }) => {
+    return (
+      <div className={`p-6 ${className}`}>
+        {children}
+      </div>
+    );
+  };
+
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [impactStats, setImpactStats] = useState([]);
+  const [donationStats, setDonationStats] = useState([]);
+  const [userTrust, setUserTrust] = useState(0);
+  const [donationGrowth, setDonationGrowth] = useState(0);
+
   useEffect(() => {
-    fetchImpactStats();
+    const fetchStats = async () => {
+      setIsLoading(true);
+      try {
+        const [impactData, donationGrowth ,  trustPercentage,donationData] = await Promise.all([
+          getImpactStats(),
+          getDonationGrowth(),
+          getUserTrust(),
+          getDonationTrends(),
+        ]);
+        setImpactStats(impactData);
+        setDonationStats(donationData);
+        setUserTrust(trustPercentage);
+        setDonationGrowth(donationGrowth);
+      } catch (error) {
+        console.error("Error fetching impact data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
 
@@ -104,7 +91,7 @@ const ImpactReportPage = () => {
             <div className="flex justify-center mb-12">
               <Card 
                 title="FOODLOOP IMPACT" 
-                description={`${impactStats.totalWeight.toLocaleString()} kg of food saved, preventing ${impactStats.estimatedCO2Saved.toLocaleString()} kg CO₂ emissions`}
+                description={`${impactStats.totalWeight ? impactStats.totalWeight.toLocaleString() : '...'} kg of food saved, preventing ${impactStats.estimatedCO2Saved ? impactStats.estimatedCO2Saved.toLocaleString() : '...'} kg CO₂ emissions`}
                 imgSrc="/logo.png"
               />
             </div>
@@ -114,28 +101,28 @@ const ImpactReportPage = () => {
               <StyledCard className="bg-green-500 text-white hover:scale-105 transition-transform">
                 <StyledCardContent className="flex flex-col gap-3">
                   <Users className="h-6 w-6" />
-                  <h3 className="text-xl font-bold">{isLoading ? '...' : `${impactStats.totalDonations.toLocaleString()}+`}</h3>
+                  <h3 className="text-2xl">{isLoading ? '...' : `${impactStats.totalWeight ? impactStats.totalWeight.toLocaleString() : '...'}+ kg`}</h3>
                   <p>Donations Completed</p>
                 </StyledCardContent>
               </StyledCard>
               <StyledCard className="bg-teal-400 text-black hover:scale-105 transition-transform">
                 <StyledCardContent className="flex flex-col gap-3">
                   <Leaf className="h-6 w-6" />
-                  <h3 className="text-xl font-bold">{isLoading ? '...' : `${impactStats.totalWeight.toLocaleString()} kg`}</h3>
+                  <h3 className="text-xl font-bold">{isLoading ? '...' : `${impactStats.totalWeight ? impactStats.totalWeight.toLocaleString() : '...'} kg`}</h3>
                   <p>Food Saved</p>
                 </StyledCardContent>
               </StyledCard>
               <StyledCard className="bg-white text-black hover:scale-105 transition-transform">
                 <StyledCardContent className="flex flex-col gap-3">
                   <Globe className="h-6 w-6 text-green-500" />
-                  <h3 className="text-xl font-bold">{isLoading ? '...' : `${impactStats.connectedNGOs}+`}</h3>
+                  <h3 className="text-xl font-bold">{isLoading ? '...' : `${impactStats.connectedNGOs ?? '...'}`}</h3>
                   <p>NGOs Connected</p>
                 </StyledCardContent>
               </StyledCard>
               <StyledCard className="bg-black text-green-400 hover:scale-105 transition-transform">
                 <StyledCardContent className="flex flex-col gap-3">
                   <Star className="h-6 w-6" />
-                  <h3 className="text-xl font-bold">{isLoading ? '...' : `${impactStats.blockchainTransactions}+`}</h3>
+                  <h3 className="text-xl font-bold">{isLoading ? '...' : `${impactStats.blockchainTransactions ?? '...'}`}</h3>
                   <p>Blockchain Verified</p>
                 </StyledCardContent>
               </StyledCard>
@@ -180,13 +167,13 @@ const ImpactReportPage = () => {
                   <StyledCard className="bg-black text-green-300 border border-green-500 hover:scale-105 transition-transform">
                     <StyledCardContent>
                       <h3 className="text-xl font-bold">CO₂ Prevented</h3>
-                      <p className="text-2xl">{isLoading ? '...' : `${impactStats.estimatedCO2Saved.toLocaleString()}+ kg`}</p>
+                      <p className="text-2xl">{isLoading ? '...' : `${impactStats.estimatedCO2Saved ? impactStats.estimatedCO2Saved.toLocaleString() : '...'}+ kg`}</p>
                     </StyledCardContent>
                   </StyledCard>
                   <StyledCard className="bg-black text-green-300 border border-green-500 hover:scale-105 transition-transform">
                     <StyledCardContent>
                       <h3 className="text-xl font-bold">Waste Diverted</h3>
-                      <p className="text-2xl">{isLoading ? '...' : `${impactStats.totalWeight.toLocaleString()}+ kg`}</p>
+                      <p className="text-2xl">{isLoading ? '...' : `${impactStats.totalWeight ? impactStats.totalWeight.toLocaleString() : '...'}+ kg`}</p>
                     </StyledCardContent>
                   </StyledCard>
                   <StyledCard className="bg-black text-green-300 border border-green-500 hover:scale-105 transition-transform">
@@ -204,7 +191,7 @@ const ImpactReportPage = () => {
                   <StyledCardContent>
                     <h3 className="text-2xl font-bold text-green-400 mb-4">Voices from the Ground</h3>
                     <div className="space-y-6">
-                      {impactStats.testimonials.map((testimonial, index) => (
+                      {Array.isArray(impactStats.testimonials) && impactStats.testimonials.map((testimonial, index) => (
                         <div key={index} className="border-l-4 border-green-400 pl-4 py-2 text-left">
                           <p className="italic text-white/80">"{testimonial.quote}"</p>
                           <p className="mt-2 font-semibold text-green-300">
@@ -223,7 +210,9 @@ const ImpactReportPage = () => {
                   <StyledCard className="bg-[#1f2833] text-white border border-teal-400">
                     <StyledCardContent className="space-y-3">
                       <h3 className="text-xl font-bold text-teal-400">Monthly Growth</h3>
-                      <p className="text-4xl font-bold text-white">+24%</p>
+                      <p className="text-4xl font-bold text-white">
+                        {isLoading ? '...' : `+${donationStats?.slice(-1)[0]?.donations ?? '...' }%`}
+                      </p>
                       <p className="text-sm text-white/70">Donation increase over last month</p>
                     </StyledCardContent>
                   </StyledCard>
@@ -231,7 +220,9 @@ const ImpactReportPage = () => {
                   <StyledCard className="bg-[#1f2833] text-white border border-teal-400">
                     <StyledCardContent className="space-y-3">
                       <h3 className="text-xl font-bold text-teal-400">User Trust</h3>
-                      <p className="text-4xl font-bold text-white">97%</p>
+                      <p className="text-4xl font-bold text-white">
+                        {isLoading ? '...' : `${userTrust}%`}
+                      </p>
                       <p className="text-sm text-white/70">Positive feedback from donors</p>
                     </StyledCardContent>
                   </StyledCard>
