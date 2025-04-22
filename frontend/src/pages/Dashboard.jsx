@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
 import ButtonWithAvatar from "../Components/MainPage/HoverButton";
 import { FoodDonationGlobe } from "../Components/MainPage/globe";
+import { getDashboardStats , getDashboardAlerts ,getRecentDonations , getUpcomingDistributions} from '../services/dashboardService';
 import { useNavigate } from 'react-router-dom';
 import {User } from 'lucide-react';
 import { 
@@ -146,120 +147,183 @@ const Dashboard = () => {
 //     };
 //   }, [lastScrollY]);
   // Stats for the dashboard
-  const stats = [
-    {
-      label: "Total Donations",
-      value: "8,742 kg",
-      icon: <IconHeartHandshake className="h-6 w-6 text-color-colour1" />,
-      change: "+8.2% from last month",
-      positive: true
-    },
-    {
-      label: "Distribution Routes",
-      value: "24 Active",
-      icon: <IconTruckDelivery className="h-6 w-6 text-color-colour1" />,
-      change: "+2 since last week",
-      positive: true
-    },
-    {
-      label: "Coverage Areas",
-      value: "32 Regions",
-      icon: <IconMapPin className="h-6 w-6 text-color-colour1" />,
-      change: "4 new regions added",
-      positive: true
-    },
-    {
-      label: "Impact Score",
-      value: "97.4%",
-      icon: <IconChartBar className="h-6 w-6 text-color-colour1" />,
-      change: "+2.1% efficiency",
-      positive: true
-    },
-  ];
+  const [stats, setStats] = useState([]);
+useEffect(() => {
+  const loadStats = async () => {
+    const data = await getDashboardStats();
+    console.log("Dashboard Stats:", data);
+    setStats([
+      {
+        label: "Total Donations",
+        value: data.totalDonations,
+        icon: <IconHeartHandshake className="h-6 w-6 text-color-colour1" />,
+        change: "+8.2% from last month", // TODO: optionally make this dynamic
+        positive: true
+      },
+      {
+        label: "Distribution Routes",
+        value: data.distributionRoutes,
+        icon: <IconTruckDelivery className="h-6 w-6 text-color-colour1" />,
+        change: "+2 since last week",
+        positive: true
+      },
+      {
+        label: "Coverage Areas",
+        value: data.coverageAreas,
+        icon: <IconMapPin className="h-6 w-6 text-color-colour1" />,
+        change: "4 new regions added",
+        positive: true
+      },
+      {
+        label: "Impact Score",
+        value: data.impactScore,
+        icon: <IconChartBar className="h-6 w-6 text-color-colour1" />,
+        change: "+2.1% efficiency",
+        positive: true
+      }
+    ]);
+  };
+  loadStats();
+}, []);
+  // const stats = [
+  //   {
+  //     label: "Total Donations",
+  //     value: "8,742 kg",
+  //     icon: <IconHeartHandshake className="h-6 w-6 text-color-colour1" />,
+  //     change: "+8.2% from last month",
+  //     positive: true
+  //   },
+  //   {
+  //     label: "Distribution Routes",
+  //     value: "24 Active",
+  //     icon: <IconTruckDelivery className="h-6 w-6 text-color-colour1" />,
+  //     change: "+2 since last week",
+  //     positive: true
+  //   },
+  //   {
+  //     label: "Coverage Areas",
+  //     value: "32 Regions",
+  //     icon: <IconMapPin className="h-6 w-6 text-color-colour1" />,
+  //     change: "4 new regions added",
+  //     positive: true
+  //   },
+  //   {
+  //     label: "Impact Score",
+  //     value: "97.4%",
+  //     icon: <IconChartBar className="h-6 w-6 text-color-colour1" />,
+  //     change: "+2.1% efficiency",
+  //     positive: true
+  //   },
+  // ];
 
   // Alerts for the dashboard
-  const alerts = [
-    {
-      title: "Low Food Supply in Northeast Region",
-      description: "Current supplies will last only 3 more days. Consider redirecting resources.",
-      severity: "high",
-      time: "2 hours ago"
-    },
-    {
-      title: "New Partner Organization: City Food Bank",
-      description: "They've committed to donating 200kg weekly. Setup distribution route.",
-      severity: "info",
-      time: "Yesterday"
-    },
-    {
-      title: "Transportation Needed for South District",
-      description: "Vehicle breakdown reported. Need replacement for tomorrow's route.",
-      severity: "medium",
-      time: "Yesterday"
-    }
-  ];
+  // const alerts = [
+  //   {
+  //     title: "Low Food Supply in Northeast Region",
+  //     description: "Current supplies will last only 3 more days. Consider redirecting resources.",
+  //     severity: "high",
+  //     time: "2 hours ago"
+  //   },
+  //   {
+  //     title: "New Partner Organization: City Food Bank",
+  //     description: "They've committed to donating 200kg weekly. Setup distribution route.",
+  //     severity: "info",
+  //     time: "Yesterday"
+  //   },
+  //   {
+  //     title: "Transportation Needed for South District",
+  //     description: "Vehicle breakdown reported. Need replacement for tomorrow's route.",
+  //     severity: "medium",
+  //     time: "Yesterday"
+  //   }
+  // ];
+  const [alerts, setAlerts] = useState([]);
+
+useEffect(() => {
+  const fetchAlerts = async () => {
+    const data = await getDashboardAlerts();
+    setAlerts(data);
+  };
+  fetchAlerts();
+}, []);
 
   // Recent donations
-  const recentDonations = [
-    {
-      organization: "Fresh Harvest Co-op",
-      amount: "124 kg",
-      type: "Fresh produce",
-      timestamp: "2 hours ago"
-    },
-    {
-      organization: "Community Bakery",
-      amount: "56 kg",
-      type: "Baked goods",
-      timestamp: "5 hours ago"
-    },
-    {
-      organization: "Green Fields Farm",
-      amount: "210 kg",
-      type: "Vegetables & fruits",
-      timestamp: "Yesterday"
-    },
-    {
-      organization: "City Restaurant Alliance",
-      amount: "88 kg",
-      type: "Prepared meals",
-      timestamp: "Yesterday"
-    },
-    {
-      organization: "Metro Grocery",
-      amount: "175 kg",
-      type: "Mixed goods",
-      timestamp: "2 days ago"
-    }
-  ];
+  // const recentDonations = [
+  //   {
+  //     organization: "Fresh Harvest Co-op",
+  //     amount: "124 kg",
+  //     type: "Fresh produce",
+  //     timestamp: "2 hours ago"
+  //   },
+  //   {
+  //     organization: "Community Bakery",
+  //     amount: "56 kg",
+  //     type: "Baked goods",
+  //     timestamp: "5 hours ago"
+  //   },
+  //   {
+  //     organization: "Green Fields Farm",
+  //     amount: "210 kg",
+  //     type: "Vegetables & fruits",
+  //     timestamp: "Yesterday"
+  //   },
+  //   {
+  //     organization: "City Restaurant Alliance",
+  //     amount: "88 kg",
+  //     type: "Prepared meals",
+  //     timestamp: "Yesterday"
+  //   },
+  //   {
+  //     organization: "Metro Grocery",
+  //     amount: "175 kg",
+  //     type: "Mixed goods",
+  //     timestamp: "2 days ago"
+  //   }
+  // ];
+  const [recentDonations, setRecentDonations] = useState([]);
+  useEffect(() => {
+    const fetchRecentDonations = async () => {
+      const data = await getRecentDonations();
+      setRecentDonations(data);
+    };
+    fetchRecentDonations();
+  }, []);
 
   // Upcoming distributions
-  const upcomingDistributions = [
-    {
-      location: "North District Community Center",
-      time: "Today, 2:00 PM",
-      peopleServed: "~120 people",
-      status: "On schedule"
-    },
-    {
-      location: "Westside Shelter",
-      time: "Today, 4:30 PM",
-      peopleServed: "~85 people",
-      status: "On schedule"
-    },
-    {
-      location: "Easttown Food Pantry",
-      time: "Tomorrow, 9:00 AM",
-      peopleServed: "~200 people",
-      status: "Needs volunteers"
-    },
-    {
-      location: "South Ridge Community",
-      time: "Tomorrow, 1:00 PM",
-      peopleServed: "~150 people",
-      status: "Transport issue"
-    }
-  ];
+  // const upcomingDistributions = [
+  //   {
+  //     location: "North District Community Center",
+  //     time: "Today, 2:00 PM",
+  //     peopleServed: "~120 people",
+  //     status: "On schedule"
+  //   },
+  //   {
+  //     location: "Westside Shelter",
+  //     time: "Today, 4:30 PM",
+  //     peopleServed: "~85 people",
+  //     status: "On schedule"
+  //   },
+  //   {
+  //     location: "Easttown Food Pantry",
+  //     time: "Tomorrow, 9:00 AM",
+  //     peopleServed: "~200 people",
+  //     status: "Needs volunteers"
+  //   },
+  //   {
+  //     location: "South Ridge Community",
+  //     time: "Tomorrow, 1:00 PM",
+  //     peopleServed: "~150 people",
+  //     status: "Transport issue"
+  //   }
+  // ];
+  const [upcomingDistributions, setUpcomingDistributions] = useState([]);
+  useEffect(() => {
+    const fetchUpcoming = async () => {
+      const data = await getUpcomingDistributions();
+      setUpcomingDistributions(data);
+    };
+    fetchUpcoming();
+  }, []);
 
   return (
     <>
@@ -407,7 +471,7 @@ const Dashboard = () => {
 <div className="bg-[#FFF5E4]">
   {/* Stats Cards */}
   <div className="px-6 pt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {stats.map((stat, index) => (
+                {Array.isArray(stats) && stats.map((stat, index) => (
                   <div key={index} className="overflow-hidden bg-white rounded-lg shadow">
                     <div className="p-5">
                       <div className="flex items-center">
@@ -439,7 +503,7 @@ const Dashboard = () => {
                     <h3 className="text-lg font-medium text-gray-900">Alerts & Notifications</h3>
                   </div>
                   <div className="divide-y divide-gray-200">
-                    {alerts.map((alert, index) => (
+                    {Array.isArray(alerts) && alerts.map((alert, index) => (
                       <div key={index} className="p-6">
                         <div className="flex items-start">
                           <div 
@@ -475,7 +539,7 @@ const Dashboard = () => {
                   <h3 className="text-lg font-medium text-gray-900">Upcoming Distributions</h3>
                 </div>
                 <div className="divide-y divide-gray-200">
-                  {upcomingDistributions.map((dist, index) => (
+                  {Array.isArray(upcomingDistributions) && upcomingDistributions.map((dist, index) => (
                     <div key={index} className="p-6">
                       <div className="flex justify-between">
                         <div>
@@ -529,7 +593,7 @@ const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {recentDonations.map((donation, index) => (
+                    {Array.isArray(recentDonations) && recentDonations.map((donation, index) => (
                       <tr key={index}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{donation.organization}</div>

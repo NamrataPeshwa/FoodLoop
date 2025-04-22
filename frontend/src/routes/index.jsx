@@ -28,7 +28,7 @@ const AppRoutes = () => {
         <Route path="/onboard" element={<Onboarding />} />
         <Route path="/map" element={<DonationMap />} />
         <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
-        <Route path="/NewDonation" element={<DonationForm/>} />
+        <Route path="/donate" element={<DonationForm/>} />
 
 
         <Route path="/admin" element={<AdminDashboard />} />

@@ -72,6 +72,7 @@ class FoodLoopApp extends StatelessWidget {
         '/donate': (context) => DonateScreen(),
         '/joyloops': (context) => JoyLoopsScreen(),
          '/map': (context) => FoodMapScreen(),
+         '/dashboard': (context) => DashboardScreen(),
       },
     );
   }

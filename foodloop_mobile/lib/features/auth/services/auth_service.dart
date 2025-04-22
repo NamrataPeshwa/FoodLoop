@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:foodloop_mobile/core/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://10.0.2.2:5000/api/auth';
   
   Future<bool> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/login'),
+        Uri.parse(ApiConstants.login),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
@@ -32,7 +32,7 @@ class AuthService {
   Future<bool> signup(Map<String, dynamic> userData) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/signup'),
+        Uri.parse(ApiConstants.signUp),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(userData),
       );

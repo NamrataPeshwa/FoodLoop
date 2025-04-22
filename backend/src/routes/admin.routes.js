@@ -9,7 +9,11 @@ import {
   getOverviewStats,
   getDonationStats,
   getUserStats,
-  getAuditLogs
+
+  getAuditLogs,
+  getDashboardStats,
+  getDashboardAlerts
+
 } from '../controllers/admin.controller.js';
 import { isAdmin, authMiddleware } from '../middleware/authMiddleware.js';
 import cache from '../middleware/cache.middleware.js';
@@ -20,6 +24,12 @@ const router = express.Router();
 router.use(authMiddleware); 
 router.use(isAdmin);
 
+router.get('/dashboard-stats', getDashboardStats);
+router.get('/dashboard-alerts', getDashboardAlerts);
+// routes/donations.routes.js or admin.routes.js
+router.get('/recent-donations', getRecentDonations);
+// routes/admin.routes.js
+router.get('/upcoming-distributions', getUpcomingDistributions);
 router.get('/users', cache('users'), getUsers);
 
 // Invalidate the /users cache whenever you verify/flag/delete a user

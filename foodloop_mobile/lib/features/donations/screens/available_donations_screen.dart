@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:foodloop_mobile/core/theme/app_pallete.dart';
-import 'package:foodloop_mobile/core/theme/theme.dart';
 import 'package:foodloop_mobile/features/donations/services/donation_service.dart';
 import 'package:foodloop_mobile/features/donations/widgets/donation_card.dart';
 
