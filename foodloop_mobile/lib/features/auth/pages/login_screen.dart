@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text,
         _passwordController.text,
       );
+      print('Login success: $success');
       
       if (success) {
         Navigator.pushReplacementNamed(context, '/dashboard');

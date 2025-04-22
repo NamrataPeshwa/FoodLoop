@@ -14,7 +14,7 @@ export const getUserProfile = async (req, res) => {
     let lastDonationDate = null;
 
     if (user.role === 'donor') {
-      const donations = await transactionModel.find({ donor: userId }).sort({ createdAt: -1 });
+      const donations = await Transaction.find({ donor: userId }).sort({ createdAt: -1 });
 
       totalDonations = donations.length;
 

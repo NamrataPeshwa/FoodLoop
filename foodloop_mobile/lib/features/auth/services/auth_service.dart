@@ -63,13 +63,13 @@ class AuthService {
   Future<Map<String, dynamic>> getUserProfile() async {
     final token = await getAuthToken();
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:5000/api/user/profile'),
+      Uri.parse(ApiConstants.userProfile),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
     );
-    
+    log('response: ${response.body}');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }

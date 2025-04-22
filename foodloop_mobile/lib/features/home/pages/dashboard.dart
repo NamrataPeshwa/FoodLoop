@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:foodloop_mobile/features/auth/services/auth_service.dart';
 import 'package:foodloop_mobile/features/donations/services/impact_statistics.dart';
@@ -31,12 +33,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final userProfile = await _authService.getUserProfile();
       final impactStats = await _impactService.getImpactStats();
 
-      print('User profile loaded: $userProfile'); // Debug output
-
+      log('User profile loaded: $userProfile'); // Debug output
+      
       setState(() {
         _userProfile = userProfile;
         _impactStats = impactStats;
+        log('Impact stats loaded: $_impactStats'); // Add debug output for impact stats
+        log('Updated user profile: $_userProfile'); // Add debug to verify state update
       });
+      
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -46,48 +51,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget _buildImpactCard() {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Community Impact',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.restaurant, color: Colors.orange),
-              title: Text('Total Donations'),
-              trailing: Text(
-                '${_impactStats['totalDonations'] ?? 0}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.scale, color: Colors.orange),
-              title: Text('Food Saved (kg)'),
-              trailing: Text(
-                '${_impactStats['totalWeight'] ?? 0}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.eco, color: Colors.green),
-              title: Text('CO₂ Saved (kg)'),
-              trailing: Text(
-                '${_impactStats['estimatedCO2Saved'] ?? 0}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // Handle navigation when a bottom navigation item is tapped
   void _onItemTapped(int index) {
@@ -120,45 +83,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // Show modal bottom sheet for profile/more options
-  void _showProfileMenu() {
+  void _showProfileMenu() async{
+    _userProfile = await _authService.getUserProfile();
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Container(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.orange,
-                  child: Text(
-                    _userProfile['name']?.substring(0, 1) ?? 'U',
-                    style: TextStyle(color: Colors.white),
-                  ),
+        return Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.orange,
+                child: Text(
+                  _userProfile['name']?.substring(0, 1) ?? 'U',
+                  style: TextStyle(color: Colors.white),
                 ),
-                title: Text(_userProfile['name'] ?? 'User'),
-                subtitle: Text(_userProfile['email'] ?? ''),
               ),
-              Divider(),
-              if (_userProfile['role'] == 'NGO')
-                ListTile(
-                  leading: Icon(Icons.settings),
-                  title: Text('Preferences'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/ngo-preferences');
-                  },
-                ),
+              title: Text(_userProfile['name'] ?? 'User'),
+              subtitle: Text(_userProfile['email'] ?? ''),
+            ),
+            Divider(),
+            if (_userProfile['role'] == 'NGO')
               ListTile(
-                leading: Icon(Icons.logout),
-                title: Text('Logout'),
-                onTap: () async {
+                leading: Icon(Icons.settings),
+                title: Text('Preferences'),
+                onTap: () {
                   Navigator.pop(context);
-                  await _authService.logout();
-                  Navigator.pushReplacementNamed(context, '/login');
+                  Navigator.pushNamed(context, '/ngo-preferences');
                 },
               ),
-            ],
-          ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _authService.logout();
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ],
         );
       },
     );
