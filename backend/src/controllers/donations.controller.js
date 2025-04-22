@@ -5,60 +5,80 @@ import FoodListing from '../models/listing.model.js';
 import Transaction from '../models/transaction.model.js';
 import { predictCategory } from '../services/mlClient.js';
 
+import fs from 'fs';
+import { uploadToCloudinary } from '../utils/cloudinary.js';
+
+
 export const createDonation = async (req, res) => {
   try {
-    console.log('Authenticated User:', req.user);  // Log user info to verify
+    console.log("🛬 Incoming donation request...");
+    console.log("Request body:", req.body);
+    console.log("Uploaded files:", req.files || req.file);
+    console.log("Authenticated user:", req.user);
+    if (!req.files || req.files.length === 0) {
+      throw new Error("No files uploaded");
+    }
     const donorId = req.user.userId;
-    console.log('Donor ID:', donorId);  // Log donor ID to verify
+
     const {
       foodDescription,
       hoursOld,
       storage,
       weight,
       expirationDate,
-      location,
-      images,
+      lat,
+      lng,
       scheduledFor
     } = req.body;
-    
-    // donor is already available as req.user.userId, no need to destructure it
-    
-    // 1) Get ML prediction
-    const predictedCategory = await predictCategory(
-      foodDescription,
-      hoursOld,
-      storage
-    );
 
-    // 2) Determine perishability
-    // anything not shelf‑stable is perishable
+    const location = {
+      type: 'Point',
+      coordinates: [parseFloat(lng), parseFloat(lat)],
+    };
+
+    // ML prediction (fallback safe)
+    let predictedCategory = 'other';
+    try {
+      predictedCategory = await predictCategory(foodDescription, hoursOld, storage);
+    } catch (e) {
+      console.warn('ML fallback: "other"', e);
+    }
+
     const isPerishable = storage !== 'room temp';
 
-    // 3) Build & save the listing
+    // Image uploads
+    const imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await uploadToCloudinary(file.path);
+        imageUrls.push(result.secure_url);
+
+        // Remove local file after upload
+        fs.unlink(file.path, (err) => {
+          if (err) console.error("File delete failed:", err);
+        });
+      }
+    }
+
     const donation = await FoodListing.create({
       donor: donorId,
-      location,   
+      location,
       foodDescription,
       predictedCategory,
       hoursOld,
       storage,
       weight,
       expirationDate,
-      images,
       scheduledFor,
+      images: imageUrls,
       isPerishable
-      // listingCount, status, volunteer, ngoId — all defaults
     });
 
-    // await axios.post(
-    //   `${process.env.BACKEND_URL}/api/transactions/match`,
-    //   { listingId: donation.donorId }
-    // );
+    res.status(201).json({ success: true, donation });
 
-    return res.status(201).json({ success: true, donation });
   } catch (error) {
     console.error('Error creating donation:', error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: 'Could not create donation',
       details: error.message
