@@ -5,7 +5,7 @@ import {
 } from "../controllers/transactions.controller.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { updateTransactionStatus } from "../controllers/transactions.controller.js";
-import { getUserTransactions } from "../controllers/transactions.controller.js";
+import { getUserTransactions , confirmParticipation , rejectParticipation} from "../controllers/transactions.controller.js";
 
 const router = express.Router();
 
