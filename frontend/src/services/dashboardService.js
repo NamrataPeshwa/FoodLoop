@@ -1,24 +1,50 @@
-// frontend/src/services/dashboardService.js
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_BACKEND_API;
 
+const getAuthToken = () => {
+  const token = localStorage.getItem("token");  // Check if this is available
+
+if (!token) {
+  console.error("No token found in localStorage.");
+  return;
+}
+  return localStorage.getItem("token"); 
+   // Retrieve the token from localStorage
+};
+
 export const getDashboardStats = async () => {
-  const res = await axios.get(`${API_URL}/api/admin/dashboard-stats`);
+  const res = await axios.get(`${API_URL}/api/admin/dashboard-stats`, {
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`  // Include the token in the Authorization header
+    }
+  });
   return res.data;
 };
 
 export const getDashboardAlerts = async () => {
-  const res = await axios.get(`${API_URL}/api/admin/dashboard-alerts`);
+  const res = await axios.get(`${API_URL}/api/admin/dashboard-alerts`, {
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`
+    }
+  });
   return res.data.alerts;
 };
 
 export const getRecentDonations = async () => {
-  const res = await axios.get(`${API_URL}/api/admin/recent-donations`); // adjust route as needed
+  const res = await axios.get(`${API_URL}/api/admin/recent-donations`, {
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`
+    }
+  });
   return res.data.recentDonations;
 };
 
 export const getUpcomingDistributions = async () => {
-  const res = await axios.get(`${API_URL}/api/admin/upcoming-distributions`);
+  const res = await axios.get(`${API_URL}/api/admin/upcoming-distributions`, {
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`
+    }
+  });
   return res.data.upcomingDistributions;
 };

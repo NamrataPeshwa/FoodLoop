@@ -2,9 +2,10 @@ import User from '../models/user.model.js';
 import Transaction from '../models/transaction.model.js';
 
 export const getUserProfile = async (req, res) => {
+  console.log('User profile request received');
   try {
-    const userId = req.user.userId;
-
+    const userId = req.user._id;
+    console.log('User ID:', userId);
     // Fetch the user details from the database
     const user = await User.findById(userId).lean(); // lean for plain JS object
 

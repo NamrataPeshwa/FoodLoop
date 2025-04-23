@@ -24,7 +24,7 @@ import redis from '../utils/redis.js';
 const router = express.Router();
 
 router.use(authMiddleware); 
-router.use(isAdmin);
+// router.use(isAdmin);
 
 router.get('/dashboard-stats', getDashboardStats);
 router.get('/dashboard-alerts', getDashboardAlerts);

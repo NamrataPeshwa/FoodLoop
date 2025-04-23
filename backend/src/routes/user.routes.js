@@ -3,8 +3,7 @@ import { getUserProfile, changePassword } from '../controllers/user.controller.j
 import {authMiddleware} from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-
-router.get('/profile', authMiddleware, getUserProfile);
+router.get('/profile', authMiddleware, getUserProfile); 
 router.post('/change-password', authMiddleware, changePassword);
 
 export default router;

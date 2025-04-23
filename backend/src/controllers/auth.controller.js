@@ -90,7 +90,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { _id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -162,7 +162,7 @@ export const handleGoogleCallback = async (req, res) => {
     await user.save();
 
     const jwtToken = jwt.sign(
-      { userId: user._id, role: user.role },
+      { _id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
