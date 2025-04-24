@@ -23,9 +23,12 @@ export const getPackagingSuggestions = async (req, res) => {
     // Gemini LLM for packaging advice
     const textResponse = await generatePackagingText(prompt);
 
-    // Imagen (text-to-image) for visual packaging aid
-    const imageUrl = await generatePackagingImage(`Eco-friendly packaging for ${metadata.foodType}`);
-
+    let imageUrl = null;
+try {
+  imageUrl = await generatePackagingImage(`Eco-friendly packaging for ${metadata.foodType}`);
+} catch (err) {
+  console.error("Image generation failed:", err);
+}
     const result = {
       suggestion: textResponse,
       visualGuide: imageUrl,
