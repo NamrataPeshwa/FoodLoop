@@ -1,7 +1,7 @@
 import express from 'express';
 import { createDonation, getDonations, getUserDonations } from '../controllers/donations.controller.js';  
 import { authMiddleware } from '../middleware/authMiddleware.js'; 
-import { upload } from '../middleware/multerConfig.js';
+import  { upload } from '../middleware/multerConfig.js';
 
 const router = express.Router();
 

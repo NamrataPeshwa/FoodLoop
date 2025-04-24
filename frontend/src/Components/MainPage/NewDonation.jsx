@@ -72,20 +72,20 @@ const DonationForm = () => {
     if (name === "photo") {
       const file = files[0];
   
-      // Check if file is provided and its size is greater than 1MB
+     
       if (file && file.size > 1024 * 1024) {
         alert("Photo must be less than or equal to 1MB");
         return;
       }
   
-      // Preview the image
+      
       const imageUrl = file ? URL.createObjectURL(file) : null;
-      setPreview(imageUrl); // Show the preview of the image
+      setPreview(imageUrl); 
   
-      // Store the file in the formData
+      
       setFormData((prev) => ({ ...prev, photo: file }));
     } else if (name === "quantity") {
-      // Validate if quantity is a valid number (can also be a decimal)
+      
       const isValidNumber = /^\d+(\.\d+)?$/.test(value);
       if (!isValidNumber && value !== "") return; // Avoid setting invalid value
       setFormData({ ...formData, quantity: value });
