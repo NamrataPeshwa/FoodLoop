@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
 import cloudinary from '../utils/cloudinary.js';  // Adjust the path as needed
-import upload from '../middleware/multer.js';  
+import upload from '../middleware/multerConfig.js';  
 dotenv.config()
 export const signup = async (req, res) => {
   try {

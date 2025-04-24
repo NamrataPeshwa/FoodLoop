@@ -70,7 +70,8 @@ const DonationCard = ({ donation, userRole  }) => {
 };
 
 const DonationList = () => {
-  const userRole = localStorage.getItem("userRole"); 
+  const userRole = sessionStorage.getItem("userRole"); 
+  console.log(userRole);
   const sampleDonations = [
     {
       images: [
