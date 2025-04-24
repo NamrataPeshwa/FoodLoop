@@ -5,44 +5,51 @@ import Transaction from '../models/transaction.model.js';
 // Claim a donation: sets listing to 'requested' and creates a Transaction with timeline
 export const claimDonation = async (req, res) => {
   try {
+    console.log("🔍 Claiming donation ID:", req.params.id);
+    console.log("👤 Authenticated user:", req.user);
+
     const listing = await FoodListing.findById(req.params.id);
 
-    // Ensure listing exists and is pending
-    if (!listing || listing.status !== 'pending') {
+    if (!listing) {
+      console.log("❌ Listing not found");
+      return res.status(404).json({ error: "Donation not found" });
+    }
+
+    if (listing.status !== 'pending') {
+      console.log("⚠️ Listing not pending:", listing.status);
       return res.status(400).json({ error: 'Donation not available for claim' });
     }
 
-    // Update listing status and assign NGO
     listing.status = 'requested';
     listing.ngoId = req.user._id;
 
-    // Optional: assign volunteer if provided
     if (req.body.volunteerId) {
       listing.volunteer = req.body.volunteerId;
     }
 
     await listing.save();
+    console.log("✅ Listing updated");
 
-    // Create a new Transaction record
     const transaction = new Transaction({
       foodListing: listing._id,
       donor: listing.donor,
       ngo: req.user._id,
       volunteer: listing.volunteer || null,
+      timeline: [{ status: 'requested', by: 'ngo', at: new Date() }],
     });
 
-    // Push the NGO 'requested' event onto the timeline
-    transaction.timeline.push({ status: 'requested', by: 'ngo' });
     await transaction.save();
+    console.log("✅ Transaction created");
 
-    return res.status(200).json({
+    res.status(200).json({
       message: 'Donation claimed and transaction created successfully',
       listing,
       transaction,
     });
   } catch (error) {
-    console.error('Error claiming donation:', error);
-    return res.status(500).json({ error: 'Error claiming donation' });
+    console.error('🚨 Error in claimDonation:', error);
+    console.error('🧵 Stack Trace:', error.stack);
+    res.status(500).json({ error: 'Error claiming donation' });
   }
 };
 

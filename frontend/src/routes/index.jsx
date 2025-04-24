@@ -16,6 +16,7 @@ import AdminDashboard from "../pages/AdminDashboard.jsx";
 import DonationList from "../pages/DonationListing.jsx";
 import FoodDonationRequestForm from "../Components/ui/RequestForm.jsx";
 import ChatbotWidget from "../Components/ui/ChatbotUI.jsx";
+import FeedDaily from "../pages/FeedDaily.jsx";
 import ReliefCamps from "../pages/Reliefcamp.jsx";
 
 const AppRoutes = () => {
@@ -36,6 +37,7 @@ const AppRoutes = () => {
         <Route path="/Listings" element={<DonationList  /> } /> 
         <Route path="/request" element={<FoodDonationRequestForm/>} />
         <Route path="/chat" element={<ChatbotWidget/>} />
+        <Route path="/recurring" element={<FeedDaily />} />
         <Route path="/relief" element={<ReliefCamps/>} />
 
         <Route path="/admin" element={<AdminDashboard />} />
@@ -43,7 +45,7 @@ const AppRoutes = () => {
           path="/dashboard"
           element={
             // <ProtectedRoute>
-              <Dashboard />
+            <Dashboard />
             // </ProtectedRoute>
           }
         />
