@@ -5,8 +5,18 @@ import Transaction from '../models/transaction.model.js';
 // Claim a donation: sets listing to 'requested' and creates a Transaction with timeline
 export const claimDonation = async (req, res) => {
   try {
+    console.log("🔍 Claiming donation ID:", req.params.id);
+    console.log("👤 Authenticated user:", req.user);
+
     const listing = await FoodListing.findById(req.params.id);
-    if (!listing || listing.status !== 'pending') {
+
+    if (!listing) {
+      console.log("❌ Listing not found");
+      return res.status(404).json({ error: "Donation not found" });
+    }
+
+    if (listing.status !== 'pending') {
+      console.log("⚠️ Listing not pending:", listing.status);
       return res.status(400).json({ error: 'Donation not available for claim' });
     }
 
@@ -18,6 +28,7 @@ export const claimDonation = async (req, res) => {
     }
 
     await listing.save();
+    console.log("✅ Listing updated");
 
     const transaction = new Transaction({
       foodListing: listing._id,
@@ -28,6 +39,7 @@ export const claimDonation = async (req, res) => {
     });
 
     await transaction.save();
+    console.log("✅ Transaction created");
 
     res.status(200).json({
       message: 'Donation claimed and transaction created successfully',
@@ -35,7 +47,7 @@ export const claimDonation = async (req, res) => {
       transaction,
     });
   } catch (error) {
-    console.error('Error claiming donation:', error);
+    console.error('🚨 Error in claimDonation:', error);
     res.status(500).json({ error: 'Error claiming donation' });
   }
 };
