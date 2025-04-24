@@ -105,6 +105,7 @@ export const getDonations = async (req, res) => {
     console.log("Fetched donations:", donations);
 
     const formattedDonations = donations.map(donation => ({
+      _id: donation._id, // ✅ Add this line
       foodType: donation.foodType || 'Food',
       name: donation.donor?.name || 'Anonymous',
       tags: donation.items?.flatMap(item => item.name) || [],

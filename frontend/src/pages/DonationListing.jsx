@@ -154,6 +154,7 @@ const DonationList = () => {
         console.log(res);
         if (res.data && res.data.data) {
           setDonations(res.data.data);
+         
         }
       } catch (err) {
         console.error("Error fetching donations:", err);
@@ -172,7 +173,7 @@ const DonationList = () => {
         <div className="flex-1 overflow-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
             {dataToRender.map((donation, idx) => (
-              <DonationCard key={idx} donation={donation} userRole={userRole}  onClaim={handleClaim} />
+              <DonationCard key={idx} donation={donation} userRole={userRole}  onClaim={handleClaim}  />
             ))}
           </div>
         </div>
