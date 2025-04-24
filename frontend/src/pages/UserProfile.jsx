@@ -82,11 +82,12 @@ const UserProfile = () => {
     // };
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem("token");
+       
         const res = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/user/profile`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
+       
         });
   
         if (!res.ok) throw new Error("Failed to fetch user data");

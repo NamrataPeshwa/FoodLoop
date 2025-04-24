@@ -25,6 +25,7 @@ class ApiConstants {
   static const String myDonations = '$donationBaseUrl/my';
 
   static const String impactUrl = '$baseUrl/impact';
+  static const String impactStatistics = '$baseUrl/impact/stats';
 
   static const String joyLoopUrl = '$baseUrl/joy';
 

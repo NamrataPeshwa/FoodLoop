@@ -3,6 +3,8 @@ const { google } = googleapis;
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv'
+dotenv.config()
 export const signup = async (req, res) => {
   try {
     console.log("Received signup request:", req.body);
@@ -90,7 +92,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { _id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -100,7 +102,7 @@ export const login = async (req, res) => {
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
-
+console.log(process.env.GOOGLE_CLIENT_ID)
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -117,6 +119,7 @@ export const getGoogleAuthURL = (req, res) => {
       'https://www.googleapis.com/auth/userinfo.email',
     ],
     prompt: "consent",
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI, // ✅ Required!
   });
 
   res.json({ url });
@@ -162,7 +165,7 @@ export const handleGoogleCallback = async (req, res) => {
     await user.save();
 
     const jwtToken = jwt.sign(
-      { userId: user._id, role: user.role },
+      { _id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );

@@ -1,10 +1,12 @@
 // controllers/adminController.js
 import User from '../models/user.model.js';
 import FoodListing from '../models/listing.model.js';
-import DonationTransaction from '../models/transaction.model.js';
+import Transaction from '../models/transaction.model.js';
 import AuditLog from '../models/auditLog.model.js';
 import mongoose from 'mongoose';
 import asyncHandler from '../utils/asynchandler.js';
+import FoodReq from '../models/foodReq.model.js'; 
+
 
 /**
  * Get users with filtering capabilities
@@ -349,7 +351,7 @@ export const getDonations = async (req, res) => {
     // For each food listing, get the donation transaction if it exists
     const donations = await Promise.all(foodListings.map(async (listing) => {
       // Get related donation transaction
-      const transaction = await DonationTransaction.findOne({ foodListing: listing._id })
+      const transaction = await Transaction.findOne({ foodListing: listing._id })
         .populate('ngo', 'name email')
         .populate('volunteer', 'name email');
       
@@ -424,7 +426,7 @@ export const updateDonationStatus = async (req, res) => {
     await foodListing.save();
     
     // Find the related donation transaction if exists
-    let transaction = await DonationTransaction.findOne({ foodListing: id });
+    let transaction = await Transaction.findOne({ foodListing: id });
     
     // If transaction exists, update its timeline
     if (transaction) {
@@ -511,7 +513,7 @@ export const getOverviewStats = async (req, res) => {
       User.countDocuments({ lastLogin: { $gte: cutoffDate } }), // Assuming you track lastLogin
       FoodListing.countDocuments({}),
       FoodListing.countDocuments({ createdAt: { $gte: cutoffDate } }),
-      DonationTransaction.countDocuments({ 
+      Transaction.countDocuments({ 
         'timeline.status': 'completed', 
         'timeline.timestamp': { $gte: cutoffDate } 
       }),
@@ -956,7 +958,7 @@ export const getAuditLogs = async (req, res) => {
 
 
 export const getDashboardStats = asyncHandler(async (req, res) => {
-  const [totalDonatedAgg] = await DonationTransaction.aggregate([
+  const [totalDonatedAgg] = await Transaction.aggregate([
     { $group: { _id: null, totalKg: { $sum: "$value" } } }
   ]);
 
@@ -970,8 +972,8 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
   const coverageAreas = locationSet.size;
 
   // Impact Score: a dummy logic (customize)
-  const deliveredTx = await DonationTransaction.countDocuments({ confirmed: true });
-  const totalTx = await DonationTransaction.countDocuments();
+  const deliveredTx = await Transaction.countDocuments({ confirmed: true });
+  const totalTx = await Transaction.countDocuments();
   const impactScore = totalTx ? ((deliveredTx / totalTx) * 100).toFixed(1) : 0;
 
   res.json({
@@ -985,7 +987,7 @@ export const getDashboardAlerts = asyncHandler(async (req, res) => {
   const alerts = [];
 
   // Check for low food stock in certain areas (mock logic)
-  const lowStockRegions = await FoodRequest.aggregate([
+  const lowStockRegions = await FoodReq.aggregate([
     { $match: { status: 'pending' } },
     { $group: { _id: "$region", totalQty: { $sum: "$quantity" } } },
     { $match: { totalQty: { $lt: 100 } } }
@@ -1029,7 +1031,7 @@ export const getDashboardAlerts = asyncHandler(async (req, res) => {
   res.json({ alerts });
 });
 export const getRecentDonations = asyncHandler(async (req, res) => {
-  const donations = await DonationTransaction.find()
+  const donations = await Transaction.find()
     .sort({ createdAt: -1 })
     .limit(5)
     .populate('donor', 'organizationName') // Only get donor name
