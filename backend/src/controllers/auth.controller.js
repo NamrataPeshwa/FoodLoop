@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
-import {uploadToCloudinary } from '../utils/uploadToCloudinary .js';  // Adjust the path as needed
+import {uploadToCloudinary } from '../utils/cloudinary.js';  // Adjust the path as needed
 import {upload} from '../middleware/multerConfig.js';  
 dotenv.config()
 export const signup = async (req, res) => {
