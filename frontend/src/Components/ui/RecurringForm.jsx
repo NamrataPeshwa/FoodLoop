@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Calendar, Thermometer, Clock, Scale, PlusCircle } from 'lucide-react';
+import { createRecurForm } from '../../services/dashboardService';
 
 export default function RecurringForm() {
   const [formData, setFormData] = useState({
@@ -15,14 +16,16 @@ export default function RecurringForm() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Food reminder added: ' + JSON.stringify(formData, null, 2));
+    // alert('Food reminder added: ' + JSON.stringify(formData, null, 2));
+    const data = await createRecurForm(formData);
+    console.log(data);
   };
 
   return (
     <div className="max-w-md  bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-1 w-[30rem]">
-      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-4 text-white font-bold text-xl flex items-center">
+      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 p-4 text-white font-bold text-xl flex items-center rounded-t-lg">
         <PlusCircle className="mr-2" />
         Add Food Reminder
       </div>

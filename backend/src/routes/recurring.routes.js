@@ -1,8 +1,12 @@
 import express from 'express';
-import { createRecurring, getMyRecurring } from '../controllers/recurring.controller.js';
+import { createRecurring, getMyRecurring,updateRecurring } from '../controllers/recurring.controller.js';
 import {authMiddleware} from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+// routes/recurringRoutes.js
+
+router.put('/recurring/:id', authMiddleware, updateRecurring);
+
 router.post('/create', authMiddleware, createRecurring);
 router.get('/existing', authMiddleware, getMyRecurring);
 export default router;

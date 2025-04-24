@@ -11,7 +11,7 @@ export const createRecurring = async (req, res) => {
       startDate, // ISO date string
       weight, // e.g. "2 kg"
     } = req.body;
-
+    console.log("--------------------------------------"+req.body)
     // 1) Call your ML service exactly like your `predictCategory` signature
     const predictedCategory = await predictCategory(foodType, 0, storage);
 
@@ -72,5 +72,41 @@ export const getMyRecurring = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Failed to fetch reminders" });
+  }
+};
+// controllers/recurringController.js
+
+export const updateRecurring = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      foodType,
+      frequency,
+      startDate,
+      weight,
+      storage
+    } = req.body;
+
+    const updated = await RecurringDonation.findOneAndUpdate(
+      { _id: id, donor: req.user._id },
+      {
+        foodType,
+        frequency,
+        startDate,
+        weight,
+        storage,
+        nextScheduled: new Date(startDate),
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Reminder not found" });
+    }
+
+    return res.status(200).json({ success: true, updated });
+  } catch (err) {
+    console.error("updateRecurring error:", err);
+    return res.status(500).json({ success: false, message: "Update failed" });
   }
 };

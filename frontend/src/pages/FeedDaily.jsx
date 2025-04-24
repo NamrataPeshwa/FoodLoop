@@ -4,7 +4,7 @@ import ExistingReminders from "../components/ui/ExistingReminders";
 
 const FeedDaily = () => {
   return (
-    <div className="bg-white w-full h-full flex justify-center items-center">
+    <div className="bg-white w-full h-full flex  items-center p-5">
       <RecurringForm />
       <ExistingReminders />
     </div>
