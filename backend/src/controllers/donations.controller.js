@@ -96,11 +96,13 @@ export const getDonations = async (req, res) => {
     }).populate('donor', 'name');
 
     const formattedDonations = donations.map(donation => ({
-      foodType: donation.foodType,
+      foodType: donation.predictedCategory || 'Food',
       name: donation.donor?.name || 'Anonymous',
-      tags: donation.tags || [],
-      location: donation.pickupLocation || 'N/A',
-      expiryDate: donation.expiryDate,
+      tags: donation.items?.flatMap(item => item.name) || [],
+      location: donation.location?.coordinates 
+        ? `Lat: ${donation.location.coordinates[1]}, Lng: ${donation.location.coordinates[0]}`
+        : 'N/A',
+      expiryDate: donation.expirationDate,
       images: donation.images || [],
     }));
 
