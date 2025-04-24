@@ -47,6 +47,12 @@ const DonationCard = ({ donation, isNGO }) => {
           <MapPin className="w-4 h-4" />
           <span>{donation.location}</span>
         </div>
+        <div className="flex items-center text-sm text-gray-600 gap-1">
+          <MapPin className="w-4 h-4" />
+          <span>{donation.adress}</span>
+        </div>
+        
+
 
         <div className="flex items-center text-sm text-gray-600 gap-1">
           <AlarmClock className="w-4 h-4" />

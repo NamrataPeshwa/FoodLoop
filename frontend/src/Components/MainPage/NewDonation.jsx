@@ -53,12 +53,10 @@ const DonationForm = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         const locationData = await getAddressFromCoords(latitude, longitude);
-        setFormData((prev) => ({
-          ...prev,
-          landmark: locationData.landmark,
-          area: locationData.area,
-          address: locationData.address,
-        }));
+        // Combine all parts into a single full address
+      const fullAddress = `${locationData.landmark}, ${locationData.area}, ${locationData.address}`;
+
+      
       },
       () => {
         alert("Unable to retrieve your location");
@@ -131,6 +129,7 @@ const DonationForm = () => {
       submissionData.append("lat", 12.9716); // You can pull this from state if needed
       submissionData.append("lng", 77.5946);
       submissionData.append("scheduledFor", new Date().toISOString()); // Placeholder
+      submissionData.append("fullAdress",fullAddress);
   
       if (formData.photo) {
         submissionData.append("images", formData.photo);
@@ -292,7 +291,7 @@ return (
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block font-semibold">Landmark</label>
                     <input
                       type="text"
@@ -316,7 +315,7 @@ return (
                       placeholder="e.g. Andheri West"
                       required
                     />
-                  </div>
+                  </div> */}
                 </>
               )}
 
