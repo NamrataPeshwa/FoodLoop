@@ -100,6 +100,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await loginUser(email, password);
+    console.log("Login response:", response.user);
     if (response.token) {
       setToken(response.token);
       localStorage.setItem("token", response.token);
@@ -131,7 +132,7 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user has a specific role
   const hasRole = (role) => {
-    const userRole = sessionStorage.getItem("userRole");
+    const userRole = localStorage.getItem("userRole");
     return userRole === role;
   };
 
