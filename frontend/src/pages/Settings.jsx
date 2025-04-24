@@ -9,21 +9,50 @@ export default function SettingsPage() {
   const navigate=useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'johndoe@example.com',
-    phone: '+1 234 567 8900',
-    address: '123 Main Street, Anytown, USA',
-    website: 'mywebsite.com',
-    notifications: {
-      email: true,
-      push: false,
-      sms: true,
-      newsletter: false
-    },
-    twoFactorEnabled: false
-  });
-
+  // const [user, setUser] = useState({
+  //   // name: 'John Doe',
+  //   // email: 'johndoe@example.com',
+  //   // phone: '+1 234 567 8900',
+  //   // address: '123 Main Street, Anytown, USA',
+  //   // website: 'mywebsite.com',
+  //   // notifications: {
+  //   //   email: true,
+  //   //   push: false,
+  //   //   sms: true,
+  //   //   newsletter: false
+  //   // },
+  //   // twoFactorEnabled: false
+  // });
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/profile`);
+        const data = response.data.user;
+  
+        setUser({
+          name: data.name,
+          email: data.email,
+          phone: data.contactNumber,
+          address: data.address,
+          website: data.website,
+          notifications: {  // hardcoded for now
+            email: true,
+            push: false,
+            sms: true,
+            newsletter: false
+          },
+          twoFactorEnabled: false  // hardcoded for now
+        });
+  
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch user profile", err);
+        setIsLoading(false);
+      }
+    };
+  
+    fetchUserProfile();
+  }, []);
   // Simulated save function
   const handleSave = (e) => {
     e.preventDefault();
