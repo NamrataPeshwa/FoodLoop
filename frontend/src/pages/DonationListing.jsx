@@ -6,7 +6,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
 import axios from "axios";
 
-const DonationCard = ({ donation, isNGO }) => {
+const DonationCard = ({ donation, userRole  }) => {
   const settings = {
     dots: true,
     infinite: true,
@@ -47,13 +47,19 @@ const DonationCard = ({ donation, isNGO }) => {
           <MapPin className="w-4 h-4" />
           <span>{donation.location}</span>
         </div>
+        <div className="flex items-center text-sm text-gray-600 gap-1">
+          <MapPin className="w-4 h-4" />
+          <span>{donation.adress}</span>
+        </div>
+        
+
 
         <div className="flex items-center text-sm text-gray-600 gap-1">
           <AlarmClock className="w-4 h-4" />
           <span>Expires: {donation.expiryDate}</span>
         </div>
 
-        {isNGO && (
+        {userRole === 'NGO' && (
           <button className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md transition duration-200">
             Claim
           </button>
@@ -63,7 +69,9 @@ const DonationCard = ({ donation, isNGO }) => {
   );
 };
 
-const DonationList = ({  isNGO }) => {
+const DonationList = () => {
+  const userRole = sessionStorage.getItem("userRole"); 
+  console.log(userRole);
   const sampleDonations = [
     {
       images: [
@@ -131,7 +139,7 @@ const DonationList = ({  isNGO }) => {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
      
       {dataToRender.map((donation, idx) => (
-        <DonationCard key={idx} donation={donation} isNGO={isNGO} />
+        <DonationCard key={idx} donation={donation} userRole={userRole}  />
       ))}
     </div>
     </div>
