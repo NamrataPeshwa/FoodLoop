@@ -1,9 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:foodloop_mobile/features/donations/services/joy_loop_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 class JoyLoopsScreen extends StatefulWidget {
+  const JoyLoopsScreen({super.key});
+
   @override
   _JoyLoopsScreenState createState() => _JoyLoopsScreenState();
 }
@@ -30,16 +34,35 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
     setState(() => _isLoading = true);
     
     try {
-      final moments = await _joyLoopService.getJoyMoments();
-      final donors = await _joyLoopService.getTopDonors();
-      final spreaders = await _joyLoopService.getJoySpreaders();
+      // Catch and handle each API call separately to prevent one failure from blocking others
+      try {
+        final moments = await _joyLoopService.getJoyMoments();
+        setState(() => _joyMoments = moments);
+        log('Joy moments loaded: ${moments.length}');
+      } catch (e) {
+        log('Error loading joy moments: $e');
+        setState(() => _joyMoments = []);
+      }
       
-      setState(() {
-        _joyMoments = moments;
-        _topDonors = donors;
-        _joySpreaders = spreaders;
-      });
+      try {
+        final donors = await _joyLoopService.getTopDonors();
+        setState(() => _topDonors = donors);
+        log('Top donors loaded: ${donors.length}');
+      } catch (e) {
+        log('Error loading top donors: $e');
+        setState(() => _topDonors = []);
+      }
+      
+      try {
+        final spreaders = await _joyLoopService.getJoySpreaders();
+        setState(() => _joySpreaders = spreaders);
+        log('Joy spreaders loaded: ${spreaders.length}');
+      } catch (e) {
+        log('Error loading joy spreaders: $e');
+        setState(() => _joySpreaders = []);
+      }
     } catch (e) {
+      log('Error loading data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading joy loops: $e'))
       );
@@ -79,8 +102,12 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
       setState(() => _selectedImage = null);
       
       // Refresh joy moments
-      final moments = await _joyLoopService.getJoyMoments();
-      setState(() => _joyMoments = moments);
+      try {
+        final moments = await _joyLoopService.getJoyMoments();
+        setState(() => _joyMoments = moments);
+      } catch (e) {
+        log('Error refreshing joy moments: $e');
+      }
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Joy moment shared successfully!'))
@@ -105,6 +132,45 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
       itemCount: _joyMoments.length,
       itemBuilder: (context, index) {
         final moment = _joyMoments[index];
+        
+        // Safe getter function to handle null or missing properties
+        String getValue(dynamic obj, String key, [String defaultValue = '']) {
+          if (obj == null) return defaultValue;
+          if (obj is! Map) return defaultValue;
+          return obj[key]?.toString() ?? defaultValue;
+        }
+        
+        // Safely get nested properties
+        String donorName = 'Anonymous';
+        if (moment != null && moment is Map) {
+          if (moment.containsKey('donor') && moment['donor'] != null) {
+            if (moment['donor'] is Map) {
+              donorName = getValue(moment['donor'], 'name', 'Anonymous');
+            } else if (moment['donor'] is String) {
+              donorName = moment['donor'];
+            }
+          } else if (moment.containsKey('name')) {
+            donorName = getValue(moment, 'name', 'Anonymous');
+          }
+        }
+        
+        // Get caption and image safely
+        String caption = '';
+        if (moment is Map) {
+          caption = getValue(moment, 'caption', '');
+          if (caption.isEmpty) {
+            caption = getValue(moment, 'content', ''); // Alternative key name
+          }
+        }
+        
+        String imageUrl = '';
+        if (moment is Map) {
+          imageUrl = getValue(moment, 'image', '');
+          if (imageUrl.isEmpty) {
+            imageUrl = getValue(moment, 'media', ''); // Alternative key name
+          }
+        }
+        
         return Card(
           margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
           child: Column(
@@ -114,17 +180,17 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
                 leading: CircleAvatar(
                   child: Icon(Icons.person),
                 ),
-                title: Text(moment['donor']['name'] ?? 'Anonymous'),
+                title: Text(donorName),
                 subtitle: Text('Shared a joy moment'),
               ),
-              if (moment['caption'] != null && moment['caption'].isNotEmpty)
+              if (caption.isNotEmpty)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(moment['caption']),
+                  child: Text(caption),
                 ),
-              if (moment['image'] != null)
+              if (imageUrl.isNotEmpty)
                 Image.network(
-                  moment['image'],
+                  imageUrl,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) => 
@@ -161,10 +227,26 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
   }
   
   Widget _buildDonorsList() {
+    if (_topDonors.isEmpty) {
+      return Center(
+        child: Text('No top donors data available'),
+      );
+    }
+    
     return ListView.builder(
       itemCount: _topDonors.length,
       itemBuilder: (context, index) {
         final donor = _topDonors[index];
+        
+        // Safety check for data format
+        String name = 'Anonymous';
+        String totalDonations = '0';
+        
+        if (donor is Map) {
+          name = donor['name']?.toString() ?? 'Anonymous';
+          totalDonations = donor['totalDonations']?.toString() ?? '0';
+        }
+        
         return ListTile(
           leading: CircleAvatar(
             child: Text('${index + 1}'),
@@ -172,8 +254,8 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
                            index == 1 ? Colors.grey[300] :
                            index == 2 ? Colors.brown[300] : Colors.orange[100],
           ),
-          title: Text(donor['name'] ?? 'Anonymous'),
-          subtitle: Text('${donor['totalDonations']} donations'),
+          title: Text(name),
+          subtitle: Text('$totalDonations donations'),
           trailing: Icon(Icons.star, color: Colors.amber),
         );
       },
@@ -181,10 +263,27 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
   }
   
   Widget _buildSpreadersList() {
+    if (_joySpreaders.isEmpty) {
+      return Center(
+        child: Text('No joy spreaders data available'),
+      );
+    }
+    
     return ListView.builder(
       itemCount: _joySpreaders.length,
       itemBuilder: (context, index) {
         final spreader = _joySpreaders[index];
+        
+        // Safety check for data format
+        String name = 'Anonymous';
+        String spreadCount = '0';
+        
+        if (spreader is Map) {
+          name = spreader['name']?.toString() ?? 'Anonymous';
+          spreadCount = spreader['spreadCount']?.toString() ?? 
+                       spreader['deliveries']?.toString() ?? '0';
+        }
+        
         return ListTile(
           leading: CircleAvatar(
             child: Text('${index + 1}'),
@@ -192,8 +291,8 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
                            index == 1 ? Colors.grey[300] :
                            index == 2 ? Colors.brown[300] : Colors.orange[100],
           ),
-          title: Text(spreader['name'] ?? 'Anonymous'),
-          subtitle: Text('${spreader['spreadCount']} deliveries'),
+          title: Text(name),
+          subtitle: Text('$spreadCount deliveries'),
           trailing: Icon(Icons.volunteer_activism, color: Colors.red),
         );
       },
