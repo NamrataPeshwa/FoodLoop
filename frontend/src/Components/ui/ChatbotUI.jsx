@@ -1,6 +1,5 @@
-// ChatbotWidget.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { MessageCircle } from "lucide-react";
+
 import { gsap } from "gsap";
 
 const ChatbotWidget = () => {
@@ -18,45 +17,45 @@ const ChatbotWidget = () => {
     }
   }, [isOpen]);
 
-  const handleMouseEnter = () => {
-    gsap.to(iconRef.current, {
-      scale: 1.2,
-      boxShadow: "0 0 20px #7e22ce",
-      duration: 0.3,
-    });
-  };
+  
 
-  const handleMouseLeave = () => {
+  
+
+  const toggleChat = () => {
+    setIsOpen(prev => !prev);
     gsap.to(iconRef.current, {
-      scale: 1,
-      boxShadow: "0 0 0px transparent",
-      duration: 0.3,
+      y: isOpen ? 0 : -10,
+      duration: 0.2,
     });
   };
 
   return (
     <>
-      {/* Chatbot Icon */}
-      <div
+      {/* Chat Icon Button */}
+      <button
         ref={iconRef}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-purple-600 text-white flex items-center justify-center rounded-full cursor-pointer shadow-lg"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={() => setIsOpen((prev) => !prev)}
+        className="fixed bottom-6 right-6 z-50 w-24 h-24 bg-transparent  flex items-center justify-center  "
+        onClick={toggleChat}
+        
+        aria-label="Open Chatbot"
       >
-        <MessageCircle className="w-6 h-6" />
-      </div>
+        <img src="./mas1.png"></img>
+      </button>
 
       {/* Chat Window */}
       {isOpen && (
         <div
           ref={chatRef}
-          className="fixed bottom-20 left-6 z-40 w-80 h-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+          className="fixed bottom-24 right-6 w-80 h-96 bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-40"
         >
-          <div className="bg-purple-600 text-white p-4 text-lg font-semibold">🤖 FoodLoop AI Chat</div>
+          <div className="bg-purple-600 text-white p-4 text-lg font-semibold">
+            🤖 FoodLoop AI Chat
+          </div>
           <div className="flex-1 p-3 overflow-y-auto text-sm text-gray-700">
             <p>Hello! 👋 How can I help you today?</p>
-            <p className="mt-2 text-gray-500">Ask me anything about donations, FoodLoop features, or getting started.</p>
+            <p className="mt-2 text-gray-500">
+              Ask me anything about donations, FoodLoop features, or getting started.
+            </p>
           </div>
           <div className="p-2 border-t flex">
             <input
@@ -64,7 +63,9 @@ const ChatbotWidget = () => {
               placeholder="Type your message..."
               className="flex-1 px-3 py-2 border rounded-l-md outline-none text-sm"
             />
-            <button className="bg-purple-600 px-4 text-white rounded-r-md text-sm">Send</button>
+            <button className="bg-purple-600 px-4 text-white rounded-r-md text-sm">
+              Send
+            </button>
           </div>
         </div>
       )}
