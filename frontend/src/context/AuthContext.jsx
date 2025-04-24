@@ -103,6 +103,7 @@ export const AuthProvider = ({ children }) => {
     if (response.token) {
       setToken(response.token);
       localStorage.setItem("token", response.token);
+      localStorage.setItem("userRole", response.data.user.role);
       
       // Set user in state and sessionStorage
       setUser(response.user);
