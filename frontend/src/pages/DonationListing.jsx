@@ -1,9 +1,10 @@
-import React from "react";
+import React ,{ useEffect, useState } from "react";
 import { MapPin, AlarmClock, UserRound } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
+import axios from "axios";
 
 const DonationCard = ({ donation, isNGO }) => {
   const settings = {
@@ -62,7 +63,7 @@ const DonationCard = ({ donation, isNGO }) => {
   );
 };
 
-const DonationList = ({ donations, isNGO }) => {
+const DonationList = ({  isNGO }) => {
   const sampleDonations = [
     {
       images: [
@@ -100,7 +101,15 @@ const DonationList = ({ donations, isNGO }) => {
   useEffect(() => {
     const fetchDonations = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_BACKEND_API}/api/donations/list`);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_API}/api/donations/list`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        console.log(res);
         if (res.data && res.data.data) {
           setDonations(res.data.data);
         }
