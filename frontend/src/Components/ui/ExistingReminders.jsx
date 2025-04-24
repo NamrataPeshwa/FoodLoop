@@ -12,6 +12,7 @@ const ExistingReminders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingReminder, setEditingReminder] = useState(null);
+  
   const fetchExistingReminder = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/recurring/existing`, {
@@ -27,35 +28,14 @@ const ExistingReminders = () => {
       setLoading(false);
     }
   };
+  
   useEffect(() => {
-    const fetchExistingReminder = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/api/recurring/existing`, {
-          headers: {
-            Authorization: `Bearer ${getAuthToken()}`,
-          },
-        });
-        setReminders(response?.data?.recurs || []);
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to fetch reminders:", err);
-        setError("Failed to load reminders");
-        setLoading(false);
-      }
-    };
     fetchExistingReminder();
   }, []);
 
   if (loading) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        {editingReminder && (
-          <EditReminderModal
-            reminder={editingReminder}
-            onClose={() => setEditingReminder(null)}
-            onUpdated={fetchExistingReminder}
-          />
-        )}
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
           <p className="text-gray-600 text-lg">Loading reminders...</p>
@@ -78,7 +58,15 @@ const ExistingReminders = () => {
   }
 
   return (
-    <div className="p-6 max-w-6xl ">
+    <div className="p-6 max-w-6xl">
+      {editingReminder && (
+        <EditReminderModal
+          reminder={editingReminder}
+          onClose={() => setEditingReminder(null)}
+          onUpdated={fetchExistingReminder}
+        />
+      )}
+      
       <h2 className="text-3xl font-bold mb-8 text-gray-800">Your Reminders</h2>
 
       {reminders && reminders.length > 0 ? (

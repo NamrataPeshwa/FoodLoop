@@ -86,7 +86,7 @@ export const updateRecurring = async (req, res) => {
       weight,
       storage
     } = req.body;
-
+    console.log("user ------>", req.user._id)
     const updated = await RecurringDonation.findOneAndUpdate(
       { _id: id, donor: req.user._id },
       {

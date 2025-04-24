@@ -5,7 +5,7 @@ import {authMiddleware} from '../middleware/authMiddleware.js';
 const router = express.Router();
 // routes/recurringRoutes.js
 
-router.put('/recurring/:id', authMiddleware, updateRecurring);
+router.put('update/:id', authMiddleware, updateRecurring);
 
 router.post('/create', authMiddleware, createRecurring);
 router.get('/existing', authMiddleware, getMyRecurring);
