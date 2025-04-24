@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { FoodDistributionSidebar } from "./Sidebar";
 import SustainablePackagingModal from "./Packing";
+import Loader from "../ui/Loader";
 
 const getAddressFromCoords = async (lat, lon) => {
   try {
