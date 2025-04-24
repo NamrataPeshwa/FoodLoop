@@ -48,6 +48,7 @@ export const claimDonation = async (req, res) => {
     });
   } catch (error) {
     console.error('🚨 Error in claimDonation:', error);
+    console.error('🧵 Stack Trace:', error.stack);
     res.status(500).json({ error: 'Error claiming donation' });
   }
 };
