@@ -20,8 +20,10 @@ export const getUserProfile = async (req, res) => {
     // Fetch donations data for 'donor' role
     if (user.role === 'donor') {
 
-      donations = await Transaction.find({ donor: userId }).sort({ createdAt: -1 });
-
+      donations = await Transaction.find({ donor: userId })
+  .sort({ createdAt: -1 })
+  .populate('foodListing', 'foodType weight')
+  .populate('ngo', 'name address');
 
       totalDonations = donations.length;
 
