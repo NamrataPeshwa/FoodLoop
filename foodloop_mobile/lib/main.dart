@@ -10,6 +10,7 @@ import 'package:foodloop_mobile/features/maps/FoodMapScreen.dart';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:foodloop_mobile/features/maps/demo_map.dart';
 
 void initApp() {
   // Ensure Flutter is initialized
@@ -73,6 +74,8 @@ class FoodLoopApp extends StatelessWidget {
         '/joyloops': (context) => JoyLoopsScreen(),
          '/map': (context) => FoodMapScreen(),
          '/dashboard': (context) => DashboardScreen(),
+         '/demo-map': (context) => GoogleMapDemo(),
+
       },
     );
   }

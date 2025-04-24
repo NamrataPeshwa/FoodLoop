@@ -6,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 
 class FoodMapScreen extends StatefulWidget {
+  const FoodMapScreen({super.key});
+
   @override
   _FoodMapScreenState createState() => _FoodMapScreenState();
 }
@@ -15,12 +17,51 @@ class _FoodMapScreenState extends State<FoodMapScreen> {
   final Completer<GoogleMapController> _controller = Completer();
   final Map<MarkerId, Marker> _markers = {};
   bool _isLoading = true;
-  
+  // Position tracking
+  StreamSubscription<Position>? _positionStreamSubscription;
+  Position? _lastKnownPosition;
+
+  // Set up position stream to continuously track user location
+  void _startPositionStream() {
+    const locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10, // Only notify if user moves at least 10 meters
+    );
+    
+    _positionStreamSubscription = Geolocator.getPositionStream(
+      locationSettings: locationSettings
+    ).listen((Position position) {
+      setState(() {
+        _lastKnownPosition = position;
+        
+        // Update user position marker
+        final userMarkerId = MarkerId('user_location');
+        final userMarker = Marker(
+          markerId: userMarkerId,
+          position: LatLng(position.latitude, position.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: InfoWindow(title: 'Your Location')
+        );
+        
+        _markers[userMarkerId] = userMarker;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _positionStreamSubscription?.cancel();
+    super.dispose();
+  }
   // Default center position (can be updated with user's location)
+  
   CameraPosition _initialPosition = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962), // Default position
+    target: LatLng(37.42796133580664, -122.085749655962), // Default position until we get user location
     zoom: 14.0,
   );
+  
+  // This will store the user's actual location once retrieved
+  Position? _currentPosition;
   
   @override
   void initState() {

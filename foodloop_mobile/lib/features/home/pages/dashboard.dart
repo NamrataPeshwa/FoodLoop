@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:foodloop_mobile/core/theme/app_pallete.dart';
 import 'package:foodloop_mobile/core/utils/app_loader.dart';
 import 'package:foodloop_mobile/features/auth/services/auth_service.dart';
 import 'package:foodloop_mobile/features/donations/services/impact_statistics.dart';
@@ -19,7 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic> _userProfile = {};
   Map<String, dynamic> _impactStats = {};
   bool _isLoading = true;
-  int _selectedIndex = 0; // For bottom navigation
+  int _selectedIndex = 2; // For bottom navigation
 
   @override
   void initState() {
@@ -37,7 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       log('User profile loaded: $userProfile'); // Debug output
       
       setState(() {
-        _userProfile = userProfile;
+        _userProfile = userProfile['user'];
         _impactStats = impactStats;
         log('Impact stats loaded: $_impactStats'); // Add debug output for impact stats
         log('Updated user profile: $_userProfile'); // Add debug to verify state update
@@ -59,25 +60,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return; // No need to navigate if already on this page
 
     switch (index) {
-      case 0: // Dashboard
+      case 0: // Joy Loops
         setState(() {
           _selectedIndex = 0;
         });
-        break;
-      case 1: // Donate Food
-         if (_userProfile['role'] == 'donor'){
-        Navigator.pushNamed(context, '/donate');
-         }else{
-          Navigator.pushNamed(context, '/available-donation');
-         }
-        break;
-      case 2: // Food Map
-        Navigator.pushNamed(context, '/map');
-        break;
-      case 3: // Joy Loops
         Navigator.pushNamed(context, '/joyloops');
         break;
+      case 1: // Donate Food
+        setState(() {
+          _selectedIndex = 1;
+        });
+          print(_userProfile);
+          Navigator.pushNamed(context, '/available-donation');
+        break;
+      case 2: // Dashboard
+        setState(() {
+          _selectedIndex = 2;
+        });
+        // Already on dashboard, no navigation needed
+        break;
+      case 3: // Food Map
+        setState(() {
+          _selectedIndex = 3;
+        });
+        Navigator.pushNamed(context, '/demo-map');
+        break;
       case 4: // Profile/More
+        setState(() {
+          _selectedIndex = 4;
+        });
         _showProfileMenu();
         break;
     }
@@ -183,7 +194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: AppPallete.gradient1,
       ),
       body:
           _isLoading
@@ -236,14 +247,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 leading: Icon(Icons.volunteer_activism, color: Colors.orange),
                                 title: Text('Your Donations'),
                                 trailing: Text(
-                                  '${_impactStats['totalDonations']}',
+                                  _userProfile['donations'].toString(),
                                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                 ),
                               ),
                               ElevatedButton(
                                 onPressed: () => Navigator.pushNamed(context, '/donate'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
+                                  backgroundColor: AppPallete.gradient1,
                                   foregroundColor: Colors.white,
                                 ),
                                 child: Text('Make a Donation'),
@@ -262,7 +273,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ListTile(
-                                leading: Icon(Icons.assignment_turned_in, color: Colors.orange),
+                                leading: Icon(Icons.assignment_turned_in, color: AppPallete.gradient1),
                                 title: Text('Claimed Donations'),
                                 trailing: Text(
                                   '${_impactStats['ngoClaimedDonations'] ?? 0}',
@@ -287,18 +298,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: _onItemTapped,
         items: <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: Icon(Icons.favorite),
+            label: 'Joy Loops',
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.restaurant),
             label:  _userProfile['role'] == 'donor'? 'Donate' : 'Donations',
           ),
-          const BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Map'),
           const BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Joy Loops',
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
           ),
+          const BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Map'),
           const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

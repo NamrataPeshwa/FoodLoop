@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:foodloop_mobile/core/theme/app_pallete.dart';
+import 'package:foodloop_mobile/core/utils/app_loader.dart';
 import 'package:foodloop_mobile/features/donations/services/donation_service.dart';
 import 'package:foodloop_mobile/features/donations/widgets/donation_card.dart';
 
@@ -55,7 +56,7 @@ class _AvailableDonationsScreenState extends State<AvailableDonationsScreen> {
           builder: (context, snapshot) {
             print('Snapshot data: ${snapshot.data}'); // Debug output
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: FancyFoodLoader());
             } else if (snapshot.hasError) {
               return Center(
                 child: Column(

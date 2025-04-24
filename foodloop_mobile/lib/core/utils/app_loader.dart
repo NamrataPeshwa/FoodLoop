@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:foodloop_mobile/core/theme/app_pallete.dart';
+
 class FancyFoodLoader extends StatefulWidget {
   const FancyFoodLoader({Key? key}) : super(key: key);
 
@@ -11,14 +13,18 @@ class FancyFoodLoader extends StatefulWidget {
 class _FancyFoodLoaderState extends State<FancyFoodLoader>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  final List<String> foodEmojis = ['🍕', '🍔', '🍟', '🍣', '🍩', '🍜'];
+  final List<String> foodEmojis = [
+    '🍕', '🍔', '🍟', '🍣', '🍩', '🍜', '🍦', '🍰', '🍎', 
+    '🍒', '🍓', '🥑', '🌮', '🌯', '🍗', '🥩', '🥪', '🍪',
+    '🥗', '🍱', '🍚', '🥤', '🍇', '🍉'
+  ];
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds:5),
     )..repeat();
   }
 
@@ -41,7 +47,7 @@ class _FancyFoodLoaderState extends State<FancyFoodLoader>
                 width: 100,
                 height: 100,
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation(Colors.deepOrange),
+                  valueColor: AlwaysStoppedAnimation(AppPallete.gradient1),
                   strokeWidth: 6,
                 ),
               ),
@@ -49,7 +55,7 @@ class _FancyFoodLoaderState extends State<FancyFoodLoader>
                 angle: _controller.value * 2 * pi,
                 child: Text(
                   foodEmojis[(_controller.value * foodEmojis.length).floor() % foodEmojis.length],
-                  style: const TextStyle(fontSize: 30),
+                  style: const TextStyle(fontSize: 60),
                 ),
               ),
             ],
