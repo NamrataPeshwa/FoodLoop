@@ -80,7 +80,7 @@ export function FoodDistributionSidebar() {
       href: "/logout",
       icon: <IconLogout className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200 group-hover:text-red-500" />,
       className: "group",
-      labelClassName: "group-hover:text-red-500",
+      labelclassname: "group-hover:text-red-500",
     },
   ];
 
@@ -91,7 +91,7 @@ export function FoodDistributionSidebar() {
       label: "Request for Food",
       onClick: handleOpenRequestModal,
       icon: <IconSalad className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200 group-hover:text-red-500" />,
-      labelClassName: "font-medium text-emerald-600 dark:text-emerald-400",
+      labelclassname: "font-medium text-emerald-600 dark:text-emerald-400",
     };
 
     const dashboardIndex = links.findIndex((link) => link.label === "Dashboard");
@@ -104,7 +104,7 @@ export function FoodDistributionSidebar() {
       href: "/admin",
       icon: <IconShieldCheck className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />,
       className: "bg-emerald-50 dark:bg-emerald-900/20",
-      labelClassName: "font-medium text-emerald-600 dark:text-emerald-400",
+      labelclassname: "font-medium text-emerald-600 dark:text-emerald-400",
     };
 
     const settingsIndex = links.findIndex((link) => link.label === "Settings");
@@ -127,7 +127,7 @@ export function FoodDistributionSidebar() {
                   key={idx}
                   link={link}
                   className={link.className || ""}
-                  labelClassName={link.labelClassName || ""}
+                  labelclassname={link.labelclassname || ""}
                   onClick={link.onClick} // 👈 Support modal-triggering
                 />
               ))}
