@@ -37,7 +37,14 @@ const Login = () => {
     setLoading(true);
     try {
       const success = await login(email, password);
-      if (success) navigate("/dashboard");
+      if (success) {
+        const userRole = sessionStorage.getItem('userRole');
+        if (userRole === 'admin') {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      }
     } catch (error) {
       console.error("Login error:", error);
       alert("Failed to log in. Please check your credentials and try again.");
@@ -49,7 +56,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/auth/google-url');
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/auth/google-url`);
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url; // Redirect to Google OAuth

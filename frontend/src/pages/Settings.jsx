@@ -2,27 +2,57 @@ import { useState } from 'react';
 import { Save, User, Lock, Bell, Shield, CreditCard, HelpCircle, Loader, ChevronRight, Mail, Phone, MapPin, Globe, ArrowLeft } from 'lucide-react';
 import UILoader from '../Components/ui/Loader';
 import { useNavigate } from 'react-router-dom';
+import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('account');
   const navigate=useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'johndoe@example.com',
-    phone: '+1 234 567 8900',
-    address: '123 Main Street, Anytown, USA',
-    website: 'mywebsite.com',
-    notifications: {
-      email: true,
-      push: false,
-      sms: true,
-      newsletter: false
-    },
-    twoFactorEnabled: false
-  });
-
+  // const [user, setUser] = useState({
+  //   // name: 'John Doe',
+  //   // email: 'johndoe@example.com',
+  //   // phone: '+1 234 567 8900',
+  //   // address: '123 Main Street, Anytown, USA',
+  //   // website: 'mywebsite.com',
+  //   // notifications: {
+  //   //   email: true,
+  //   //   push: false,
+  //   //   sms: true,
+  //   //   newsletter: false
+  //   // },
+  //   // twoFactorEnabled: false
+  // });
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/profile`);
+        const data = response.data.user;
+  
+        setUser({
+          name: data.name,
+          email: data.email,
+          phone: data.contactNumber,
+          address: data.address,
+          website: data.website,
+          notifications: {  // hardcoded for now
+            email: true,
+            push: false,
+            sms: true,
+            newsletter: false
+          },
+          twoFactorEnabled: false  // hardcoded for now
+        });
+  
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch user profile", err);
+        setIsLoading(false);
+      }
+    };
+  
+    fetchUserProfile();
+  }, []);
   // Simulated save function
   const handleSave = (e) => {
     e.preventDefault();
@@ -64,117 +94,122 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-merriweather">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <div className="flex items-center gap-3 mb-6">
-        <button
-        className="text-gray-600 hover:text-black"
-        onClick={() => navigate('/dashboard')}
-      >
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        </div>
+    <div className="flex h-screen w-screen overflow-hidden bg-[#FFF5E4]">
+      {/* Container that holds sidebar and content */}
+      <div className="flex w-full flex-1 flex-col overflow-hidden border border-neutral-200 bg-gray-100 md:flex-row dark:border-neutral-700 dark:bg-neutral-800">
+        {/* Sidebar component */}
+        <FoodDistributionSidebar />
         
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 md:gap-4 border-b border-gray-200 pb-4">
-          <TabButton 
-            label="Account" 
-            icon={<User size={18} />} 
-            active={activeTab === 'account'} 
-            onClick={() => setActiveTab('account')}
-          />
-          <TabButton 
-            label="Security" 
-            icon={<Lock size={18} />} 
-            active={activeTab === 'security'} 
-            onClick={() => setActiveTab('security')}
-          />
-          <TabButton 
-            label="Notifications" 
-            icon={<Bell size={18} />} 
-            active={activeTab === 'notifications'} 
-            onClick={() => setActiveTab('notifications')}
-          />
-          <TabButton 
-            label="Privacy" 
-            icon={<Shield size={18} />} 
-            active={activeTab === 'privacy'} 
-            onClick={() => setActiveTab('privacy')}
-          />
-          <TabButton 
-            label="Billing" 
-            icon={<CreditCard size={18} />} 
-            active={activeTab === 'billing'} 
-            onClick={() => setActiveTab('billing')}
-          />
-          <TabButton 
-            label="Help" 
-            icon={<HelpCircle size={18} />} 
-            active={activeTab === 'help'} 
-            onClick={() => setActiveTab('help')}
-          />
-        </div>
-      </div>
-      
-      {/* Main Content */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <UILoader size="lg" className="text-orange-500" />
+        {/* Main content area */}
+        <div className="flex flex-col w-screen overflow-y-auto">
+        <div className="p-4 md:p-8 font-merriweather">
+          {/* Header */}
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+            </div>
+            
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-2 md:gap-4 border-b border-gray-200 pb-4">
+              <TabButton 
+                label="Account" 
+                icon={<User size={18} />} 
+                active={activeTab === 'account'} 
+                onClick={() => setActiveTab('account')}
+              />
+              <TabButton 
+                label="Security" 
+                icon={<Lock size={18} />} 
+                active={activeTab === 'security'} 
+                onClick={() => setActiveTab('security')}
+              />
+              <TabButton 
+                label="Notifications" 
+                icon={<Bell size={18} />} 
+                active={activeTab === 'notifications'} 
+                onClick={() => setActiveTab('notifications')}
+              />
+              <TabButton 
+                label="Privacy" 
+                icon={<Shield size={18} />} 
+                active={activeTab === 'privacy'} 
+                onClick={() => setActiveTab('privacy')}
+              />
+              <TabButton 
+                label="Billing" 
+                icon={<CreditCard size={18} />} 
+                active={activeTab === 'billing'} 
+                onClick={() => setActiveTab('billing')}
+              />
+              <TabButton 
+                label="Help" 
+                icon={<HelpCircle size={18} />} 
+                active={activeTab === 'help'} 
+                onClick={() => setActiveTab('help')}
+              />
+            </div>
           </div>
-        ) : (
-          <>
-            {activeTab === 'account' && (
-              <AccountSettings 
-                user={user} 
-                handleChange={handleChange} 
-                handleSave={handleSave}
-                isSaving={isSaving}
-              />
+          
+          {/* Main Content */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <UILoader size="lg" className="text-[#FFA725]" />
+              </div>
+            ) : (
+              <>
+                {activeTab === 'account' && (
+                  <AccountSettings 
+                    user={user} 
+                    handleChange={handleChange} 
+                    handleSave={handleSave}
+                    isSaving={isSaving}
+                  />
+                )}
+                
+                {activeTab === 'security' && (
+                  <SecuritySettings 
+                    user={user} 
+                    handleTwoFactorToggle={handleTwoFactorToggle}
+                    handleSave={handleSave}
+                    isSaving={isSaving}
+                  />
+                )}
+                
+                {activeTab === 'notifications' && (
+                  <NotificationSettings 
+                    user={user} 
+                    handleNotificationToggle={handleNotificationToggle}
+                    handleSave={handleSave}
+                    isSaving={isSaving}
+                  />
+                )}
+                
+                {activeTab === 'privacy' && (
+                  <PrivacySettings 
+                    handleSave={handleSave}
+                    isSaving={isSaving}
+                  />
+                )}
+                
+                {activeTab === 'billing' && (
+                  <BillingSettings 
+                    handleSave={handleSave}
+                    isSaving={isSaving}
+                  />
+                )}
+                
+                {activeTab === 'help' && (
+                  <HelpCenter />
+                )}
+              </>
             )}
-            
-            {activeTab === 'security' && (
-              <SecuritySettings 
-                user={user} 
-                handleTwoFactorToggle={handleTwoFactorToggle}
-                handleSave={handleSave}
-                isSaving={isSaving}
-              />
-            )}
-            
-            {activeTab === 'notifications' && (
-              <NotificationSettings 
-                user={user} 
-                handleNotificationToggle={handleNotificationToggle}
-                handleSave={handleSave}
-                isSaving={isSaving}
-              />
-            )}
-            
-            {activeTab === 'privacy' && (
-              <PrivacySettings 
-                handleSave={handleSave}
-                isSaving={isSaving}
-              />
-            )}
-            
-            {activeTab === 'billing' && (
-              <BillingSettings 
-                handleSave={handleSave}
-                isSaving={isSaving}
-              />
-            )}
-            
-            {activeTab === 'help' && (
-              <HelpCenter />
-            )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 // Tab Button Component

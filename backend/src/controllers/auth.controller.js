@@ -3,35 +3,84 @@ const { google } = googleapis;
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv'
+dotenv.config()
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    console.log("Received signup request:", req.body);
+    const { name, email, password, role, googleId } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ error: "User already exists. Please log in." });
+    if (!name || !email || (!password && !googleId) || (!role && !googleId)) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Create and save new user
-    const user = new User({
+    const {
+      organizationName,
+      contactNumber,
+      address,
+      website,
+      location,
+      foodPreferences,
+      needsVolunteer,
+      certificates,
+      foodTypes,
+      walletAddress,
+      volunteerInterests,
+      associatedNGO,
+    } = req.body;
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+
+    // If user exists and it's a Google user who hasn't completed onboarding
+    if (existingUser && existingUser.googleId && !existingUser.profileCompleted) {
+      Object.assign(existingUser, {
+        name,
+        role,
+        profileCompleted: true,
+        ...(organizationName && { organizationName }),
+        ...(contactNumber && { contactNumber }),
+        ...(address && { address }),
+        ...(website && { website }),
+        ...(location && { location }),
+        ...(role === 'donor' && { foodTypes, walletAddress }),
+        ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates }),
+        ...(role === 'volunteer' && { volunteerInterests, associatedNGO }),
+      });
+
+      await existingUser.save();
+      return res.status(200).json({ success: true, message: "Google user profile updated" });
+    }
+
+    // If user exists and is not a Google user, block
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists. Please log in." });
+    }
+
+    const userData = {
       name,
       email,
       password,
-      googleId: `${Math.random()}abc`, // fixing needed : googleID needs to be unique
       role,
-    });
+      googleId,
+      profileCompleted: true,
+      ...(organizationName && { organizationName }),
+      ...(contactNumber && { contactNumber }),
+      ...(address && { address }),
+      ...(website && { website }),
+      ...(location && { location }),
+      ...(role === 'donor' && { foodTypes, walletAddress }),
+      ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates }),
+      ...(role === 'volunteer' && { volunteerInterests, associatedNGO }),
+    };
 
+    const user = new User(userData);
     await user.save();
-    console.log("User saved successfully:", user);
-    res
-      .status(201)
-      .json({ message: "User registered successfully", success: true });
+
+    return res.status(201).json({ success: true, message: "User registered successfully" });
   } catch (error) {
     console.error("Signup Error:", error);
-    res.status(500).json({ error: "Signup failed", details: error.message });
+    return res.status(500).json({ error: "Signup failed", details: error.message });
   }
 };
 
@@ -43,7 +92,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { _id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -70,6 +119,7 @@ export const getGoogleAuthURL = (req, res) => {
       'https://www.googleapis.com/auth/userinfo.email',
     ],
     prompt: "consent",
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI, // ✅ Required!
   });
 
   res.json({ url });
@@ -89,32 +139,33 @@ export const handleGoogleCallback = async (req, res) => {
 
     const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
     const { data: googleUser } = await oauth2.userinfo.get();
+    console.log("Google User Data:", googleUser);
 
-    let user = await User.findOne({ where: { email: googleUser.email } });
+    let user = await User.findOne({ email: googleUser.email });
     let isNewUser = false;
 
     if (!user) {
       isNewUser = true;
       user = new User({
-        username: googleUser.email.split('@')[0] + "_" + Math.floor(Math.random() * 10000),
+        // name: googleUser.email.split('@')[0] + "_" + Math.floor(Math.random() * 10000),
+        name : googleUser.name,
         email: googleUser.email,
         avatar: googleUser.picture,
         googleId: googleUser.id,
         authProvider: "google",
-        // tokens: { refreshToken: tokens.refresh_token }
+        profileCompleted: false, // 👈 forces onboarding flow
+        role: null            // 👈 role will be selected in onboarding
       });
     } else {
-      // Update if user already exists
       user.googleId = googleUser.id;
       user.authProvider = "google";
       user.avatar = googleUser.picture;
-    //   user.tokens.refreshToken = tokens.refresh_token;
     }
 
     await user.save();
 
     const jwtToken = jwt.sign(
-      { userId: user._id },
+      { _id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -125,10 +176,10 @@ export const handleGoogleCallback = async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        username: user.username,
-        bio: user.bio,
+        name: user.name,
         avatar: user.avatar,
-        isNewUser: isNewUser || !user.bio
+        googleId: user.googleId,
+        profileCompleted: user.profileCompleted
       }
     });
   } catch (error) {

@@ -7,6 +7,14 @@ import Landingpage from "../pages/Landingpage.jsx";
 import JoyLoops from "../Components/JoyLoops/Joyloop.jsx";
 import UserProfile from "../pages/UserProfile.jsx";
 import SettingsPage from "../pages/Settings.jsx";
+import ImpactReportPage from "../pages/ImpactReport.jsx";
+import Onboarding from "../pages/Onboarding.jsx";
+import DonationMap from "../pages/HeatMap.jsx";
+import DeliveryTimeline from "../pages/DeliveryTimeline.jsx";
+import DonationForm from "../Components/MainPage/NewDonation.jsx";
+import AdminDashboard from "../pages/AdminDashboard.jsx";
+import DonationList from "../pages/DonationListing.jsx";
+import FoodDonationRequestForm from "../components/ui/RequestForm.jsx";
 
 const AppRoutes = () => {
   return (
@@ -18,6 +26,15 @@ const AppRoutes = () => {
         <Route path="/joyloop" element={<JoyLoops />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/impact" element={<ImpactReportPage />} />
+        <Route path="/onboard" element={<Onboarding />} />
+        <Route path="/map" element={<DonationMap />} />
+        <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
+        <Route path="/donate" element={<DonationForm/>} />
+        <Route path="/Listings" element={<DonationList  /> } />        <Route path="/request" element={<FoodDonationRequestForm/>} />
+
+
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="/dashboard"
           element={

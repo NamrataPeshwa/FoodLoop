@@ -1,11 +1,14 @@
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = `${import.meta.env.VITE_BACKEND_API}/api/auth`;
 
-export const signupUser = async (name, email, password, role) => {
+export const signupUser = async (userData) => {
   try {
+    console.log("Signup request data:", userData);
+ 
+
     const response = await fetch(`${API_URL}/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify(userData),
     });
     return response.json();
   } catch (error) {

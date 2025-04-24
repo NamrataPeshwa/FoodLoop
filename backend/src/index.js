@@ -6,13 +6,18 @@ import http from 'http';
 import connectDB from './utils/db.connect.js'; 
 import './jobs/matchListingsJob.js';
 
-
 // Importing Routes
 import authRoutes from './routes/auth.routes.js';
 import donationRoutes from './routes/donations.routes.js';
 import ngoRoutes from './routes/ngo.routes.js';
-import joyRoutes from './routes/joy.route.js';
 import transactionRoutes from './routes/transactions.routes.js';
+import impactRoutes from './routes/impact.routes.js';
+import userRoutes from './routes/user.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import joyloopRoutes from './routes/joyloop.routes.js';
+import requestRoutes from './routes/request.routes.js';
+
+
 
 dotenv.config();
 const app = express();
@@ -23,10 +28,20 @@ const server = http.createServer(app);
 app.use(cors());
 app.use(express.json());
 
+app.get('/health', (req, res) => {
+      res.status(200).send('OK');
+    }
+    );
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/ngo', ngoRoutes);
+app.use('/api/transaction', transactionRoutes);
+app.use('/api/impact', impactRoutes );
+app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/joyloop', joyloopRoutes)
+app.use('/api/request', requestRoutes);
 
 // Real-time Donation Tracking
 // io.on('connection', (socket) => {
@@ -45,5 +60,6 @@ app.use('/api/ngo', ngoRoutes);
 connectDB();
 
 // Server Listener
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

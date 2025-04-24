@@ -1,23 +1,29 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Color, Scene, Fog, PerspectiveCamera, Vector3 } from "three";
+import { Color, Scene, Fog, PerspectiveCamera as ThreePerspectiveCamera, Vector3, Vector2, Raycaster } from "three";
 import ThreeGlobe from "three-globe";
 import { useThree, Canvas, extend } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import countries from "../../../data/globe.json";
 
 extend({ ThreeGlobe: ThreeGlobe });
-
 const RING_PROPAGATION_SPEED = 3;
 const aspect = 1.2;
 const cameraZ = 300;
 
 let numbersOfRings = [0];
 
-export function Globe({ globeConfig, data }) {
+export function Globe({ globeConfig, data, onRegionHover, onRegionClick }) {
   const globeRef = useRef(null);
   const groupRef = useRef();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hoveredRegion, setHoveredRegion] = useState(null);
+
+  const cameraRef = useRef();
+  
+  // Get the camera from the Three.js context
+  const { camera, scene } = useThree();
+
 
   const defaultProps = {
     pointSize: 1,
@@ -35,7 +41,11 @@ export function Globe({ globeConfig, data }) {
     maxRings: 3,
     ...globeConfig,
   };
-
+  useEffect(() => {
+    if (camera) {
+      cameraRef.current = camera;
+    }
+  }, [camera]);
   useEffect(() => {
     if (!globeRef.current && groupRef.current) {
       globeRef.current = new ThreeGlobe();
@@ -195,6 +205,177 @@ export function Globe({ globeConfig, data }) {
       clearInterval(interval);
     };
   }, [isInitialized, data]);
+
+  useEffect(() => {
+    if (!globeRef.current || !isInitialized || !data) return;
+    
+    // Create a raycaster for handling mouse interactions
+    const handleMouseMove = (event) => {
+      if (!globeRef.current) return;
+      
+      // Convert mouse position to normalized device coordinates
+      const mouse = new Vector2(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1
+      );
+      
+      // Find intersections with the globe
+      const raycaster = new Raycaster();
+      raycaster.setFromCamera(mouse, globeRef.current.parent.parent.children[0]); // camera
+      
+      const intersects = raycaster.intersectObject(globeRef.current, true);
+      
+      if (intersects.length > 0) {
+        // Get the country/region data from the intersection
+        const region = data.find(r => 
+          r.startLat === intersects[0].object.userData.lat && 
+          r.startLng === intersects[0].object.userData.lng
+        );
+        
+        if (region && region.region) {
+          setHoveredRegion(region);
+          if (typeof onRegionHover === 'function') {
+            onRegionHover(region);
+          }
+        }
+      } else {
+        if (hoveredRegion && typeof onRegionHover === 'function') {
+          onRegionHover(null);
+        }
+        setHoveredRegion(null);
+      }
+    };
+    
+    const handleClick = () => {
+      if (hoveredRegion && typeof onRegionClick === 'function') {
+        onRegionClick(hoveredRegion);
+      }
+    };
+    
+    // Add event listeners
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('click', handleClick);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('click', handleClick);
+    };
+  }, [isInitialized, data, hoveredRegion, onRegionHover, onRegionClick]);
+
+  // Ensure proper handling of user data for intersections
+  useEffect(() => {
+    if (!globeRef.current || !isInitialized || !data) return;
+    
+    // Add userData to each point for raycasting
+    data.forEach(point => {
+      if (point.startLat && point.startLng) {
+        const pointObj = globeRef.current.children.find(child =>
+          child.userData && 
+          child.userData.lat === point.startLat && 
+          child.userData.lng === point.startLng
+        );
+        
+        if (pointObj) {
+          pointObj.userData = { ...pointObj.userData, ...point };
+        }
+      }
+    });
+  }, [isInitialized, data]);
+
+  useEffect(() => {
+    if (!globeRef.current || !isInitialized || !data || !cameraRef.current) return;
+    
+    const raycaster = new Raycaster();
+    const mouse = new Vector2();
+  
+    const handleMouseMove = (event) => {
+      if (!globeRef.current || !cameraRef.current) return;
+      
+      // Calculate mouse position in normalized device coordinates
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      
+      try {
+        // Use the camera reference from our ref
+        raycaster.setFromCamera(mouse, cameraRef.current);
+        
+        // Find intersections with the globe and its children
+        const intersects = raycaster.intersectObject(globeRef.current, true);
+        
+        if (intersects.length > 0) {
+          // Find the closest region
+          let closestRegion = null;
+          let minDistance = Infinity;
+          
+          // Loop through data to find region closest to intersection point
+          data.forEach(region => {
+            if (region.region) {
+              const regionLat = Number(region.startLat);
+              const regionLng = Number(region.startLng);
+              
+              // Convert intersection point to lat/lng (simplified approximation)
+              const radius = 100; // Approximate globe radius in scene units
+              const point = intersects[0].point.normalize().multiplyScalar(radius);
+              
+              // Get lat/lng from 3D point (simplified)
+              const lat = 90 - (Math.acos(point.y / radius) * 180 / Math.PI);
+              const lng = (Math.atan2(point.z, point.x) * 180 / Math.PI);
+              
+              // Calculate distance
+              const distance = Math.sqrt(
+                Math.pow(regionLat - lat, 2) + 
+                Math.pow(regionLng - lng, 2)
+              );
+              
+              if (distance < minDistance && distance < 15) {
+                minDistance = distance;
+                closestRegion = region;
+              }
+            }
+          });
+          
+          if (closestRegion) {
+            setHoveredRegion(closestRegion);
+            if (typeof onRegionHover === 'function') {
+              onRegionHover(closestRegion);
+            }
+          } else {
+            if (hoveredRegion && typeof onRegionHover === 'function') {
+              onRegionHover(null);
+            }
+            setHoveredRegion(null);
+          }
+        } else {
+          if (hoveredRegion && typeof onRegionHover === 'function') {
+            onRegionHover(null);
+          }
+          setHoveredRegion(null);
+        }
+      } catch (error) {
+        console.error("Raycasting error:", error);
+      }
+    };
+    
+    const handleClick = () => {
+      if (hoveredRegion && typeof onRegionClick === 'function') {
+        onRegionClick(hoveredRegion);
+      }
+    };
+    
+    // Add event listeners to the canvas element directly
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('click', handleClick);
+      
+      return () => {
+        canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('click', handleClick);
+      };
+    }
+  }, [isInitialized, data, hoveredRegion, onRegionHover, onRegionClick]);
+
+  
   return <group ref={groupRef} />;
 }
 
@@ -210,42 +391,72 @@ export function WebGLRendererConfig() {
   return null;
 }
 
-export const World=(props)=> {
-  const { globeConfig } = props;
-  const scene = new Scene();
-  scene.fog = new Fog(0xffffff, 400, 2000);
+// 1. First, fix the World component to properly handle the camera:
+
+// Fixed World Component with properly instantiated PerspectiveCamera
+export const World = (props) => {
+  const { globeConfig, data, onLoad } = props;
+  const aspect = 1.2; // Original aspect ratio
+  const cameraZ = 300;
+  
+  // Call onLoad when component mounts
+  useEffect(() => {
+    if (typeof onLoad === 'function') {
+      onLoad();
+    }
+  }, [onLoad]);
+  
   return (
-    <Canvas scene={scene} camera={new PerspectiveCamera(50, aspect, 180, 1800)}>
+    <Canvas 
+      style={{ width: '100%', height: '100%' }}
+      resize={{ scroll: false }}
+      // Define camera directly in Canvas for React Three Fiber to handle properly
+    >
       <WebGLRendererConfig />
+      <fog attach="fog" args={['#ffffff', 400, 2000]} />
+      
+      {/* Define the camera as a component to ensure it's created correctly */}
+      <PerspectiveCamera
+        makeDefault  // This ensures the camera is set as the default camera
+        fov={50}
+        aspect={aspect}
+        near={180}
+        far={1800}
+        position={[0, 0, cameraZ]}
+      />
+      
       <ambientLight color={globeConfig.ambientLight} intensity={0.6} />
       <directionalLight
         color={globeConfig.directionalLeftLight}
-        position={new Vector3(-400, 100, 400)}
+        position={[-400, 100, 400]}
       />
       <directionalLight
         color={globeConfig.directionalTopLight}
-        position={new Vector3(-200, 500, 200)}
+        position={[-200, 500, 200]}
       />
       <pointLight
         color={globeConfig.pointLight}
-        position={new Vector3(-200, 500, 200)}
+        position={[-200, 500, 200]}
         intensity={0.8}
       />
-      <Globe {...props} />
+      <Globe 
+        {...props} 
+        onRegionHover={globeConfig.onRegionHover}
+        onRegionClick={globeConfig.onRegionClick}
+      />
       <OrbitControls
         enablePan={false}
         enableZoom={false}
         minDistance={cameraZ}
         maxDistance={cameraZ}
-        autoRotateSpeed={1}
-        autoRotate={true}
+        autoRotateSpeed={globeConfig.autoRotateSpeed || 1}
+        autoRotate={globeConfig.autoRotate !== false}
         minPolarAngle={Math.PI / 3.5}
         maxPolarAngle={Math.PI - Math.PI / 3}
       />
     </Canvas>
   );
-}
-
+};
 export function hexToRgb(hex) {
   const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
   hex = hex.replace(shorthandRegex, function (m, r, g, b) {
