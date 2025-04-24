@@ -59,7 +59,7 @@ const DonationCard = ({ donation, userRole  }) => {
           <span>Expires: {donation.expiryDate}</span>
         </div>
 
-        {userRole === 'ngo' && (
+        {userRole === 'NGO' && (
           <button className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-md transition duration-200">
             Claim
           </button>

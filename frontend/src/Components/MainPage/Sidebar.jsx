@@ -32,6 +32,7 @@ export function FoodDistributionSidebar() {
   useEffect(() => {
     try {
       const userRoleFromStorage = sessionStorage.getItem("userRole");
+      console.log(userRoleFromStorage);
       if (userRoleFromStorage) setUserRole(userRoleFromStorage);
 
       const user = localStorage.getItem("userData");
