@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { FoodDistributionSidebar } from "./Sidebar";
+import SustainablePackagingModal from "./Packing";
 
 const getAddressFromCoords = async (lat, lon) => {
   try {
@@ -39,6 +40,8 @@ const DonationForm = () => {
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPackagingModal, setShowPackagingModal] = useState(false);
+  const [donationId, setDonationId] = useState(null);
 
   const removeImage = () => {
     setPreview(null);
@@ -153,8 +156,14 @@ const DonationForm = () => {
       const data = await response.json();
       console.log("✅ Submission successful:", data);
   
-      // Reset form
       setShowSuccess(true);
+      setDonationId(data._id);
+
+      setTimeout(() => {
+        setShowPackagingModal(true);
+      }, 1500);
+
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -413,6 +422,12 @@ return (
                     🎉 Thank you! Your donation has been listed successfully.
                   </div>
                 )}
+
+<SustainablePackagingModal 
+        isOpen={showPackagingModal}
+        onClose={handleCloseModal}
+        donationId={donationId}
+      />
               </div>
             </form>
           </div>
