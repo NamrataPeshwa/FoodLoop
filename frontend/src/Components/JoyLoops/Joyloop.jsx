@@ -136,7 +136,7 @@ const JoyLoops = () => {
   const fetchMoments = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/api/joyloop",
+        `${import.meta.env.VITE_BACKEND_API}/api/joyloop/get`
       );
       
       if (response.data && response.data.data && response.data.data.momentOfDay) {
@@ -144,16 +144,37 @@ const JoyLoops = () => {
       }
     } catch (error) {
       console.error('Error fetching moments:', error);
-      
       if (error.response && error.response.status === 401) {
         localStorage.removeItem('authToken');
         navigate('/login');
       }
     }
   };
+  const [topDonors, setTopDonors] = useState([]);
+
+const fetchTopDonors = async () => {
+  try {
+    const res = await axios.get(`${import.meta.env.VITE_BACKEND_API}/api/joyloop/top-donors`);
+    setTopDonors(res.data);
+  } catch (err) {
+    console.error("Error fetching top donors:", err);
+  }
+};
+const [joySpreaders, setJoySpreaders] = useState([]);
+
+const fetchJoySpreaders = async () => {
+  try {
+    const res = await axios.get(`${import.meta.env.VITE_BACKEND_API}/api/joyloop/joy-spreaders`);
+    setJoySpreaders(res.data);
+  } catch (err) {
+    console.error("Error fetching joy spreaders:", err);
+  }
+};
 
   useEffect(() => {
     fetchMoments();
+    fetchTopDonors();
+    fetchJoySpreaders();
   }, []);
 
   useEffect(() => {
@@ -183,27 +204,23 @@ const JoyLoops = () => {
   };
 
   const handleSubmitPost = async () => {
-    if (!postContent && !selectedFile && !recordedVideo) {
-      return; // Don't submit empty posts
-    }
-
+    if (!postContent && !selectedFile && !recordedVideo) return;
+  
     setIsSubmitting(true);
-
+  
     try {
       const formData = new FormData();
       formData.append('caption', postContent);
-      
-      // Add media file if available
+  
       if (selectedFile) {
         formData.append('media', selectedFile);
       } else if (recordedVideo) {
-        // Convert blob to file
         const videoFile = new File([recordedVideo.blob], 'recorded-video.webm', { type: 'video/webm' });
         formData.append('media', videoFile);
       }
-
+  
       const response = await axios.post(
-        "http://localhost:8000/api/joyloop", 
+        `${import.meta.env.VITE_BACKEND_API}/api/joyloop/post`,
         formData,
         {
           headers: {
@@ -212,17 +229,15 @@ const JoyLoops = () => {
           }
         }
       );
-
-      // If successful, add the new moment to state and reset form
+  
       if (response.data && response.data.data) {
-        setMoments(prevMoments => [response.data.data, ...prevMoments]);
+        setMoments(prev => [response.data.data, ...prev]);
         setPostContent("");
         resetMedia();
         setShareMode(false);
       }
     } catch (error) {
       console.error('Error posting moment:', error);
-      
       if (error.response && error.response.status === 401) {
         localStorage.removeItem('authToken');
         navigate('/login');
@@ -505,104 +520,138 @@ const JoyLoops = () => {
               
               {/* Content Area */}
               <div className="bg-black/40 rounded-xl border h-fit border-gray-800 p-4">
-                {activeTab === 'joyMoments' && (
-                  moments.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {moments.map((moment) => (
-                        <div key={moment._id} className="bg-gradient-to-br from-gray-900 to-black rounded-lg overflow-hidden border border-gray-800 hover:border-orange-600/30 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,140,0,0.2)]">
-                          <div className="relative aspect-video bg-gray-800">
-                            {moment.publicUrl && moment.publicUrl.includes('.mp4') ? (
-                              <video src={moment.publicUrl} className="w-full h-full object-cover" controls />
-                            ) : (
-                              <img src={moment.publicUrl || "/api/placeholder/400/225"} alt="Joy moment" className="w-full h-full object-cover" />
-                            )}
-                            <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-gray-300">
-                              {new Date(moment.date).toLocaleDateString()}
-                            </div>
-                          </div>
-                          
-                          <div className="p-4">
-                            <h4 className="text-gray-200 font-medium mb-2">{moment.caption || "Moment of Joy"}</h4>
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-1">
-                                <Heart size={16} className="text-orange-500" />
-                                <span className="text-gray-400 text-sm">12</span>
-                              </div>
-                              <button className="text-gray-500 hover:text-orange-400">
-                                <ShareIcon size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                      <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                        <Heart size={36} className="text-orange-500/50" />
-                      </div>
-                      <p className="text-gray-400 mb-4">No joy moments shared yet. Be the first to spread joy!</p>
-                      <button 
-                        onClick={toggleShareMode}
-                        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
-                      >
-                        Share Your First Joy
-                      </button>
-                    </div>
-                  )
-                )}
+              {activeTab === 'joyMoments' && (
+  moments.length > 0 ? (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {moments.map((moment) => (
+        <div key={moment._id} className="bg-gradient-to-br from-gray-900 to-black rounded-lg overflow-hidden border border-gray-800 hover:border-orange-600/30 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,140,0,0.2)]">
+          <div className="relative aspect-video bg-gray-800">
+            {moment.mediaType === 'video' ? (
+              <video src={moment.publicUrl} className="w-full h-full object-cover" controls />
+            ) : (
+              <img src={moment.publicUrl || "/api/placeholder/400/225"} alt="Joy moment" className="w-full h-full object-cover" />
+            )}
+            <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-gray-300">
+              {new Date(moment.date).toLocaleDateString()}
+            </div>
+          </div>
+
+          <div className="p-4">
+            <h4 className="text-gray-200 font-medium mb-2">{moment.caption || "Moment of Joy"}</h4>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1">
+                <Heart size={16} className="text-orange-500" />
+                <span className="text-gray-400 text-sm">12</span>
+              </div>
+              <button className="text-gray-500 hover:text-orange-400">
+                <ShareIcon size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+        <Heart size={36} className="text-orange-500/50" />
+      </div>
+      <p className="text-gray-400 mb-4">No joy moments shared yet. Be the first to spread joy!</p>
+      <button 
+        onClick={toggleShareMode}
+        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white px-6 py-2 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+      >
+        Share Your First Joy
+      </button>
+    </div>
+  )
+)}
                 
                 {activeTab === 'topDonors' && (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {[1, 2, 3].map((index) => (
-                      <div key={index} className={`p-6 rounded-lg ${index === 1 ? 'bg-gradient-to-br from-yellow-900/30 to-black border border-yellow-700/30' : 'bg-gray-900 border border-gray-800'}`}>
-                        <div className="flex items-center gap-4">
-                          <div className="relative">
-                            <div className={`w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden ${index === 1 ? 'border-2 border-yellow-500' : 'border border-gray-700'}`}>
-                              <img src="/api/placeholder/80/80" alt="Donor avatar" className="w-full h-full object-cover" />
-                            </div>
-                            {index === 1 && (
-                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                                <span className="text-black text-xs font-bold">1</span>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-lg text-gray-200">Donor Name</h3>
-                            <p className="text-md text-gray-400">1,245 meals donated</p>
-                            {index === 1 && <p className="text-md font-bold text-yellow-500 mt-2">Top Donor</p>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    {topDonors.map((donor, index) => (
+      <div
+        key={donor.donorId}
+        className={`p-6 rounded-lg ${
+          index === 0
+            ? 'bg-gradient-to-br from-yellow-900/30 to-black border border-yellow-700/30'
+            : 'bg-gray-900 border border-gray-800'
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div
+              className={`w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden ${
+                index === 0 ? 'border-2 border-yellow-500' : 'border border-gray-700'
+              }`}
+            >
+              <img
+                src="/api/placeholder/80/80"
+                alt="Donor avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {index === 0 && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                <span className="text-black text-xs font-bold">1</span>
+              </div>
+            )}
+          </div>
+          <div>
+            <h3 className="font-medium text-lg text-gray-200">{donor.name}</h3>
+            <p className="text-md text-gray-400">{donor.totalDonations} meals donated</p>
+            {index === 0 && (
+              <p className="text-md font-bold text-yellow-500 mt-2">Top Donor</p>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
                 
                 {activeTab === 'joySpreaders' && (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {[1, 2, 3].map((index) => (
-                      <div key={index} className={`p-4 rounded-lg ${index === 1 ? 'bg-gradient-to-br from-green-900/30 to-black border border-green-700/30' : 'bg-gray-900 border border-gray-800'}`}>
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <div className={`w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden ${index === 1 ? 'border-2 border-green-500' : 'border border-gray-700'}`}>
-                              <img src="/api/placeholder/64/64" alt="Spreader avatar" className="w-full h-full object-cover" />
-                            </div>
-                            {index === 1 && (
-                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                                <span className="text-black text-xs font-bold">1</span>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-gray-200">Spreader Name</h3>
-                            <p className="text-sm text-gray-400">28 joy stories shared</p>
-                            {index === 1 && <p className="text-sm font-bold text-green-500 mt-1">Top Joy Spreader</p>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    {joySpreaders.map((spreader, index) => (
+      <div
+        key={spreader.volunteerId}
+        className={`p-4 rounded-lg ${
+          index === 0
+            ? 'bg-gradient-to-br from-green-900/30 to-black border border-green-700/30'
+            : 'bg-gray-900 border border-gray-800'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div
+              className={`w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden ${
+                index === 0 ? 'border-2 border-green-500' : 'border border-gray-700'
+              }`}
+            >
+              <img
+                src="/api/placeholder/64/64"
+                alt="Spreader avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {index === 0 && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <span className="text-black text-xs font-bold">1</span>
+              </div>
+            )}
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-200">{spreader.name}</h3>
+            <p className="text-sm text-gray-400">{spreader.spreadCount} joy stories shared</p>
+            {index === 0 && (
+              <p className="text-sm font-bold text-green-500 mt-1">Top Joy Spreader</p>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
               </div>
               
               {/* Add this extra style to the head of the document */}
