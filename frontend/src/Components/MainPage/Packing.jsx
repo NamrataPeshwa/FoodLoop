@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import Loader from "../ui/Loader";
 
 const SustainablePackagingModal = ({ isOpen, onClose, donationId }) => {
   const [packagingData, setPackagingData] = useState({
     suggestion: "",
     visualGuide: ""
   });
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -15,6 +17,9 @@ const SustainablePackagingModal = ({ isOpen, onClose, donationId }) => {
     }
   }, [isOpen, donationId]);
 
+  useEffect(() => {
+    setImageLoaded(false); // reset on every new packagingData
+  }, [packagingData.visualGuide]);
   const fetchPackagingData = async () => {
     try {
       setLoading(true);
@@ -87,20 +92,30 @@ const SustainablePackagingModal = ({ isOpen, onClose, donationId }) => {
               </div>
 
               {/* Visual guide */}
-              {packagingData.visualGuide && (
-                <div className="bg-white bg-opacity-70 rounded-xl p-4 backdrop-blur-sm shadow-md">
-                  <h3 className="text-lg font-bold text-colour4 mb-2">
-                    Visual Guide
-                  </h3>
-                  <div className="relative rounded-lg overflow-hidden bg-color3 bg-opacity-20 flex items-center justify-center">
-                    <img
-                      src={packagingData.visualGuide}
-                      alt="Sustainable packaging visual guide"
-                      className="w-full h-auto rounded-lg"
-                    />
-                  </div>
-                </div>
-              )}
+              {packagingData.visualGuide ? (
+  <div className="bg-white bg-opacity-70 rounded-xl p-4 backdrop-blur-sm shadow-md">
+    <h3 className="text-lg font-bold text-colour4 mb-2">
+      Visual Guide
+    </h3>
+    <div className="relative rounded-lg overflow-hidden bg-color3 bg-opacity-20 flex items-center justify-center min-h-[200px]">
+      {!imageLoaded ? (
+        <Loader />
+      ) : (
+        <img
+          src={packagingData.visualGuide}
+          alt="Sustainable packaging visual guide"
+          onLoad={() => setImageLoaded(true)}
+          className="w-full h-auto rounded-lg"
+        />
+      )}
+    </div>
+  </div>
+) : (
+  <p className="text-sm text-gray-500 italic">
+    No visual available for this packaging suggestion.
+  </p>
+)}
+
 
               {/* Action buttons */}
               <div className="flex justify-center pt-4">

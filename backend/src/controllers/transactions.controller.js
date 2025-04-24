@@ -298,7 +298,7 @@ export const updateTransactionStatus = async (req, res) => {
   try {
     const { transactionId } = req.params;
     const { status, note } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const userRole = req.user.role.toLowerCase(); // 'donor', 'ngo', 'volunteer', 'admin'
 
     // Define which roles may set which status
@@ -345,7 +345,7 @@ export const updateTransactionStatus = async (req, res) => {
 
 export const getUserTransactions = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
     const role = req.user.role.toLowerCase();
 
     // Build filter based on role

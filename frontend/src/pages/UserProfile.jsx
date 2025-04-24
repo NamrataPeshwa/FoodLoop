@@ -93,6 +93,8 @@ const UserProfile = () => {
         if (!res.ok) throw new Error("Failed to fetch user data");
   
         const { user, donations } = await res.json();
+      
+        console.log("donations data", donations);
         setUser(user);
         setDonations(donations);
         setLoading(false);

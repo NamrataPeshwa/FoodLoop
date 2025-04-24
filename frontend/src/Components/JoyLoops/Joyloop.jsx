@@ -155,6 +155,7 @@ const JoyLoops = () => {
 const fetchTopDonors = async () => {
   try {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_API}/api/joyloop/top-donors`);
+    console.log(res);
     setTopDonors(res.data);
   } catch (err) {
     console.error("Error fetching top donors:", err);

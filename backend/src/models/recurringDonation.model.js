@@ -5,7 +5,7 @@ const recurringDonationSchema = new Schema({
     foodType: { type: String, required: true },
     weight: { type: String, required: true },
     frequency: { type: String, enum: ['daily', 'weekly', 'monthly'], required: true },
-    storage: { type: String, enum: ['fridge', 'room temp', 'frozen'], required: true },
+    storage: { type: String, enum: ['refrigerated', 'room temp', 'frozen'], required: true },
     startDate: { type: Date, required: true },
     expirationEstimate: { type: Number }, // predicted shelf-life in hours/days
     nextScheduled: { type: Date },
