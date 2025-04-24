@@ -6,8 +6,11 @@ export const getUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
     console.log('User ID:', userId);
+    console.log('Role:', req.user.role);
+
     // Fetch the user details from the database
     const user = await User.findById(userId).lean(); // lean for plain JS object
+    console.log('User details:', user.role);
 
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -26,6 +29,7 @@ export const getUserProfile = async (req, res) => {
   .populate('ngo', 'name address');
 
       totalDonations = donations.length;
+      console.log(donations)
 
       if (donations.length > 0) {
         const firstDonationDate = donations[donations.length - 1].createdAt;
