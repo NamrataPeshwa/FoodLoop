@@ -121,6 +121,7 @@ const DonationForm = () => {
   
       // ✅ Prepare FormData
       const submissionData = new FormData();
+      submissionData.append("title",formData.title);
       submissionData.append("foodDescription", formData.description);
       submissionData.append("hoursOld", 1); // Default fallback or add a UI field
       submissionData.append("storage", "room temp"); // Optional UI-controlled
