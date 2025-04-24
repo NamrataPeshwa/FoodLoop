@@ -218,14 +218,14 @@ const fetchJoySpreaders = async () => {
         const videoFile = new File([recordedVideo.blob], 'recorded-video.webm', { type: 'video/webm' });
         formData.append('media', videoFile);
       }
-  
+      console.log(localStorage.getItem('token'))
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_API}/api/joyloop/post`,
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         }
       );
