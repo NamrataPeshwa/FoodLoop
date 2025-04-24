@@ -154,7 +154,7 @@ export const getDonations = async (req, res) => {
 };
 export const getUserDonations = async (req, res) => {
     try {
-        const userId = req.user.userId;
+        const userId = req.user._id;
 
         // Fetch donations and populate foodListing and certificateData
         const donations = await Transaction.find({ donor: userId })
