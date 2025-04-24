@@ -96,6 +96,21 @@ const DonationList = ({ donations, isNGO }) => {
       expiryDate: "2025-04-19 10:30",
     }
   ];
+  const [donations, setDonations] = React.useState(sampleDonations);
+  useEffect(() => {
+    const fetchDonations = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_API}/api/donations/list`);
+        if (res.data && res.data.data) {
+          setDonations(res.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching donations:", err);
+      }
+    };
+  
+    fetchDonations();
+  }, []);
 
   const dataToRender = donations && donations.length > 0 ? donations : sampleDonations;
 

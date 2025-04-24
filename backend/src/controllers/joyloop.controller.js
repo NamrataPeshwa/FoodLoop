@@ -36,7 +36,7 @@ export const getJoySpreaders = async (req, res) => {
         }
       }
     ]);
-
+console.log("Joy Spreaders:", joySpreaders);
     res.json(joySpreaders);
   } catch (err) {
     console.error("Error fetching joy spreaders:", err);
