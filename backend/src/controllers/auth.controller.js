@@ -195,7 +195,8 @@ export const handleGoogleCallback = async (req, res) => {
         name: user.name,
         avatar: user.avatar,
         googleId: user.googleId,
-        profileCompleted: user.profileCompleted
+        profileCompleted: user.profileCompleted,
+        role: user.role,
       }
     });
   } catch (error) {

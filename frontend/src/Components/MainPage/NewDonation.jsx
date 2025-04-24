@@ -27,6 +27,8 @@ const getAddressFromCoords = async (lat, lon) => {
 
 const DonationForm = () => {
   const [donorType, setDonorType] = useState("common");
+  const [latitude, setLatitude] = useState(null);
+const [longitude, setLongitude] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -64,6 +66,10 @@ const DonationForm = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
+        // Store them in state
+    setLatitude(latitude);
+    setLongitude(longitude);
+
         const locationData = await getAddressFromCoords(latitude, longitude);
         setFormData((prev) => ({
           ...prev,
@@ -140,8 +146,8 @@ const DonationForm = () => {
         "expirationDate",
         new Date(formData.expiryTime).toISOString()
       );
-      submissionData.append("lat", 12.9716); // You can pull this from state if needed
-      submissionData.append("lng", 77.5946);
+      submissionData.append("lat", latitude); // You can pull this from state if needed
+      submissionData.append("lng", longitude); // You can pull this from state if needed
       submissionData.append("scheduledFor", new Date().toISOString()); // Placeholder
       submissionData.append("fullAddress", formData.fullAddress);
 
@@ -169,9 +175,10 @@ const DonationForm = () => {
 
       const data = await response.json();
       console.log("✅ Submission successful:", data);
-
+      console.log(data)
       setShowSuccess(true);
-      setDonationId(data._id);
+      setDonationId(data.donation._id);
+      console.log(data.donation._id)
 
       setTimeout(() => {
         setShowPackagingModal(true);

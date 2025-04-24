@@ -41,6 +41,7 @@
     avatar: data.user.avatar || "",
   })
 );
+localStorage.setItem("userRole", data.user.role);
             //Check if onboarding is needed
             if (!data.user.profileCompleted) {
               window.location.href = "/onboard";

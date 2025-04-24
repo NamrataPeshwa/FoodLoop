@@ -18,6 +18,7 @@ import adminRoutes from "./routes/admin.routes.js";
 import joyloopRoutes from "./routes/joyloop.routes.js";
 import requestRoutes from "./routes/request.routes.js";
 import recurringRoutes from "./routes/recurring.routes.js";
+import packRoutes from "./routes/pack.routes.js";
 
 dotenv.config();
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/joyloop", joyloopRoutes);
 app.use("/api/request", requestRoutes);
 app.use("/api/recurring", recurringRoutes);
+app.use("/api/pack", packRoutes);
 
 // Real-time Donation Tracking
 // io.on('connection', (socket) => {

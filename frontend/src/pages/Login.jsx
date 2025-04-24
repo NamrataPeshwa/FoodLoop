@@ -12,7 +12,7 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login, googleSignIn } = useAuth();
+  const { login, googleSignIn, hasRole } = useAuth();
   const navigate = useNavigate();
 
   // Background images that will rotate
@@ -38,10 +38,12 @@ const Login = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        const userRole = sessionStorage.getItem('userRole');
-        if (userRole === 'admin') {
+        // Use the hasRole function from AuthContext instead of directly accessing storage
+        if (hasRole('admin')) {
+          console.log("Admin role detected, navigating to admin page");
           navigate("/admin");
         } else {
+          console.log("Regular user detected, navigating to dashboard");
           navigate("/dashboard");
         }
       }
@@ -98,7 +100,7 @@ const Login = () => {
       
       {/* Content */}
       <div className="w-full flex justify-center items-center z-10">
-  <div className="transform scale-90 w-full max-w-md p-8">
+        <div className="transform scale-90 w-full max-w-md p-8">
           <div className="bg-white shadow-xl rounded-lg overflow-hidden">
             {showForgotPassword ? (
               <ForgotPassword 
