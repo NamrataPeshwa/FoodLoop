@@ -9,7 +9,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
     headers: {
       'Content-Type': 'application/json',
       // Get auth token from localStorage
-      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
     },
     credentials: 'include'
   };
