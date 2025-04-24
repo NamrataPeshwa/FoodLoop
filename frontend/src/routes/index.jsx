@@ -15,6 +15,7 @@ import DonationForm from "../Components/MainPage/NewDonation.jsx";
 import AdminDashboard from "../pages/AdminDashboard.jsx";
 import DonationList from "../pages/DonationListing.jsx";
 import FoodDonationRequestForm from "../components/ui/RequestForm.jsx";
+import FeedDaily from "../pages/FeedDaily.jsx";
 
 const AppRoutes = () => {
   return (
@@ -29,17 +30,20 @@ const AppRoutes = () => {
         <Route path="/impact" element={<ImpactReportPage />} />
         <Route path="/onboard" element={<Onboarding />} />
         <Route path="/map" element={<DonationMap />} />
-        <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
-        <Route path="/donate" element={<DonationForm/>} />
-        <Route path="/Listings" element={<DonationList  /> } />        <Route path="/request" element={<FoodDonationRequestForm/>} />
-
-
+        <Route
+          path="/orderstatus"
+          element={<DeliveryTimeline currentStep={5} />}
+        />
+        <Route path="/donate" element={<DonationForm />} />
+        <Route path="/recurring" element={<FeedDaily />} />
+        <Route path="/Listings" element={<DonationList />} />{" "}
+        <Route path="/request" element={<FoodDonationRequestForm />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="/dashboard"
           element={
             // <ProtectedRoute>
-              <Dashboard />
+            <Dashboard />
             // </ProtectedRoute>
           }
         />

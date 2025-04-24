@@ -16,6 +16,7 @@ import userRoutes from './routes/user.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import joyloopRoutes from './routes/joyloop.routes.js';
 import requestRoutes from './routes/request.routes.js';
+import recurringRoutes from './routes/recurring.routes.js';
 
 
 
@@ -42,6 +43,8 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/joyloop', joyloopRoutes)
 app.use('/api/request', requestRoutes);
+app.use('/api/recurring', recurringRoutes);
+
 
 // Real-time Donation Tracking
 // io.on('connection', (socket) => {

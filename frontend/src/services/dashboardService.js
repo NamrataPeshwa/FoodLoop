@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_BACKEND_API;
 
-const getAuthToken = () => {
+export const getAuthToken = () => {
   const token = localStorage.getItem("token");  // Check if this is available
 
 if (!token) {
