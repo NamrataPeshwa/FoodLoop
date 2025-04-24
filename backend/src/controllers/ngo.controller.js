@@ -6,43 +6,37 @@ import Transaction from '../models/transaction.model.js';
 export const claimDonation = async (req, res) => {
   try {
     const listing = await FoodListing.findById(req.params.id);
-
-    // Ensure listing exists and is pending
     if (!listing || listing.status !== 'pending') {
       return res.status(400).json({ error: 'Donation not available for claim' });
     }
 
-    // Update listing status and assign NGO
     listing.status = 'requested';
     listing.ngoId = req.user._id;
 
-    // Optional: assign volunteer if provided
     if (req.body.volunteerId) {
       listing.volunteer = req.body.volunteerId;
     }
 
     await listing.save();
 
-    // Create a new Transaction record
     const transaction = new Transaction({
       foodListing: listing._id,
       donor: listing.donor,
       ngo: req.user._id,
       volunteer: listing.volunteer || null,
+      timeline: [{ status: 'requested', by: 'ngo', at: new Date() }],
     });
 
-    // Push the NGO 'requested' event onto the timeline
-    transaction.timeline.push({ status: 'requested', by: 'ngo' });
     await transaction.save();
 
-    return res.status(200).json({
+    res.status(200).json({
       message: 'Donation claimed and transaction created successfully',
       listing,
       transaction,
     });
   } catch (error) {
     console.error('Error claiming donation:', error);
-    return res.status(500).json({ error: 'Error claiming donation' });
+    res.status(500).json({ error: 'Error claiming donation' });
   }
 };
 
