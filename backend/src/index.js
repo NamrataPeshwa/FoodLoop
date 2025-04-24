@@ -10,11 +10,13 @@ import './jobs/matchListingsJob.js';
 import authRoutes from './routes/auth.routes.js';
 import donationRoutes from './routes/donations.routes.js';
 import ngoRoutes from './routes/ngo.routes.js';
-import joyRoutes from './routes/joy.route.js';
 import transactionRoutes from './routes/transactions.routes.js';
 import impactRoutes from './routes/impact.routes.js';
 import userRoutes from './routes/user.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import joyloopRoutes from './routes/joyloop.routes.js';
+import requestRoutes from './routes/request.routes.js';
+
 
 
 dotenv.config();
@@ -38,6 +40,8 @@ app.use('/api/transaction', transactionRoutes);
 app.use('/api/impact', impactRoutes );
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/joyloop', joyloopRoutes)
+app.use('/api/request', requestRoutes);
 
 // Real-time Donation Tracking
 // io.on('connection', (socket) => {

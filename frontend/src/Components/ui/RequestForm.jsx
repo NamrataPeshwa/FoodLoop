@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { createFoodRequest } from "../../services/dashboardService";
+import SubmittedForm from "./SubmittedForm";
 const FoodDonationRequestForm = () => {
+  const user = JSON.parse(localStorage.getItem("userData"));
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     forSomeoneElse: false,
     organizationName: "",
     contactPerson: "",
-    address: "",
-    phone: "",
+    address: user.address,
+    phone: user.contactNumber,
     requestType: "general",
     specialOccasion: "",
     celebrationName: "",
@@ -24,13 +28,19 @@ const FoodDonationRequestForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    toast.success("Food donation request submitted successfully!");
+    const createFoodRequest2 = await createFoodRequest(formData);
+    if (createFoodRequest2.error) {
+      toast.error("Error submitting request. Please try again.");
+    } else {
+      setIsSubmitted(true);
+      console.log("Form submitted:", formData);
+      toast.success("Food donation request submitted successfully!");
+    }
   };
 
-  return (
+  return !isSubmitted ? (
     <div className="flex justify-center items-center p-6">
       <div className="relative max-w-md w-full overflow-hidden rounded-lg">
         {/* Container for the form with fixed dimensions */}
@@ -174,7 +184,7 @@ const FoodDonationRequestForm = () => {
                 </select>
                 <label
                   htmlFor="requestType"
-                  className="absolute text-sm text-gray-500 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-3 text-blue-600"
+                  className="absolute text-sm transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-3 text-blue-600"
                 >
                   Request Type*
                 </label>
@@ -341,6 +351,10 @@ const FoodDonationRequestForm = () => {
         }
       `}</style>
     </div>
+  ) : (
+    <>
+      <SubmittedForm />
+    </>
   );
 };
 

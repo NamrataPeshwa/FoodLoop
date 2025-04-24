@@ -16,7 +16,6 @@ import {
 } from "@tabler/icons-react";
 import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
-import FloatingFormWidget from "../components/ui/FloatingFormWidget";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -420,7 +419,9 @@ useEffect(() => {
               {/* Tab navigation */}
               <div className="flex px-6 border-b border-[#FFF5E4]/20">
                 <button
-                  onClick={() => setSelectedTab("overview")}
+                  onClick={() => setSelectedTab("overview")
+
+                  }
                   className={`px-4 py-3 text-sm font-medium ${
                     selectedTab === "overview"
                       ? "border-b-2 border-white text-white"
@@ -430,7 +431,9 @@ useEffect(() => {
                   Overview
                 </button>
                 <button
-                  onClick={() => setSelectedTab("donations")}
+                  onClick={() => {setSelectedTab("donations")
+                    navigate('/Listings')}
+                  }
                   className={`px-4 py-3 text-sm font-medium ${
                     selectedTab === "donations"
                       ? "border-b-2 border-white text-white"
@@ -628,7 +631,6 @@ useEffect(() => {
         </div>
       </div>
     </div>
-    <FloatingFormWidget/>
   </>
 );
 };

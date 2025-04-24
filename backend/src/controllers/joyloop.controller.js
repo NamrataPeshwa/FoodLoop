@@ -1,16 +1,17 @@
 import Transaction from "../models/transaction.model.js";
 import User from "../models/user.model.js";
 import FoodListing from "../models/listing.model.js";
+import JoyLoop from "../models/joyloop.model.js";
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
 
+// GET: Top Volunteers (Joy Spreaders)
 export const getJoySpreaders = async (req, res) => {
   try {
-    const joySpreaders = await Transaction.aggregate([
-      {
-        $match: { volunteer: { $exists: true, $ne: null } }
-      },
+    const joySpreaders = await JoyLoop.aggregate([
       {
         $group: {
-          _id: "$volunteer",
+          _id: "$user",
           spreadCount: { $sum: 1 }
         }
       },
@@ -21,29 +22,29 @@ export const getJoySpreaders = async (req, res) => {
           from: "users",
           localField: "_id",
           foreignField: "_id",
-          as: "volunteerDetails"
+          as: "userDetails"
         }
       },
-      { $unwind: "$volunteerDetails" },
+      { $unwind: "$userDetails" },
       {
         $project: {
           _id: 0,
-          volunteerId: "$volunteerDetails._id",
-          name: "$volunteerDetails.name",
-          email: "$volunteerDetails.email",
+          userId: "$userDetails._id",
+          name: "$userDetails.name",
+          email: "$userDetails.email",
           spreadCount: 1
         }
       }
     ]);
-
-    return res.json(joySpreaders);
+console.log("Joy Spreaders:", joySpreaders);
+    res.json(joySpreaders);
   } catch (err) {
     console.error("Error fetching joy spreaders:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-
+// GET: Top Donors
 export const getTopDonors = async (req, res) => {
   try {
     const topDonors = await FoodListing.aggregate([
@@ -77,23 +78,68 @@ export const getTopDonors = async (req, res) => {
 
     res.json(topDonors);
   } catch (err) {
-    console.error("Error fetching top donors", err);
+    console.error("Error fetching top donors:", err);
     res.status(500).json({ error: "Server error fetching top donors" });
   }
 };
 
+// POST: Share a Joy Moment
+export const postJoyMoment = async (req, res) => {
+  try {
+    const { caption } = req.body;
+    console.log("Received caption:", req.body);
+    console.log("Received file:", req.file);  
+    const file = req.file;
 
+    let mediaUrl = "";
+    let mediaType = "";
+
+    if (file) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        resource_type: "auto"
+      });
+      mediaUrl = result.secure_url;
+      mediaType = file.mimetype.startsWith("video") ? "video" : "image";
+
+      fs.unlinkSync(file.path); // cleanup temp file
+    }
+
+    const moment = new JoyLoop({
+      user: req.user._id,
+      caption,
+      mediaUrl,
+      mediaType
+    });
+
+    await moment.save();
+
+    res.status(201).json({ success: true, data: moment });
+  } catch (error) {
+    console.error("Error posting joy moment:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// GET: All Joy Moments
 export const getJoyMoments = async (req, res) => {
   try {
-    const moments = await FoodListing.find({
-      caption: { $exists: true, $ne: "" }
-    })
+    const moments = await JoyLoop.find()
       .sort({ createdAt: -1 })
-      .limit(30);
+      .limit(30)
+      .populate("user", "name email avatar");
 
-    return res.json(moments);
-  } catch (err) {
-    console.error("Error fetching joy moments:", err);
-    res.status(500).json({ error: err.message });
+    const formatted = moments.map(moment => ({
+      _id: moment._id,
+      caption: moment.caption,
+      publicUrl: moment.mediaUrl,        // renamed for frontend consistency
+      mediaType: moment.mediaType,
+      date: moment.createdAt,
+      user: moment.user
+    }));
+
+    res.status(200).json({ success: true, data: { momentOfDay: formatted } });
+  } catch (error) {
+    console.error("Error fetching joy moments:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
