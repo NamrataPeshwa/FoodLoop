@@ -51,7 +51,11 @@ export const getUpcomingDistributions = async () => {
 
 export const createFoodRequest = async (requestData) => {
   try {
-    const res = await axios.post(`${API_URL}/api/request`, requestData, {});
+    const res = await axios.post(`${API_URL}/api/request`, requestData, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`
+      }
+    });
     return res.data;
   } catch (error) {
     console.error("Error creating food request:", error);
