@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { FoodDistributionSidebar } from "./Sidebar";
 import SustainablePackagingModal from "./Packing";
+import Loader from "../ui/Loader";
 
 const getAddressFromCoords = async (lat, lon) => {
   try {
@@ -43,8 +44,8 @@ const DonationForm = () => {
   const [showPackagingModal, setShowPackagingModal] = useState(false);
   const [donationId, setDonationId] = useState(null);
    
-  const handleCloseModal=async()=>{
-
+  const handleCloseModal=()=>{
+setShowPackagingModal(false);
   }
 
   const removeImage = () => {
@@ -61,8 +62,10 @@ const DonationForm = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         const locationData = await getAddressFromCoords(latitude, longitude);
-        // Combine all parts into a single full address
-       formData.fullAddress = `${locationData.landmark}, ${locationData.area}, ${locationData.address}`;
+        setFormData((prev) => ({
+          ...prev,
+          fullAddress: `${locationData.landmark}, ${locationData.area}, ${locationData.address}`,
+        }));
 
       
       },
@@ -130,6 +133,7 @@ const DonationForm = () => {
       // ✅ Prepare FormData
       const submissionData = new FormData();
       submissionData.append("title",formData.title);
+      console.log("title " , formData.title);
       submissionData.append("foodDescription", formData.description);
       submissionData.append("hoursOld", 1); // Default fallback or add a UI field
       submissionData.append("storage", "room temp"); // Optional UI-controlled
@@ -138,7 +142,7 @@ const DonationForm = () => {
       submissionData.append("lat", 12.9716); // You can pull this from state if needed
       submissionData.append("lng", 77.5946);
       submissionData.append("scheduledFor", new Date().toISOString()); // Placeholder
-      submissionData.append("fullAdress",formData.fullAddress);
+      submissionData.append("fullAddress",formData.fullAddress);
   
       if (formData.photo) {
         submissionData.append("images", formData.photo);
@@ -426,12 +430,26 @@ return (
                     🎉 Thank you! Your donation has been listed successfully.
                   </div>
                 )}
-
-<SustainablePackagingModal 
+{loading ? (
+  <div className="flex flex-col items-center justify-center py-16">
+    <Loader />
+    <p className="mt-4 text-colour4 font-medium">Loading packaging details...</p>
+  </div>
+) : error ? (
+  <div className="py-8 text-center">
+    <p className="text-red-600">{error}</p>
+    <button
+      onClick={fetchPackagingData}
+      className="mt-4 px-4 py-2 bg-colour1 text-white rounded-md hover:bg-amber-600 transition-colors"
+    >
+      Try Again
+    </button>
+  </div>
+) : (<SustainablePackagingModal 
         isOpen={showPackagingModal}
         onClose={handleCloseModal}
         donationId={donationId}
-      />
+      />)}
               </div>
             </form>
           </div>
