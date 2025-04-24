@@ -18,7 +18,7 @@ export const createDonation = async (req, res) => {
     if (!req.files || req.files.length === 0) {
       throw new Error("No files uploaded");
     }
-    const donorId = req.user.userId;
+    const donorId = req.user._id;
 
     const {
       foodDescription,
