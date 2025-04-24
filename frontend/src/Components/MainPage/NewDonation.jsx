@@ -42,6 +42,10 @@ const DonationForm = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPackagingModal, setShowPackagingModal] = useState(false);
   const [donationId, setDonationId] = useState(null);
+   
+  const handleCloseModal=async()=>{
+
+  }
 
   const removeImage = () => {
     setPreview(null);

@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
-import cloudinary from '../utils/cloudinary.js';  // Adjust the path as needed
+import uploadToCloudinary  from '../utils/uploadToCloudinary .js';  // Adjust the path as needed
 import upload from '../middleware/multerConfig.js';  
 dotenv.config()
 export const signup = async (req, res) => {
@@ -33,10 +33,10 @@ export const signup = async (req, res) => {
 
     // If user is a donor or NGO and has certificates, handle the file upload
     if ((role === 'donor' || role === 'NGO') && req.files && req.files.length > 0) {
-      // Upload files to Cloudinary
+      // Upload files to uploadToCloudinary 
       const certificateUrls = [];
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path);
+        const result = await uploadToCloudinary .uploader.upload(file.path);
         certificateUrls.push(result.secure_url);
       }
       
