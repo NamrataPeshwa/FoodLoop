@@ -1,4 +1,4 @@
-import FoodListing from "../models/FoodListing.js";
+import FoodListing from "../models/listing.model.js";
 import redis from "../utils/redis.js";
 import { generatePackagingText, generatePackagingImage } from "../utils/geminiImagenUtils.js";
 

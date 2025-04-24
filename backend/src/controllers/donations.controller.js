@@ -15,22 +15,27 @@ export const createDonation = async (req, res) => {
     console.log("Request body:", req.body);
     console.log("Uploaded files:", req.files || req.file);
     console.log("Authenticated user:", req.user);
+    
     if (!req.files || req.files.length === 0) {
       throw new Error("No files uploaded");
     }
+
     const donorId = req.user._id;
 
     const {
       foodDescription,
+      title,
       hoursOld,
       storage,
       weight,
       expirationDate,
       lat,
       lng,
-      scheduledFor
+      scheduledFor,
+      fullAddress,  // Include the full address from request body
     } = req.body;
 
+    // Location setup
     const location = {
       type: 'Point',
       coordinates: [parseFloat(lng), parseFloat(lat)],
@@ -60,8 +65,10 @@ export const createDonation = async (req, res) => {
       }
     }
 
+    // Create the donation including the full address
     const donation = await FoodListing.create({
       donor: donorId,
+      foodType : title,
       location,
       foodDescription,
       predictedCategory,
@@ -71,7 +78,8 @@ export const createDonation = async (req, res) => {
       expirationDate,
       scheduledFor,
       images: imageUrls,
-      isPerishable
+      isPerishable,
+      fullAddress,  // Store the full address received from the frontend
     });
 
     res.status(201).json({ success: true, donation });
@@ -94,13 +102,17 @@ export const getDonations = async (req, res) => {
       status: 'pending',
       _id: { $nin: matchedListings }
     }).populate('donor', 'name');
+    console.log("Fetched donations:", donations);
 
     const formattedDonations = donations.map(donation => ({
-      foodType: donation.foodType,
+      foodType: donation.foodType || 'Food',
       name: donation.donor?.name || 'Anonymous',
-      tags: donation.tags || [],
-      location: donation.pickupLocation || 'N/A',
-      expiryDate: donation.expiryDate,
+      tags: donation.items?.flatMap(item => item.name) || [],
+      location: donation.location?.coordinates 
+        ? `Lat: ${donation.location.coordinates[1]}, Lng: ${donation.location.coordinates[0]}`
+        : 'N/A',
+      expiryDate: donation.expirationDate,
+      adress : donation.fullAddress || 'N/A', // Use fullAddress if available
       images: donation.images || [],
     }));
 

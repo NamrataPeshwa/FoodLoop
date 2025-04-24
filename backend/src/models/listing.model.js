@@ -17,6 +17,11 @@ const foodListingSchema = new Schema(
       trim: true 
     },
 
+    foodType:{
+      type:String,
+      required : true
+    },
+
     // ML‐predicted meal category (snack, lunch, bfast, etc.)
     predictedCategory: {
       type: String,
@@ -81,7 +86,8 @@ value: {
 },
 completedAt: {
   type: Date
-}
+},
+fullAddress: { type: String, required: true }, // New field for storing the full address
   },
   { timestamps: true }
 );

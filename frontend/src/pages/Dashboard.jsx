@@ -25,10 +25,11 @@ const Dashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef(null);
   const buttonRef = useRef(null);
-  
+
   const handleAvatarClick = () => {
     navigate('/joyloop');
   };
+
   const handleProfileClick = () => {
     navigate('/profile');
   };
@@ -398,12 +399,10 @@ useEffect(() => {
                     )}
                   </div>
                   
-                  <button 
-                    className="flex items-center text-white py-2 rounded-full transition-all ml-2"
-                    onClick={handleAvatarClick}
-                  >
+                 
                     <ButtonWithAvatar/>
-                  </button>
+                   
+                      
                   <div className="relative ml-2">
                     <button 
                       className="flex items-center bg-amber-500 hover:bg-amber-600 text-white py-2 px-1 rounded-full transition-all"

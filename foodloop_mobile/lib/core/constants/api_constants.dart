@@ -5,7 +5,10 @@ class ApiConstants {
 
 
 
-  static const String baseUrl = 'http://192.168.123.198:5000/api';
+  // static const String baseUrl = 'http://192.168.123.198:5000/api';
+
+  // hosted URL
+  static const String baseUrl = 'https://foodloop-72do.onrender.com/api';
 
 
 //auth urls

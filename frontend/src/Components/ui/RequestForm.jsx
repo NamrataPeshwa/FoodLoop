@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createFoodRequest } from "../../services/dashboardService";
+import SubmittedForm from "./SubmittedForm";
 const FoodDonationRequestForm = () => {
-  const user= JSON.parse(localStorage.getItem("userData"));
+  const user = JSON.parse(localStorage.getItem("userData"));
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     forSomeoneElse: false,
     organizationName: "",
     contactPerson: "",
-    address: user.address,
-    phone: user.contactNumber,
+    address: user.address || "",
+    phone: user.contactNumber || "",
     requestType: "general",
     specialOccasion: "",
     celebrationName: "",
@@ -28,20 +30,18 @@ const FoodDonationRequestForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
     const createFoodRequest2 = await createFoodRequest(formData);
     if (createFoodRequest2.error) {
       toast.error("Error submitting request. Please try again.");
     } else {
+      setIsSubmitted(true);
       console.log("Form submitted:", formData);
       toast.success("Food donation request submitted successfully!");
     }
   };
 
-  return (
-    
+  return !isSubmitted ? (
     <div className="flex justify-center items-center p-6">
-    {console.log(localStorage.userData)}
       <div className="relative max-w-md w-full overflow-hidden rounded-lg">
         {/* Container for the form with fixed dimensions */}
         <div className="relative bg-white border border-transparent rounded-lg shadow-lg">
@@ -351,6 +351,10 @@ const FoodDonationRequestForm = () => {
         }
       `}</style>
     </div>
+  ) : (
+    <>
+      <SubmittedForm />
+    </>
   );
 };
 
