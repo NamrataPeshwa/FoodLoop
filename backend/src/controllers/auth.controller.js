@@ -3,6 +3,8 @@ const { google } = googleapis;
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv'
+dotenv.config()
 export const signup = async (req, res) => {
   try {
     console.log("Received signup request:", req.body);
@@ -100,7 +102,7 @@ export const login = async (req, res) => {
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
-
+console.log(process.env.GOOGLE_CLIENT_ID)
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -117,6 +119,7 @@ export const getGoogleAuthURL = (req, res) => {
       'https://www.googleapis.com/auth/userinfo.email',
     ],
     prompt: "consent",
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI, // ✅ Required!
   });
 
   res.json({ url });
