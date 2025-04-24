@@ -3,3 +3,5 @@
 foodloop_api/venv
 /node_modules
 package-lock.json
+foodloop_api/dataset/
+foodloop_api/__pycache__
