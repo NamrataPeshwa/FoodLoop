@@ -6,7 +6,7 @@ import  { upload } from '../middleware/multerConfig.js';
 const router = express.Router();
 
 router.post('/create',authMiddleware, upload.array('images'), createDonation);
-router.get('/list', getDonations);
+router.get('/list',authMiddleware, getDonations);
 router.get("/my", authMiddleware, getUserDonations);
 
 

@@ -165,6 +165,7 @@ const [joySpreaders, setJoySpreaders] = useState([]);
 const fetchJoySpreaders = async () => {
   try {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_API}/api/joyloop/joy-spreaders`);
+    console.log(res);
     setJoySpreaders(res.data);
   } catch (err) {
     console.error("Error fetching joy spreaders:", err);

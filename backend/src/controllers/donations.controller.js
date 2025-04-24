@@ -87,21 +87,29 @@ export const createDonation = async (req, res) => {
 };
 
 export const getDonations = async (req, res) => {
-    try {
-        const matchedListings = await Transaction.find().distinct('foodListing');
+  try {
+    const matchedListings = await Transaction.find().distinct('foodListing');
 
-        const donations = await FoodListing.find({
-            status: 'pending',
-            _id: { $nin: matchedListings }, // exclude already matched
-        });
+    const donations = await FoodListing.find({
+      status: 'pending',
+      _id: { $nin: matchedListings }
+    }).populate('donor', 'name');
 
-        res.json(donations);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error fetching donations' });
-    }
+    const formattedDonations = donations.map(donation => ({
+      foodType: donation.foodType,
+      name: donation.donor?.name || 'Anonymous',
+      tags: donation.tags || [],
+      location: donation.pickupLocation || 'N/A',
+      expiryDate: donation.expiryDate,
+      images: donation.images || [],
+    }));
+
+    res.json({ success: true, data: formattedDonations });
+  } catch (error) {
+    console.error("Error fetching donations:", error);
+    res.status(500).json({ success: false, error: 'Error fetching donations' });
+  }
 };
-
 export const getUserDonations = async (req, res) => {
     try {
         const userId = req.user.userId;
