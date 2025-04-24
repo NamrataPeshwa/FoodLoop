@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_BACKEND_API;
 
 const getAuthToken = () => {
   
-  const token = sessionStorage.getItem("token");  // Check if this is available
+  const token = localStorage.getItem("token");  // Check if this is available
 
 if (!token) {
   console.error("No token found in localStorage.");
