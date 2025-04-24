@@ -26,6 +26,10 @@ const server = http.createServer(app);
 app.use(cors());
 app.use(express.json());
 
+app.get('/health', (req, res) => {
+      res.status(200).send('OK');
+    }
+    );
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/donations', donationRoutes);
