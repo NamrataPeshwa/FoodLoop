@@ -429,12 +429,26 @@ return (
                     🎉 Thank you! Your donation has been listed successfully.
                   </div>
                 )}
-
-<SustainablePackagingModal 
+{loading ? (
+  <div className="flex flex-col items-center justify-center py-16">
+    <Loader />
+    <p className="mt-4 text-colour4 font-medium">Loading packaging details...</p>
+  </div>
+) : error ? (
+  <div className="py-8 text-center">
+    <p className="text-red-600">{error}</p>
+    <button
+      onClick={fetchPackagingData}
+      className="mt-4 px-4 py-2 bg-colour1 text-white rounded-md hover:bg-amber-600 transition-colors"
+    >
+      Try Again
+    </button>
+  </div>
+) : (<SustainablePackagingModal 
         isOpen={showPackagingModal}
         onClose={handleCloseModal}
         donationId={donationId}
-      />
+      />)}
               </div>
             </form>
           </div>
