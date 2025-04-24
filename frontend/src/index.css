@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 .scroll-lock {
     position: fixed;
     width: 100vw;
