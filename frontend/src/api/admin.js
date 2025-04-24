@@ -1,19 +1,9 @@
 // api/admin.js - Central API module for admin functionality
-import * as mockAPI from './mockData';
 
-const API_BASE_URL = 'http://localhost:5000/api/admin';
-
-// Flag to control whether to use mock data or real API
-const USE_MOCK_DATA = true;
+const API_BASE_URL = 'https://foodloop-72do.onrender.com/api/admin';
 
 // Helper function for making API requests
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
-  // If using mock data, return early
-  if (USE_MOCK_DATA) {
-    console.log(`Mock API request: ${endpoint}`);
-    return null; // This won't actually be used when mocking
-  }
-
   const options = {
     method,
     headers: {
@@ -40,32 +30,36 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
 
 // Analytics API calls
 export const getOverviewStats = (timeframe) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.getOverviewStats(timeframe);
-  }
-  return apiRequest(`/stats/overview?timeframe=${timeframe}`);
+  return apiRequest(`/analytics/overview?timeframe=${timeframe}`);
 };
 
 export const getDonationStats = (timeframe) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.getDonationStats(timeframe);
-  }
-  return apiRequest(`/stats/donations?timeframe=${timeframe}`);
+  return apiRequest(`/analytics/donations?timeframe=${timeframe}`);
 };
 
 export const getUserStats = (timeframe) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.getUserStats(timeframe);
-  }
-  return apiRequest(`/stats/users?timeframe=${timeframe}`);
+  return apiRequest(`/analytics/users?timeframe=${timeframe}`);
+};
+
+// Dashboard API calls
+export const getDashboardStats = () => {
+  return apiRequest('/dashboard-stats');
+};
+
+export const getDashboardAlerts = () => {
+  return apiRequest('/dashboard-alerts');
+};
+
+export const getRecentDonations = () => {
+  return apiRequest('/recent-donations');
+};
+
+export const getUpcomingDistributions = () => {
+  return apiRequest('/upcoming-distributions');
 };
 
 // User Management API calls
 export const fetchUsers = (filters) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.fetchUsers(filters);
-  }
-
   const queryParams = new URLSearchParams();
   if (filters.role !== 'all') queryParams.append('role', filters.role);
   if (filters.verificationStatus !== 'all') queryParams.append('verificationStatus', filters.verificationStatus);
@@ -75,35 +69,22 @@ export const fetchUsers = (filters) => {
 };
 
 export const verifyUser = (userId, verified, notes = '') => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.verifyUser(userId, verified, notes);
-  }
-  return apiRequest(`/users/${userId}/verify`, 'POST', {
+  return apiRequest(`/users/${userId}/verify`, 'PUT', {
     verified,
     notes
   });
 };
 
 export const flagUser = (userId, reason) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.flagUser(userId, reason);
-  }
-  return apiRequest(`/users/${userId}/flag`, 'POST', { reason });
+  return apiRequest(`/users/${userId}/flag`, 'PUT', { reason });
 };
 
 export const deleteUser = (userId) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.deleteUser(userId);
-  }
   return apiRequest(`/users/${userId}`, 'DELETE');
 };
 
 // Donation Tracking API calls
 export const fetchDonations = (filters) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.fetchDonations(filters);
-  }
-
   const queryParams = new URLSearchParams();
   if (filters.status !== 'all') queryParams.append('status', filters.status);
   if (filters.dateRange !== 'all') queryParams.append('dateRange', filters.dateRange);
@@ -114,140 +95,42 @@ export const fetchDonations = (filters) => {
 };
 
 export const updateDonationStatus = (donationId, status) => {
-  if (USE_MOCK_DATA) {
-    return mockAPI.updateDonationStatus(donationId, status);
-  }
-  return apiRequest(`/donations/${donationId}/status`, 'PATCH', { status });
+  return apiRequest(`/donations/${donationId}/status`, 'PUT', { status });
 };
 
 export const flagDonation = (donationId, reason) => {
-    if (USE_MOCK_DATA) {
-      return mockAPI.flagDonation(donationId, reason);
-    }
-    return apiRequest(`/donations/${donationId}/flag`, 'POST', { reason });
-  };
+  return apiRequest(`/donations/${donationId}/flag`, 'PUT', { reason });
+};
+
+// Audit Logs API calls
+export const getAuditLogs = (filters) => {
+  const queryParams = new URLSearchParams();
+  if (filters.severity !== 'all') queryParams.append('severity', filters.severity);
+  if (filters.action !== 'all') queryParams.append('action', filters.action);
+  if (filters.dateRange !== 'all') queryParams.append('dateRange', filters.dateRange);
+  if (filters.userId) queryParams.append('userId', filters.userId);
   
-  // Audit Logs API calls
-  export const getAuditLogs = (filters) => {
-    if (USE_MOCK_DATA) {
-      return mockAPI.getAuditLogs(filters);
-    }
+  return apiRequest(`/audit-logs?${queryParams.toString()}`);
+};
+
+// Distribution management API calls
+export const fetchDistributions = (filters = {}) => {
+  const queryParams = new URLSearchParams();
+  if (filters.status) queryParams.append('status', filters.status);
+  if (filters.dateRange) queryParams.append('dateRange', filters.dateRange);
+  if (filters.distributorId) queryParams.append('distributorId', filters.distributorId);
   
-    const queryParams = new URLSearchParams();
-    if (filters.severity !== 'all') queryParams.append('severity', filters.severity);
-    if (filters.action !== 'all') queryParams.append('action', filters.action);
-    if (filters.dateRange !== 'all') queryParams.append('dateRange', filters.dateRange);
-    if (filters.userId) queryParams.append('userId', filters.userId);
-    
-    return apiRequest(`/logs?${queryParams.toString()}`);
-  };
-  
-  // Distribution management API calls
-  export const fetchDistributions = (filters = {}) => {
-    if (USE_MOCK_DATA) {
-      // Get the distributions from mock data
-      const distributions = mockAPI.mockData.distributions;
-      
-      // Apply basic filtering
-      let filteredDistributions = [...distributions];
-      
-      if (filters.status) {
-        filteredDistributions = filteredDistributions.filter(dist => dist.status === filters.status);
-      }
-      
-      if (filters.dateRange) {
-        const now = new Date();
-        let cutoffDate;
-        
-        switch (filters.dateRange) {
-          case 'today':
-            cutoffDate = new Date(now.setHours(0, 0, 0, 0));
-            break;
-          case 'week':
-            cutoffDate = new Date(now.setDate(now.getDate() - 7));
-            break;
-          case 'month':
-            cutoffDate = new Date(now.setMonth(now.getMonth() - 1));
-            break;
-          default:
-            cutoffDate = new Date(0);
-        }
-        
-        filteredDistributions = filteredDistributions.filter(dist => 
-          new Date(dist.date) >= cutoffDate
-        );
-      }
-      
-      // Return the filtered distributions with a delay to simulate API request
-      return new Promise(resolve => {
-        setTimeout(() => resolve(filteredDistributions), 500);
-      });
-    }
-    
-    const queryParams = new URLSearchParams();
-    if (filters.status) queryParams.append('status', filters.status);
-    if (filters.dateRange) queryParams.append('dateRange', filters.dateRange);
-    if (filters.distributorId) queryParams.append('distributorId', filters.distributorId);
-    
-    return apiRequest(`/distributions?${queryParams.toString()}`);
-  };
-  
-  export const updateDistributionStatus = (distributionId, status, data = {}) => {
-    if (USE_MOCK_DATA) {
-      return new Promise(resolve => {
-        setTimeout(() => resolve({ 
-          success: true, 
-          distributionId, 
-          status, 
-          message: `Distribution ${distributionId} status updated to ${status}` 
-        }), 300);
-      });
-    }
-    
-    return apiRequest(`/distributions/${distributionId}/status`, 'PATCH', { status, ...data });
-  };
-  
-  export const assignDonationToDistribution = (distributionId, donationIds) => {
-    if (USE_MOCK_DATA) {
-      return new Promise(resolve => {
-        setTimeout(() => resolve({ 
-          success: true, 
-          distributionId,
-          donationIds,
-          message: `${donationIds.length} donations assigned to distribution ${distributionId}` 
-        }), 400);
-      });
-    }
-    
-    return apiRequest(`/distributions/${distributionId}/donations`, 'POST', { donationIds });
-  };
-  
-  export const assignVolunteersToDistribution = (distributionId, volunteerIds) => {
-    if (USE_MOCK_DATA) {
-      return new Promise(resolve => {
-        setTimeout(() => resolve({ 
-          success: true, 
-          distributionId,
-          volunteerIds,
-          message: `${volunteerIds.length} volunteers assigned to distribution ${distributionId}` 
-        }), 350);
-      });
-    }
-    
-    return apiRequest(`/distributions/${distributionId}/volunteers`, 'POST', { volunteerIds });
-  };
-  
-  // Export direct access to mock data for development/testing
-  export const getMockData = () => {
-    if (USE_MOCK_DATA) {
-      return mockAPI.mockData;
-    }
-    return null;
-  };
-  
-  // Toggle mock data usage (useful for development switching)
-  export const setUseMockData = (useMock) => {
-    // This doesn't actually modify the constant, but can be used for logging
-    console.log(`API mode set to: ${useMock ? 'MOCK' : 'REAL'}`);
-    // In a real implementation, you might use a state management system to track this
-  };
+  return apiRequest(`/distributions?${queryParams.toString()}`);
+};
+
+export const updateDistributionStatus = (distributionId, status, data = {}) => {
+  return apiRequest(`/distributions/${distributionId}/status`, 'PUT', { status, ...data });
+};
+
+export const assignDonationToDistribution = (distributionId, donationIds) => {
+  return apiRequest(`/distributions/${distributionId}/donations`, 'POST', { donationIds });
+};
+
+export const assignVolunteersToDistribution = (distributionId, volunteerIds) => {
+  return apiRequest(`/distributions/${distributionId}/volunteers`, 'POST', { volunteerIds });
+};
