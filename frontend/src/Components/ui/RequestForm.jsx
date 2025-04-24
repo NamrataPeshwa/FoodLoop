@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { createFoodRequest } from "../../services/dashboardService";
 const FoodDonationRequestForm = () => {
   const [formData, setFormData] = useState({
     forSomeoneElse: false,
@@ -24,10 +25,16 @@ const FoodDonationRequestForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    toast.success("Food donation request submitted successfully!");
+    console.log(formData);
+    const createFoodRequest2 = await createFoodRequest(formData);
+    if (createFoodRequest2.error) {
+      toast.error("Error submitting request. Please try again.");
+    } else {
+      console.log("Form submitted:", formData);
+      toast.success("Food donation request submitted successfully!");
+    }
   };
 
   return (
@@ -174,7 +181,7 @@ const FoodDonationRequestForm = () => {
                 </select>
                 <label
                   htmlFor="requestType"
-                  className="absolute text-sm text-gray-500 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-3 text-blue-600"
+                  className="absolute text-sm transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-3 text-blue-600"
                 >
                   Request Type*
                 </label>

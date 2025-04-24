@@ -5,7 +5,7 @@ import {
   getRequestById,
 getAllRequests,
   claimRequest
-} from '../controllers/foodRequestController.js';
+} from '../controllers/foodReq.controller.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();

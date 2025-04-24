@@ -1,5 +1,5 @@
 // frontend/src/services/dashboardService.js
-import axios from 'axios';
+import axios from "axios";
 
 const API_URL = import.meta.env.VITE_BACKEND_API;
 
@@ -21,4 +21,14 @@ export const getRecentDonations = async () => {
 export const getUpcomingDistributions = async () => {
   const res = await axios.get(`${API_URL}/api/admin/upcoming-distributions`);
   return res.data.upcomingDistributions;
+};
+
+export const createFoodRequest = async (requestData) => {
+  try {
+    const res = await axios.post(`${API_URL}/api/request`, requestData, {});
+    return res.data;
+  } catch (error) {
+    console.error("Error creating food request:", error);
+    throw error;
+  }
 };
