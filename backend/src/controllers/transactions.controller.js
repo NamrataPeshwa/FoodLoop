@@ -4,7 +4,7 @@ import express from "express";
 import Transaction from "../models/transaction.model.js";
 import FoodListing from "../models/listing.model.js";
 import User from "../models/user.model.js";
-import redis from "../utils/redis.js";
+import redisClient from "../utils/redis.js";
 import { sendSMS } from "../services/notificationService.js";
 import Web3 from "web3";
 // import foodLoopAbi from "../blockchain/build/contracts/FoodLoop.json" assert { type: "json" };
@@ -72,11 +72,11 @@ export const matchFoodListings = async (req, res) => {
       });
       if (existingTx) continue;
 
-      // 3) Find closest NGO (with simple Redis cache)
+      // 3) Find closest NGO (with simple redisClient cache)
       const cacheKey = `ngo-near:${listing._id}`;
       let closestNGO = null;
 
-      const cached = await redis.get(cacheKey);
+      const cached = await redisClient.get(cacheKey);
       if (cached) {
         const ngo = JSON.parse(cached);
         if (!ngo.foodPreferences.includes(listing.foodType)) {
@@ -98,7 +98,7 @@ export const matchFoodListings = async (req, res) => {
           if (!ngo.foodPreferences.includes(listing.foodType)) {
             closestNGO = ngo;
             // cache minimal info
-            await redis.set(cacheKey, JSON.stringify({
+            await redisClient.set(cacheKey, JSON.stringify({
               _id: ngo._id.toString(),
               foodPreferences: ngo.foodPreferences
             }), 'EX', 300);
