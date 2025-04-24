@@ -285,7 +285,7 @@ return (
                     <input
                       type="text"
                       name="address"
-                      value={formData.address}
+                      value={formData.fullAddress}
                       onChange={handleChange}
                       className="w-full p-2 border rounded"
                       placeholder="Full Address"
