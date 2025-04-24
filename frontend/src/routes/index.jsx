@@ -14,7 +14,8 @@ import DeliveryTimeline from "../pages/DeliveryTimeline.jsx";
 import DonationForm from "../Components/MainPage/NewDonation.jsx";
 import AdminDashboard from "../pages/AdminDashboard.jsx";
 import DonationList from "../pages/DonationListing.jsx";
-import FoodDonationRequestForm from "../components/ui/RequestForm.jsx";
+import FoodDonationRequestForm from "../Components/ui/RequestForm.jsx";
+import ChatbotWidget from "../Components/ui/ChatbotUI.jsx";
 
 const AppRoutes = () => {
   return (
@@ -31,8 +32,9 @@ const AppRoutes = () => {
         <Route path="/map" element={<DonationMap />} />
         <Route path="/orderstatus" element={<DeliveryTimeline  currentStep={5}/>} />
         <Route path="/donate" element={<DonationForm/>} />
-        <Route path="/Listings" element={<DonationList  /> } />        <Route path="/request" element={<FoodDonationRequestForm/>} />
-
+        <Route path="/Listings" element={<DonationList  /> } /> 
+        <Route path="/request" element={<FoodDonationRequestForm/>} />
+        <Route path="/chat" element={<ChatbotWidget/>} />
 
         <Route path="/admin" element={<AdminDashboard />} />
         <Route

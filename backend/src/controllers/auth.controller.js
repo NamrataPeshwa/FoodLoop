@@ -4,6 +4,8 @@ import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
+import {uploadToCloudinary } from '../utils/cloudinary.js';  // Adjust the path as needed
+import {upload} from '../middleware/multerConfig.js';  
 dotenv.config()
 export const signup = async (req, res) => {
   try {
@@ -29,6 +31,19 @@ export const signup = async (req, res) => {
       associatedNGO,
     } = req.body;
 
+    // If user is a donor or NGO and has certificates, handle the file upload
+    if ((role === 'donor' || role === 'NGO') && req.files && req.files.length > 0) {
+      // Upload files to uploadToCloudinary 
+      const certificateUrls = [];
+      for (const file of req.files) {
+        const result = await uploadToCloudinary.uploader.upload(file.path);
+        certificateUrls.push(result.secure_url);
+      }
+      
+      // Add the certificate URLs to the user data
+      req.body.certificates = certificateUrls;
+    }
+
     // Check if user exists
     const existingUser = await User.findOne({ email });
 
@@ -43,8 +58,8 @@ export const signup = async (req, res) => {
         ...(address && { address }),
         ...(website && { website }),
         ...(location && { location }),
-        ...(role === 'donor' && { foodTypes, walletAddress }),
-        ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates }),
+        ...(role === 'donor' && { foodTypes, walletAddress, certificates: req.body.certificates }),
+        ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates: req.body.certificates }),
         ...(role === 'volunteer' && { volunteerInterests, associatedNGO }),
       });
 
@@ -57,6 +72,7 @@ export const signup = async (req, res) => {
       return res.status(400).json({ error: "User already exists. Please log in." });
     }
 
+    // Create new user
     const userData = {
       name,
       email,
@@ -69,8 +85,8 @@ export const signup = async (req, res) => {
       ...(address && { address }),
       ...(website && { website }),
       ...(location && { location }),
-      ...(role === 'donor' && { foodTypes, walletAddress }),
-      ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates }),
+      ...(role === 'donor' && { foodTypes, walletAddress, certificates: req.body.certificates }),
+      ...(role === 'NGO' && { foodPreferences, needsVolunteer, certificates: req.body.certificates }),
       ...(role === 'volunteer' && { volunteerInterests, associatedNGO }),
     };
 

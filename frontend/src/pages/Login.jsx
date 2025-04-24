@@ -56,6 +56,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
+      console.log(import.meta.env.VITE_BACKEND_API)
       const res = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/auth/google-url`);
       const data = await res.json();
       if (data.url) {

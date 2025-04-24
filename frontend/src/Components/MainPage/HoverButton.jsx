@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-
+import { useNavigate } from 'react-router-dom';
 export default function ButtonWithAvatar() {
+  
   // State for the HoverBorderGradient component
   const [hovered, setHovered] = useState(false);
+ 
   const [direction, setDirection] = useState("TOP");
-  
+const navigate = useNavigate();
+ 
   // Rotate direction function
   const rotateDirection = (currentDirection) => {
     const directions = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
@@ -13,6 +16,9 @@ export default function ButtonWithAvatar() {
     return directions[nextIndex];
   };
   
+  const handleAvatarClick = () => {
+    navigate('/joyloop');
+  };
   // Gradient maps
   const movingMap = {
     TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
@@ -40,6 +46,8 @@ export default function ButtonWithAvatar() {
       <button
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onClick={handleAvatarClick}
+       
         className="relative flex rounded-full border content-center bg-black/20 hover:bg-black/10 transition duration-500 items-center flex-col gap-10 h-min justify-center overflow-visible p-px w-fit"
       >
         <div className="w-auto text-white z-10 bg-black px-4 py-2 rounded-full">

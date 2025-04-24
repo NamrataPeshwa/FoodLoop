@@ -18,7 +18,12 @@ export const authMiddleware = (req, res, next) => {
 };
 
 export const isAdmin = (req, res, next) => {
-    try {
+  const token = req.header('Authorization');
+    
+  if (!token) return res.status(401).json({ error: 'Access denied' });
+  try {
+      const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+        req.user = decoded;
       // Ensure the user is authenticated and role is available
       if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied. Admins only.' });

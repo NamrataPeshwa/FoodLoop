@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { FoodDistributionSidebar } from "./Sidebar";
+import SustainablePackagingModal from "./Packing";
 
 const getAddressFromCoords = async (lat, lon) => {
   try {
@@ -33,11 +34,18 @@ const DonationForm = () => {
     area: "",
     address: "",
     expiryTime: "",
+    fullAddress:"",
     photo: null,
   });
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPackagingModal, setShowPackagingModal] = useState(false);
+  const [donationId, setDonationId] = useState(null);
+   
+  const handleCloseModal=()=>{
+setShowPackagingModal(false);
+  }
 
   const removeImage = () => {
     setPreview(null);
@@ -55,10 +63,10 @@ const DonationForm = () => {
         const locationData = await getAddressFromCoords(latitude, longitude);
         setFormData((prev) => ({
           ...prev,
-          landmark: locationData.landmark,
-          area: locationData.area,
-          address: locationData.address,
+          fullAddress: `${locationData.landmark}, ${locationData.area}, ${locationData.address}`,
         }));
+
+      
       },
       () => {
         alert("Unable to retrieve your location");
@@ -123,6 +131,8 @@ const DonationForm = () => {
   
       // ✅ Prepare FormData
       const submissionData = new FormData();
+      submissionData.append("title",formData.title);
+      console.log("title " , formData.title);
       submissionData.append("foodDescription", formData.description);
       submissionData.append("hoursOld", 1); // Default fallback or add a UI field
       submissionData.append("storage", "room temp"); // Optional UI-controlled
@@ -131,6 +141,7 @@ const DonationForm = () => {
       submissionData.append("lat", 12.9716); // You can pull this from state if needed
       submissionData.append("lng", 77.5946);
       submissionData.append("scheduledFor", new Date().toISOString()); // Placeholder
+      submissionData.append("fullAddress",formData.fullAddress);
   
       if (formData.photo) {
         submissionData.append("images", formData.photo);
@@ -152,8 +163,14 @@ const DonationForm = () => {
       const data = await response.json();
       console.log("✅ Submission successful:", data);
   
-      // Reset form
       setShowSuccess(true);
+      setDonationId(data._id);
+
+      setTimeout(() => {
+        setShowPackagingModal(true);
+      }, 1500);
+
+      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -284,7 +301,7 @@ return (
                     <input
                       type="text"
                       name="address"
-                      value={formData.address}
+                      value={formData.fullAddress}
                       onChange={handleChange}
                       className="w-full p-2 border rounded"
                       placeholder="Full Address"
@@ -292,7 +309,7 @@ return (
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block font-semibold">Landmark</label>
                     <input
                       type="text"
@@ -316,7 +333,7 @@ return (
                       placeholder="e.g. Andheri West"
                       required
                     />
-                  </div>
+                  </div> */}
                 </>
               )}
 
@@ -412,6 +429,12 @@ return (
                     🎉 Thank you! Your donation has been listed successfully.
                   </div>
                 )}
+
+<SustainablePackagingModal 
+        isOpen={showPackagingModal}
+        onClose={handleCloseModal}
+        donationId={donationId}
+      />
               </div>
             </form>
           </div>
