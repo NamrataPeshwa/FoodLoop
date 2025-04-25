@@ -13,6 +13,7 @@ import {
 import { IconAlertCircle, IconChartBar, IconHeartHandshake, IconMapPin, IconTruckDelivery } from "@tabler/icons-react";
 import { User } from "lucide-react";
 const Header = () => {
+  // eslint-disable-next-line no-unused-vars
   const [stats, setStats] = useState([]);
 
   const [selectedTab, setSelectedTab] = useState("overview");
