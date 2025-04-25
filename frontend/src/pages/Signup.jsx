@@ -59,12 +59,13 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex h-screen relative overflow-hidden bg-gradient-to-br from-orange-200 to-yellow-50">
+    <div className="flex h-screen font-merriweather relative overflow-hidden bg-gradient-to-br from-orange-200 to-yellow-50">
       {/* Food Meteors Animation Background */}
       <FoodMeteors number={15} />
       
-      <div className="w-[60%] flex justify-center items-center z-10">
+      <div className="w-[60%] flex justify-center  items-center z-10">
         <div className="transform scale-90 relative bg-white/80 backdrop-blur-sm p-8 shadow-lg rounded-lg w-[28rem]">
+
           <form onSubmit={handleSubmit} className="relative z-10">
             <h2 className="text-2xl font-bold text-center mb-6 text-green-600">Join FoodLoop</h2>
             <button

@@ -68,7 +68,7 @@ export const matchFoodListings = async (req, res) => {
       // 2) Skip if already has a pending or confirmed transaction
       const existingTx = await Transaction.findOne({
         foodListing: listing._id,
-        status:     { $in: ['requested', 'confirmed'] }
+        status:     { $in: ['pending', 'confirmed'] }
       });
       if (existingTx) continue;
 
@@ -90,7 +90,7 @@ export const matchFoodListings = async (req, res) => {
           location: {
             $near: {
               $geometry: listing.location,
-              $maxDistance: 10000
+              $maxDistance: 500
             }
           }
         });
@@ -138,7 +138,7 @@ export const matchFoodListings = async (req, res) => {
         donor:       listing.donor._id,
         ngo:         closestNGO._id,
         volunteer:   closestVolunteer?._id || null,
-        status:      'requested',
+        status:      'pending',
         confirmedBy: []          // will accumulate NGO/volunteer IDs on confirm
       });
 
@@ -148,7 +148,7 @@ export const matchFoodListings = async (req, res) => {
       await listing.save();
 
       // 7) Send confirmation emails
-      const base = process.env.BASE_URL;
+      const base = 'https://foodloop-72do.onrender.com';
       // NGO
       await sendConfirmationEmail(
         closestNGO.email,
@@ -285,61 +285,152 @@ export const confirmDeliveryAndMintNFT = async (req, res) => {
     });
   } catch (error) {
     console.error("Minting Error:", error);
-    res
-      .status(500)
-      .json({
-        message: "Failed to confirm delivery on-chain",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Failed to confirm delivery on-chain",
+      error: error.message,
+    });
   }
 };
 
-export const updateTransactionStatus = async (req, res) => {
+export const getOrderTimeline = async (req, res) => {
   try {
-    const { transactionId } = req.params;
-    const { status, note } = req.body;
-    const userId = req.user._id;
-    const userRole = req.user.role.toLowerCase(); // 'donor', 'ngo', 'volunteer', 'admin'
+    const { orderId } = req.params;
 
-    // Define which roles may set which status
-    const allowed = {
-      requested: ["ngo"],
-      picked_up: ["volunteer"],
-      in_transit: ["volunteer"],
-      delivered: ["ngo"],
-      confirmed: ["admin"],
+    // Validate orderId format
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: 'Invalid order ID format' });
+    }
+
+    const order = await Order.findById(orderId);
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Check authorization - users should only access orders they're involved with
+    // Unless they're an admin
+    if (!req.user.isAdmin) {
+      const userRole = req.user.role;
+      const userId = req.user._id;
+      
+      // Check if user is authorized to view this order
+      if (
+        (userRole === 'donor' && order.donor.toString() !== userId.toString()) ||
+        (userRole === 'ngo' && order.ngo.toString() !== userId.toString()) ||
+        (userRole === 'volunteer' && order.volunteer?.toString() !== userId.toString())
+      ) {
+        return res.status(403).json({ message: 'Not authorized to view this order timeline' });
+      }
+    }
+
+    // Return timeline events
+    return res.status(200).json({
+      orderId: order._id,
+      currentStatus: order.status,
+      events: order.timeline || []
+    });
+  } catch (error) {
+    console.error('Error fetching order timeline:', error);
+    return res.status(500).json({ message: 'Server error while fetching timeline' });
+  }
+};
+
+/**
+ * Update order status and add timeline event
+ * @route PUT /api/orders/:orderId/update-status
+ */
+export const updateOrderStatus = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { orderId } = req.params;
+    const { status, note } = req.body;
+    
+    // Default to current user's role if not specified
+    const by = req.body.by || req.user.role;
+    
+    // Validate orderId format
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: 'Invalid order ID format' });
+    }
+
+    // Validate status
+    const validStatuses = ['pending', 'requested', 'picked_up', 'in_transit', 'delivered', 'confirmed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    // Validate updater role
+    const validRoles = ['system', 'donor', 'ngo', 'volunteer'];
+    if (!validRoles.includes(by)) {
+      return res.status(400).json({ message: 'Invalid role for status update' });
+    }
+
+    const order = await Order.findById(orderId);
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Check authorization for status update
+    const userRole = req.user.role;
+    const userId = req.user._id;
+
+    // Get the status transition rules
+    const allowedTransitions = getStatusTransitionRules(userRole);
+    const currentStatus = order.status;
+
+    // Check if the transition is allowed
+    if (!isStatusTransitionAllowed(currentStatus, status, userRole, allowedTransitions)) {
+      return res.status(403).json({ 
+        message: `${userRole} cannot change status from ${currentStatus} to ${status}` 
+      });
+    }
+
+    // Create timeline event
+    const timelineEvent = {
+      status,
+      timestamp: new Date(),
+      by,
+      note: note || `Status updated to ${status}`
     };
 
-    if (!allowed[status] || !allowed[status].includes(userRole)) {
-      return res
-        .status(403)
-        .json({ error: "You are not allowed to set this status" });
+    // Update order
+    order.status = status;
+    if (!order.timeline) {
+      order.timeline = [];
+    }
+    order.timeline.push(timelineEvent);
+
+    // Handle specific status updates
+    if (status === 'delivered') {
+      order.deliveredAt = new Date();
+    } else if (status === 'confirmed') {
+      order.confirmedAt = new Date();
+      // Trigger blockchain/NFT minting if relevant
+      try {
+        await triggerBlockchainConfirmation(order);
+      } catch (blockchainError) {
+        console.error('Blockchain confirmation error:', blockchainError);
+        // Continue with save even if blockchain confirmation fails
+        // The status will be updated and can be retried later
+      }
     }
 
-    // Fetch transaction
-    const tx = await Transaction.findById(transactionId);
-    if (!tx) {
-      return res.status(404).json({ error: "Transaction not found" });
-    }
-
-    // Append timeline event
-    tx.timeline.push({
-      status,
-      by: userRole,
-      note: note || "",
+    await order.save();
+    
+    // Success response
+    return res.status(200).json({
+      message: 'Order status updated successfully',
+      currentStatus: status,
+      timelineEvent
     });
-
-    // If it's a final confirmation, mark confirmed flag
-    if (status === "confirmed") {
-      tx.confirmed = true;
-    }
-
-    await tx.save();
-
-    return res.status(200).json({ success: true, timeline: tx.timeline });
-  } catch (err) {
-    console.error("Status update error:", err);
-    return res.status(500).json({ error: "Server error updating status" });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    return res.status(500).json({ message: 'Server error while updating status' });
   }
 };
 
