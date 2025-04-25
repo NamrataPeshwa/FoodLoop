@@ -21,23 +21,23 @@ router.post(
 router.patch(
   '/:transactionId/status',
   authMiddleware,
-  updateTransactionStatus
+  updateOrderStatus
 );
 router.get('/', authMiddleware, getUserTransactions);
 router.post("/match", matchFoodListings);
 // Routes for blockchain confirmation
-router.post('/transactions/confirm/:transactionId', auth, confirmDeliveryAndMintNFT);
+router.post('/transactions/confirm/:transactionId', authMiddleware, confirmDeliveryAndMintNFT);
 
 // Routes for order timeline
-router.get('/orders/:orderId/timeline', auth, getOrderTimeline);
+router.get('/orders/:orderId/timeline', authMiddleware, getOrderTimeline);
 
 // Routes for updating order status
-router.put('/orders/:orderId/update-status', 
-  auth, 
-  validationRules.updateOrderStatus, 
-  validate, 
-  updateOrderStatus
-);
+// router.put('/orders/:orderId/update-status', 
+//   authMiddleware, 
+//   validationRules.updateOrderStatus, 
+//   validate, 
+//   updateOrderStatus
+// );
 router.post('/reject/:transactionId/:userId', rejectParticipation);
 
 
