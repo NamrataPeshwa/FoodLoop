@@ -39,7 +39,6 @@ const AppRoutes = () => {
         <Route path="/chat" element={<ChatbotWidget/>} />
         <Route path="/recurring" element={<FeedDaily />} />
         <Route path="/relief" element={<ReliefCamps/>} />
-
         <Route path="/admin" element={<AdminDashboard />} />
         <Route
           path="/dashboard"

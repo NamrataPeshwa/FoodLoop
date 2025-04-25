@@ -20,9 +20,14 @@ export default {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-100%)' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
       },
       animation: {
         'scroll-left': 'scroll 30s linear infinite',
+        float: "float 3s ease-in-out infinite",
       },
     },
 
