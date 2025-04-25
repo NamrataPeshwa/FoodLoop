@@ -180,6 +180,17 @@ const DonationList = () => {
 
   return (
     <>
+     <div className="flex h-screen bg-colour3">
+     <div className="flex w-full flex-1 flex-col overflow-hidden border border-neutral-200  md:flex-row ">
+       <FoodDistributionSidebar />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+     
+      {dataToRender.map((donation, idx) => (
+        <DonationCard key={idx} donation={donation} userRole={userRole}  onClaim={handleClaim} />
+      ))}
+    </div>
+    </div>
+    </div>
       <div className="flex w-full h-full">
         <div className="h-screen">
           <FoodDistributionSidebar />

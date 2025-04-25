@@ -90,7 +90,7 @@ export const matchFoodListings = async (req, res) => {
           location: {
             $near: {
               $geometry: listing.location,
-              $maxDistance: 10000
+              $maxDistance: 500
             }
           }
         });
@@ -138,7 +138,7 @@ export const matchFoodListings = async (req, res) => {
         donor:       listing.donor._id,
         ngo:         closestNGO._id,
         volunteer:   closestVolunteer?._id || null,
-        status:      'requested',
+        status:      'pending',
         confirmedBy: []          // will accumulate NGO/volunteer IDs on confirm
       });
 
@@ -148,7 +148,7 @@ export const matchFoodListings = async (req, res) => {
       await listing.save();
 
       // 7) Send confirmation emails
-      const base = process.env.BASE_URL;
+      const base = 'https://foodloop-72do.onrender.com';
       // NGO
       await sendConfirmationEmail(
         closestNGO.email,
