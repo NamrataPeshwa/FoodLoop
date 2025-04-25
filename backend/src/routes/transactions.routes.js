@@ -5,8 +5,10 @@ import {
  
 } from "../controllers/transactions.controller.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
-import { updateTransactionStatus } from "../controllers/transactions.controller.js";
-import { getUserTransactions , confirmParticipation , rejectParticipation} from "../controllers/transactions.controller.js";
+
+import { getUserTransactions ,  
+  getOrderTimeline, 
+  updateOrderStatus , rejectParticipation} from "../controllers/transactions.controller.js";
 
 const router = express.Router();
 
@@ -23,7 +25,19 @@ router.patch(
 );
 router.get('/', authMiddleware, getUserTransactions);
 router.post("/match", matchFoodListings);
-router.post('/confirm/:transactionId/:userId', confirmParticipation);
+// Routes for blockchain confirmation
+router.post('/transactions/confirm/:transactionId', auth, confirmDeliveryAndMintNFT);
+
+// Routes for order timeline
+router.get('/orders/:orderId/timeline', auth, getOrderTimeline);
+
+// Routes for updating order status
+router.put('/orders/:orderId/update-status', 
+  auth, 
+  validationRules.updateOrderStatus, 
+  validate, 
+  updateOrderStatus
+);
 router.post('/reject/:transactionId/:userId', rejectParticipation);
 
 
