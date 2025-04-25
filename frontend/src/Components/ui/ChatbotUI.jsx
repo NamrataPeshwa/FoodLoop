@@ -89,7 +89,7 @@ const ChatbotWidget = () => {
   <img
     src="./mas1.png"
     alt="Chat icon"
-    className="transition-transform translate-y-20 duration-300 ease-in-out  group-hover:-translate-y-2 group-hover:scale-110"
+    className="transition-transform translate-y-20 duration-300 ease-in-out  group-hover:-translate-y-0 group-hover:scale-110"
   />
 </button>
 
@@ -99,7 +99,7 @@ const ChatbotWidget = () => {
       {isOpen && (
         <div
           
-          className="fixed bottom-24 right-6 w-80 h-96 bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-40"
+          className="fixed bottom-28 right-6 w-80 h-96 bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-40"
         >
           <div className="bg-colour1 text-white p-4 text-lg font-semibold">
             🤖 FoodLoop AI Chat

@@ -71,8 +71,8 @@ const Dashboard = () => {
 
       t1.from("#intro-slider", {
         xPercent: "-100",
-        duration: 1.3,
-        delay: 0.3,
+        duration: 0.5,
+        delay: 0.1,
       })
         .from(["#title-1", "#title-2", "#title-3"], {
           opacity: 0,
@@ -82,12 +82,11 @@ const Dashboard = () => {
         .to(["#title-1", "#title-2", "#title-3"], {
           opacity: 0,
           y: "-=30",
-          delay: 0.1,
           stagger: 0.2,
         })
         .to("#intro-slider", {
           xPercent: "-100",
-          duration: 0.8,
+          duration: 0.4,
           opacity: 0,
         });
     }, comp);

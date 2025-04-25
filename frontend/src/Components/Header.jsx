@@ -3,6 +3,8 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import ButtonWithAvatar from "../Components/MainPage/HoverButton";
+import { useLocation } from 'react-router-dom';
+
 
 import {
   getDashboardStats,
@@ -15,7 +17,7 @@ import { User } from "lucide-react";
 const Header = () => {
   // eslint-disable-next-line no-unused-vars
   const [stats, setStats] = useState([]);
-
+  const location = useLocation();
   const [selectedTab, setSelectedTab] = useState("overview");
   // const [visible, setVisible] = useState(true);
   // const [lastScrollY, setLastScrollY] = useState(0);
@@ -212,53 +214,44 @@ const Header = () => {
 
         {/* Tab navigation */}
         <div className="flex px-6 border-b border-[#FFF5E4]/20">
-          <button
-            onClick={() => setSelectedTab("overview")}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedTab === "overview"
-                ? "border-b-2 border-white text-white"
-                : "text-[#FFF5E4]/80 hover:text-white"
-            }`}
-          >
+        <button
+  onClick={() => navigate("/dashboard")}
+  className={`px-4 py-3 text-sm font-medium ${
+    location.pathname === "/dashboard"
+      ? "border-b-2 border-white text-white"
+      : "text-[#FFF5E4]/80 hover:text-white"
+  }`}
+>
             Overview
           </button>
           <button
-            onClick={() => {
-              setSelectedTab("donations");
-              navigate("/Listings");
-            }}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedTab === "donations"
-                ? "border-b-2 border-white text-white"
-                : "text-[#FFF5E4]/80 hover:text-white"
-            }`}
-          >
+  onClick={() => navigate("/Listings")}
+  className={`px-4 py-3 text-sm font-medium ${
+    location.pathname === "/Listings"
+      ? "border-b-2 border-white text-white"
+      : "text-[#FFF5E4]/80 hover:text-white"
+  }`}
+>
             Donations
           </button>
           <button
-            onClick={() => {
-              setSelectedTab("daily");
-              navigate("/recurring");
-            }}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedTab === "daily"
-                ? "border-b-2 border-white text-white"
-                : "text-[#FFF5E4]/80 hover:text-white"
-            }`}
-          >
+  onClick={() => navigate("/recurring")}
+  className={`px-4 py-3 text-sm font-medium ${
+    location.pathname === "/recurring"
+      ? "border-b-2 border-white text-white"
+      : "text-[#FFF5E4]/80 hover:text-white"
+  }`}
+>
             Feed Daily
           </button>
           <button
-            onClick={() => {
-              setSelectedTab("camps");
-              navigate("/relief");
-            }}
-            className={`px-4 py-3 text-sm font-medium ${
-              selectedTab === "camps"
-                ? "border-b-2 border-white text-white"
-                : "text-[#FFF5E4]/80 hover:text-white"
-            }`}
-          >
+  onClick={() => navigate("/relief")}
+  className={`px-4 py-3 text-sm font-medium ${
+    location.pathname === "/relief"
+      ? "border-b-2 border-white text-white"
+      : "text-[#FFF5E4]/80 hover:text-white"
+  }`}
+>
             Relief Camps
           </button>
         </div>

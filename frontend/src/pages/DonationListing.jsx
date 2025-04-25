@@ -19,7 +19,7 @@ const DonationCard = ({ donation, userRole, onClaim }) => {
 
   return (
     <div className="bg-white shadow-lg rounded-2xl w-full max-w-sm flex flex-col h-full">
-      <div className="w-full h-56 bg-gray-100">
+      <div className="w-full h-56 bg-gray-100 ">
         {donation.images && donation.images.length > 1 ? (
           <Slider {...settings}>
             {donation.images.map((img, idx) => (
@@ -27,7 +27,7 @@ const DonationCard = ({ donation, userRole, onClaim }) => {
                 key={idx}
                 src={img}
                 alt="donation"
-                className="w-full h-56 object-cover"
+                className="w-full h-56 object-contain "
               />
             ))}
           </Slider>
@@ -187,8 +187,8 @@ const DonationList = () => {
         </div>
         <div className="w-full ">
           <Header />
-          <div clasName="flex h-screen bg-colour3">
-            <div className="flex w-full flex-1 flex-col overflow-hidden border border-neutral-200  md:flex-row ">
+          <div clasName="flex  bh-screen">
+            <div className="flex w-full flex-1 flex-col bg-gray-100 overflow-hidden border border-neutral-200  md:flex-row ">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
                 {dataToRender.map((donation, idx) => (
                   <DonationCard

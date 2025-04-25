@@ -37,7 +37,7 @@ const ExistingReminders = () => {
     return (
       <div className="w-full h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+          <div className="w-16 h-16 border-t-4  border-solid rounded-full animate-spin"></div>
           <p className="text-gray-600 text-lg">Loading reminders...</p>
         </div>
       </div>
@@ -113,7 +113,7 @@ const ExistingReminders = () => {
 
                 <div className="mt-6 flex justify-end">
                   <button
-                    className="px-4 py-2 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors duration-200 text-sm font-medium"
+                    className="px-4 py-2 rounded-md bg-blue-50 text-amber-700 hover:bg-amber-800 transition-colors duration-200 text-sm font-medium"
                     onClick={() => setEditingReminder(reminder)}
                   >
                     Edit
@@ -140,7 +140,7 @@ const ExistingReminders = () => {
             You don't have any reminders set up yet. Create your first reminder
             to get started.
           </p>
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center">
+          <button className="px-6 py-3 bg-colour1 text-white rounded-lg hover:bg-amber-600 transition-colors duration-200 flex items-center">
             <Check className="mr-2" size={18} />
             Create Reminder
           </button>
