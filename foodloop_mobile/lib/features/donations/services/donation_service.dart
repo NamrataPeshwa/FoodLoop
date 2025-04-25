@@ -109,49 +109,60 @@ class DonationService {
 }
 
   Future<List<dynamic>> getAvailableDonations() async {
-    try {
-      final token = await _authService.getAuthToken();
-
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
-
-      final response = await http.get(
-        Uri.parse(ApiConstants.listDonations),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-
-        // Log response structure for debugging
-        log('Response structure: ${data.keys}');
-        log('Response data: $data');
-        // Handle the actual response format from backend
-        if (data.containsKey('success') && data.containsKey('data')) {
-          return data['data'] as List<dynamic>;
-        } else if (data.containsKey('donations')) {
-          return data['donations'] as List<dynamic>;
-        } else if (data is Map &&
-            data.values.isNotEmpty &&
-            data.values.first is List) {
-          // Fallback to first list value found
-          return data.values.first as List<dynamic>;
-        } else {
-          log('Unexpected response format: $data');
-          throw Exception('Unexpected response format');
-        }
-      } else {
-        throw Exception('Failed to load donations: ${response.statusCode}');
-      }
-    } catch (e) {
-      log('Error in getAvailableDonations: $e');
-      throw Exception('Failed to load donations: $e');
+  try {
+    final token = await _authService.getAuthToken();
+    
+    if (token == null) {
+      throw Exception('Authentication token not found');
     }
+
+    final response = await http.get(
+      Uri.parse(ApiConstants.listDonations),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      
+      // Log response structure for debugging
+      log('Response structure: ${data.keys}');
+      
+      // Extract the donations list
+      List<dynamic> donations = [];
+      
+      if (data.containsKey('success') && data.containsKey('data')) {
+        donations = data['data'] as List<dynamic>;
+      } else if (data.containsKey('donations')) {
+        donations = data['donations'] as List<dynamic>;
+      } else if (data is Map && data.values.isNotEmpty && data.values.first is List) {
+        donations = data.values.first as List<dynamic>;
+      } else {
+        log('Unexpected response format: $data');
+        throw Exception('Unexpected response format');
+      }
+      
+      // Log the first donation structure to understand the format
+      if (donations.isNotEmpty) {
+        log('First donation structure: ${donations[0].runtimeType}');
+        log('First donation keys: ${(donations[0] as Map).keys.toList()}');
+        if (donations[0]['location'] != null) {
+          log('Location format: ${donations[0]['location'].runtimeType}: ${donations[0]['location']}');
+        }
+      }
+      
+      return donations;
+    } else {
+      throw Exception('Failed to load donations: ${response.statusCode}');
+    }
+  } catch (e) {
+    log('Error in getAvailableDonations: $e');
+    throw Exception('Failed to load donations: $e');
   }
+}
+
   Future<Map<String, dynamic>> claimDonation(String donationId) async {
   try {
     final token = await _authService.getAuthToken();

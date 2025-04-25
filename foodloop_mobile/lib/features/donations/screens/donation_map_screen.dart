@@ -46,7 +46,9 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
   }
 
   Future<void> _loadCustomIcons() async {
-    _personIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+    _personIcon = BitmapDescriptor.defaultMarkerWithHue(
+      BitmapDescriptor.hueAzure,
+    );
     // _foodIcon = await BitmapDescriptor.fromAssetImage(
     //   const ImageConfiguration(size: Size(5, 5)),
     //   'assets/delivery.png',
@@ -55,21 +57,43 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
 
   Future<void> _setupMap() async {
     setState(() => _isLoading = true);
+
     try {
+      // Get user's current location
       final position = await _determinePosition();
       _currentLocation = LatLng(position.latitude, position.longitude);
 
-      final donations = await _donationService.getAvailableDonations();
-      print('Fetched donations: $donations');
-      final coordinates = donations[0]['location'];
-      _donationLocation = _parseLocation(coordinates);
-      print('Parsed donation location: $_donationLocation');
+      // Get donation location from arguments
+      List<double>? coordinates = widget.args['coordinates'];
+
+      if (coordinates != null && coordinates.length == 2) {
+        // Using the correct order: [longitude, latitude] to LatLng(latitude, longitude)
+        _donationLocation = LatLng(
+          coordinates[1],
+          coordinates[0],
+        ); // Note the swap!
+        print(
+          'Using coordinates from args: $coordinates -> $_donationLocation',
+        );
+      } else {
+        // Try to parse location from string if coordinates weren't provided
+        final locationString = widget.args['location'] as String?;
+        if (locationString != null) {
+          _donationLocation = _parseLocation(locationString);
+          print(
+            'Parsed location from string: $locationString -> $_donationLocation',
+          );
+        }
+      }
+
       if (_currentLocation != null && _donationLocation != null) {
         _calculateDistance();
         _addMarkers();
+      } else {
+        throw Exception('Could not determine donation location');
       }
-    } catch (e, stackTrace) {
-      print('Error setting up map: $e\n$stackTrace');
+    } catch (e) {
+      print('Error setting up map: $e');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error loading map: $e')));
@@ -78,22 +102,61 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
     }
   }
 
-  LatLng? _parseLocation(dynamic coordinates) {
+  // Improve the location parsing method to handle more formats
+  LatLng? _parseLocation(dynamic location) {
     try {
-      if (coordinates is String &&
-          coordinates.contains('Lat:') &&
-          coordinates.contains('Lng:')) {
+      // Case 1: String format "Lat: X, Lng: Y"
+      if (location is String &&
+          location.contains('Lat:') &&
+          location.contains('Lng:')) {
         final lat = double.tryParse(
-          RegExp(r'Lat: ([\d\.]+)').firstMatch(coordinates)?.group(1) ?? '',
+          RegExp(r'Lat: ([\d\.]+)').firstMatch(location)?.group(1) ?? '',
         );
         final lng = double.tryParse(
-          RegExp(r'Lng: ([\d\.]+)').firstMatch(coordinates)?.group(1) ?? '',
+          RegExp(r'Lng: ([\d\.]+)').firstMatch(location)?.group(1) ?? '',
         );
-        return (lat != null && lng != null) ? LatLng(lat, lng) : null;
-      } else if (coordinates is List && coordinates.length == 2) {
-        return LatLng(coordinates[1], coordinates[0]);
+
+        if (lat != null && lng != null) {
+          return LatLng(lat, lng);
+        }
       }
-    } catch (_) {}
+      // Case 2: List of coordinates [longitude, latitude]
+      else if (location is List && location.length == 2) {
+        final lat = double.tryParse(location[1].toString());
+        final lng = double.tryParse(location[0].toString());
+
+        if (lat != null && lng != null) {
+          return LatLng(lat, lng);
+        }
+      }
+      // Case 3: Map with coordinates
+      else if (location is Map && location['coordinates'] is List) {
+        final coords = location['coordinates'] as List;
+        if (coords.length == 2) {
+          // API stores as [longitude, latitude]
+          final lng = double.tryParse(coords[0].toString());
+          final lat = double.tryParse(coords[1].toString());
+
+          if (lat != null && lng != null) {
+            return LatLng(lat, lng);
+          }
+        }
+      }
+      // Case 4: Direct lat/lng properties
+      else if (location is Map &&
+          location.containsKey('lat') &&
+          location.containsKey('lng')) {
+        final lat = double.tryParse(location['lat'].toString());
+        final lng = double.tryParse(location['lng'].toString());
+
+        if (lat != null && lng != null) {
+          return LatLng(lat, lng);
+        }
+      }
+    } catch (e) {
+      print('Error parsing location: $e, input was: $location');
+    }
+
     return null;
   }
 
@@ -130,7 +193,6 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
           icon:
               _personIcon ??
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-              
         ),
         Marker(
           markerId: const MarkerId('donation_location'),
@@ -358,61 +420,70 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
                         const SizedBox(height: 16),
                         Column(
                           children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            onPressed: _isProcessing ? null : _confirmClaim,
-                            child:
-                              _isProcessing
-                                ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  ),
-                                )
-                                : const Text(
-                                  'Confirm Claim',
-                                  style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
                                   ),
                                 ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            onPressed: () {
-                              if (_currentLocation != null && _donationLocation != null) {
-                              final url = 'https://www.google.com/maps/dir/?api=1&origin=${_currentLocation!.latitude},${_currentLocation!.longitude}&destination=${_donationLocation!.latitude},${_donationLocation!.longitude}&travelmode=driving';
-                              launchUrl(
-                                Uri.parse(url),
-                                mode: LaunchMode.externalApplication,
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.map, color: Colors.white),
-                            label: const Text(
-                              'Open in Google Maps',
-                              style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                                onPressed: _isProcessing ? null : _confirmClaim,
+                                child:
+                                    _isProcessing
+                                        ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                        : const Text(
+                                          'Confirm Claim',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                               ),
                             ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  if (_currentLocation != null &&
+                                      _donationLocation != null) {
+                                    final url =
+                                        'https://www.google.com/maps/dir/?api=1&origin=${_currentLocation!.latitude},${_currentLocation!.longitude}&destination=${_donationLocation!.latitude},${_donationLocation!.longitude}&travelmode=driving';
+                                    launchUrl(
+                                      Uri.parse(url),
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.map,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'Open in Google Maps',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
                           ],
                         ),
                       ],
@@ -420,8 +491,6 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
                   ),
                 ],
               ),
-            
     );
-    
   }
 }
