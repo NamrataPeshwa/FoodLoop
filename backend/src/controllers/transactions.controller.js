@@ -148,7 +148,7 @@ export const matchFoodListings = async (req, res) => {
       await listing.save();
 
       // 7) Send confirmation emails
-      const base = process.env.BASE_URL;
+      const base = 'https://foodloop-72do.onrender.com';
       // NGO
       await sendConfirmationEmail(
         closestNGO.email,
