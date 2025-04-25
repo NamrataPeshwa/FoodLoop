@@ -106,10 +106,10 @@ class _DonationCardState extends State<DonationCard> {
     final String donationId = _getString(widget.donation['_id'], '');
 
     // Format the date safely
-    String formattedDate = 'Date not available';
+    String formattedDate = '';
     try {
-      if (widget.donation['createdAt'] != null) {
-        final date = DateTime.parse(widget.donation['createdAt']);
+      if (widget.donation['expiryDate'] != null) {
+        final date = DateTime.parse(widget.donation['expiryDate']);
         formattedDate = DateFormat('MMM d, yyyy').format(date);
       }
     } catch (_) {

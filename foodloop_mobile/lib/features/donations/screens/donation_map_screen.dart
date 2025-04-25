@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:foodloop_mobile/features/donations/services/donation_service.dart';
 import 'package:foodloop_mobile/core/utils/app_loader.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DonationMapScreen extends StatefulWidget {
   final Map<String, dynamic> args;
@@ -35,65 +36,65 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
   BitmapDescriptor? _personIcon;
   BitmapDescriptor? _foodIcon;
 
-  final String _apiKey = 'AIzaSyAOzi0yFEvMUUV0QVQ6YSY6t7H2sHhd2Ms'; // 🔐 Replace securely later
+  final String _apiKey =
+      'AIzaSyAOzi0yFEvMUUV0QVQ6YSY6t7H2sHhd2Ms'; // Replace this securely
 
   @override
   void initState() {
     super.initState();
-    _loadCustomIcons();
-    _setupMap();
+    _loadCustomIcons().then((_) => _setupMap());
   }
 
   Future<void> _loadCustomIcons() async {
-    _personIcon = await BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(size: Size(48, 48)), 'assets/logo.png');
-
-    _foodIcon = await BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(size: Size(48, 48)), 'assets/logo.png');
+    _personIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+    // _foodIcon = await BitmapDescriptor.fromAssetImage(
+    //   const ImageConfiguration(size: Size(5, 5)),
+    //   'assets/delivery.png',
+    // );
   }
 
   Future<void> _setupMap() async {
     setState(() => _isLoading = true);
     try {
       final position = await _determinePosition();
-      final donationService = DonationService();
       _currentLocation = LatLng(position.latitude, position.longitude);
-      print('Current location: $_currentLocation');
-      List<dynamic> donations = await donationService.getAvailableDonations();
+
+      final donations = await _donationService.getAvailableDonations();
+      print('Fetched donations: $donations');
       final coordinates = donations[0]['location'];
-      print('Coordinates: $coordinates');
-      if (coordinates != null) {
-        if (coordinates is String && coordinates.contains('Lat:') && coordinates.contains('Lng:')) {
-          // Parse string format "Lat: X, Lng: Y"
-          final latMatch = RegExp(r'Lat: ([\d\.]+)').firstMatch(coordinates);
-          final lngMatch = RegExp(r'Lng: ([\d\.]+)').firstMatch(coordinates);
-          
-          if (latMatch != null && lngMatch != null) {
-        final lat = double.tryParse(latMatch.group(1)!);
-        final lng = double.tryParse(lngMatch.group(1)!);
-        
-        if (lat != null && lng != null) {
-          _donationLocation = LatLng(lat, lng);
-        }
-          }
-        } else if (coordinates is List && coordinates.length == 2) {
-          // Handle original array format
-          _donationLocation = LatLng(coordinates[1], coordinates[0]);
-        }
-      }
-      print('Donation location: $_donationLocation');
+      _donationLocation = _parseLocation(coordinates);
+      print('Parsed donation location: $_donationLocation');
       if (_currentLocation != null && _donationLocation != null) {
         _calculateDistance();
         _addMarkers();
-        await _getRoutePolyline();
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading map: $e')),
-      );
+    } catch (e, stackTrace) {
+      print('Error setting up map: $e\n$stackTrace');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading map: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  LatLng? _parseLocation(dynamic coordinates) {
+    try {
+      if (coordinates is String &&
+          coordinates.contains('Lat:') &&
+          coordinates.contains('Lng:')) {
+        final lat = double.tryParse(
+          RegExp(r'Lat: ([\d\.]+)').firstMatch(coordinates)?.group(1) ?? '',
+        );
+        final lng = double.tryParse(
+          RegExp(r'Lng: ([\d\.]+)').firstMatch(coordinates)?.group(1) ?? '',
+        );
+        return (lat != null && lng != null) ? LatLng(lat, lng) : null;
+      } else if (coordinates is List && coordinates.length == 2) {
+        return LatLng(coordinates[1], coordinates[0]);
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<Position> _determinePosition() async {
@@ -126,14 +127,15 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
           markerId: const MarkerId('current_location'),
           position: _currentLocation!,
           infoWindow: const InfoWindow(title: 'Your Location'),
-          icon: _personIcon ??
+          icon:
+              _personIcon ??
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+              
         ),
         Marker(
           markerId: const MarkerId('donation_location'),
           position: _donationLocation!,
-          infoWindow:
-              InfoWindow(title: widget.args['title'] ?? 'Donation'),
+          infoWindow: InfoWindow(title: widget.args['title'] ?? 'Donation'),
           icon: _foodIcon ?? BitmapDescriptor.defaultMarker,
         ),
       };
@@ -152,9 +154,11 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
 
     _distance = distanceInMeters / 1000;
     final durationHours = _distance / 30;
-    _duration = durationHours < 1
-        ? '${(durationHours * 60).round()} min'
-        : '${durationHours.toStringAsFixed(1)} hours';
+    _duration =
+        durationHours < 1
+            ? '${(durationHours * 60).round()} min'
+            : '${durationHours.toStringAsFixed(1)} hours';
+    print('Distance: $_distance km, Duration: $_duration');
   }
 
   Future<void> _getRoutePolyline() async {
@@ -172,12 +176,10 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-
       if (data['routes'].isNotEmpty) {
         final points = data['routes'][0]['overview_polyline']['points'];
         PolylinePoints polylinePoints = PolylinePoints();
-        List<PointLatLng> decodedPoints =
-            polylinePoints.decodePolyline(points);
+        List<PointLatLng> decodedPoints = polylinePoints.decodePolyline(points);
 
         setState(() {
           _polylines = {
@@ -185,15 +187,44 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
               polylineId: const PolylineId('route'),
               color: Colors.orange,
               width: 5,
-              points: decodedPoints
-                  .map((p) => LatLng(p.latitude, p.longitude))
-                  .toList(),
+              points:
+                  decodedPoints
+                      .map((p) => LatLng(p.latitude, p.longitude))
+                      .toList(),
             ),
           };
         });
       }
     } else {
       print('Failed to load directions: ${response.body}');
+    }
+  }
+
+  void _animateCamera(GoogleMapController controller) {
+    if (_currentLocation != null && _donationLocation != null) {
+      controller.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(
+              _currentLocation!.latitude < _donationLocation!.latitude
+                  ? _currentLocation!.latitude
+                  : _donationLocation!.latitude,
+              _currentLocation!.longitude < _donationLocation!.longitude
+                  ? _currentLocation!.longitude
+                  : _donationLocation!.longitude,
+            ),
+            northeast: LatLng(
+              _currentLocation!.latitude > _donationLocation!.latitude
+                  ? _currentLocation!.latitude
+                  : _donationLocation!.latitude,
+              _currentLocation!.longitude > _donationLocation!.longitude
+                  ? _currentLocation!.longitude
+                  : _donationLocation!.longitude,
+            ),
+          ),
+          100,
+        ),
+      );
     }
   }
 
@@ -206,7 +237,6 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
       }
 
       await _donationService.claimDonation(donationId);
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Donation claimed successfully!')),
       );
@@ -214,9 +244,9 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
       Navigator.pop(context);
       Navigator.pushReplacementNamed(context, '/available-donation');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to claim donation: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to claim donation: $e')));
     } finally {
       setState(() => _isProcessing = false);
     }
@@ -233,15 +263,15 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
             icon: const Icon(Icons.layers),
             onPressed: () {
               setState(() {
-                _mapType = _mapType == MapType.normal
-                    ? MapType.satellite
-                    : MapType.normal;
+                _mapType =
+                    _mapType == MapType.normal
+                        ? MapType.satellite
+                        : MapType.normal;
               });
             },
           ),
           IconButton(
-            icon:
-                Icon(_showTraffic ? Icons.traffic : Icons.traffic_outlined),
+            icon: Icon(_showTraffic ? Icons.traffic : Icons.traffic_outlined),
             onPressed: () {
               setState(() {
                 _showTraffic = !_showTraffic;
@@ -250,125 +280,148 @@ class _DonationMapScreenState extends State<DonationMapScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: FancyFoodLoader())
-          : Column(
-              children: [
-                Expanded(
-                  child: GoogleMap(
-                    mapType: _mapType,
-                    trafficEnabled: _showTraffic,
-                    initialCameraPosition: CameraPosition(
-                      target: _donationLocation ?? const LatLng(0, 0),
-                      zoom: 13,
+      body:
+          _isLoading
+              ? const Center(child: FancyFoodLoader())
+              : Column(
+                children: [
+                  Expanded(
+                    child: GoogleMap(
+                      mapType: _mapType,
+                      trafficEnabled: _showTraffic,
+                      initialCameraPosition: CameraPosition(
+                        target: _donationLocation ?? const LatLng(0, 0),
+                        zoom: 13,
+                      ),
+                      markers: _markers,
+                      polylines: _polylines,
+                      myLocationEnabled: true,
+                      zoomControlsEnabled: true,
+                      onMapCreated: (controller) async {
+                        _controller.complete(controller);
+                        _animateCamera(controller);
+                        await _getRoutePolyline(); // defer to avoid early heavy load
+                      },
                     ),
-                    markers: _markers,
-                    polylines: _polylines,
-                    myLocationEnabled: true,
-                    zoomControlsEnabled: true,
-                    onMapCreated: (GoogleMapController controller) {
-                      _controller.complete(controller);
-                      if (_currentLocation != null &&
-                          _donationLocation != null) {
-                        controller.animateCamera(
-                          CameraUpdate.newLatLngBounds(
-                            LatLngBounds(
-                              southwest: LatLng(
-                                _currentLocation!.latitude <
-                                        _donationLocation!.latitude
-                                    ? _currentLocation!.latitude
-                                    : _donationLocation!.latitude,
-                                _currentLocation!.longitude <
-                                        _donationLocation!.longitude
-                                    ? _currentLocation!.longitude
-                                    : _donationLocation!.longitude,
-                              ),
-                              northeast: LatLng(
-                                _currentLocation!.latitude >
-                                        _donationLocation!.latitude
-                                    ? _currentLocation!.latitude
-                                    : _donationLocation!.latitude,
-                                _currentLocation!.longitude >
-                                        _donationLocation!.longitude
-                                    ? _currentLocation!.longitude
-                                    : _donationLocation!.longitude,
-                              ),
-                            ),
-                            100,
-                          ),
-                        );
-                      }
-                    },
                   ),
-                ),
-                Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.args['title'] ?? 'Donation',
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on,
-                              color: Colors.grey[600], size: 16),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              widget.args['location'] ?? 'Unknown location',
-                              style: TextStyle(color: Colors.grey[600]),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.args['title'] ?? 'Donation',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              color: Colors.grey[600],
+                              size: 16,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Distance: ${_distance.toStringAsFixed(1)} km',
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                widget.args['location'] ?? 'Unknown location',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Distance: ${_distance.toStringAsFixed(1)} km',
                               style: const TextStyle(
-                                  fontWeight: FontWeight.w500, fontSize: 16)),
-                          Text('Est. time: $_duration',
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              'Est. time: $_duration',
                               style: const TextStyle(
-                                  fontWeight: FontWeight.w500, fontSize: 16)),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          onPressed: _isProcessing ? null : _confirmClaim,
-                          child: _isProcessing
-                              ? const SizedBox(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Column(
+                          children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onPressed: _isProcessing ? null : _confirmClaim,
+                            child:
+                              _isProcessing
+                                ? const SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
-                                      color: Colors.white),
+                                  color: Colors.white,
+                                  ),
                                 )
-                              : const Text(
+                                : const Text(
                                   'Confirm Claim',
                                   style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  ),
                                 ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onPressed: () {
+                              if (_currentLocation != null && _donationLocation != null) {
+                              final url = 'https://www.google.com/maps/dir/?api=1&origin=${_currentLocation!.latitude},${_currentLocation!.longitude}&destination=${_donationLocation!.latitude},${_donationLocation!.longitude}&travelmode=driving';
+                              launchUrl(
+                                Uri.parse(url),
+                                mode: LaunchMode.externalApplication,
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.map, color: Colors.white),
+                            label: const Text(
+                              'Open in Google Maps',
+                              style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              ),
+                            ),
+                            ),
+                          ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            
     );
+    
   }
 }

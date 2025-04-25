@@ -102,9 +102,6 @@ class _DonateScreenState extends State<DonateScreen> {
   try {
     // Get user ID - using a hardcoded ID for now since you have it in your code
     // In a production app, you should get this from proper authentication
-    String donorId = '68047732e7139914432dbdb3';
-    
-    log('User ID: $donorId');
     log('Location: $_location');
     
     // Convert XFiles to Files for upload
@@ -113,13 +110,13 @@ class _DonateScreenState extends State<DonateScreen> {
     // Important: Send lat and lng as separate fields rather than as an array
     final donationData = {
       'foodDescription': _foodDescription,
+      'foodType': _foodDescription, // Assuming food type is always 'food'
       'hoursOld': _hoursOld.toString(),
       'storage': _storage,
       'weight': _weight,
       'expirationDate': _expirationDate.toIso8601String(),
       'lat': _location[1].toString(), // Send latitude as a string
-      'lng': _location[0].toString(), // Send longitude as a string
-      'donor': donorId, // Include donor ID explicitly
+      'lng': _location[0].toString(), // Send longitude as a string // Include donor ID explicitly
     };
     
     log('Sending donation data: $donationData');
