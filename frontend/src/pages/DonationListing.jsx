@@ -195,6 +195,7 @@ const DonationList = () => {
                     key={idx}
                     donation={donation}
                     userRole={userRole}
+                    onClaim={handleClaim}
                   />
                 ))}
               </div>
