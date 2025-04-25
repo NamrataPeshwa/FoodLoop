@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { CheckCircle, Clock, Circle } from "lucide-react";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
+import { useAuth } from "../context/AuthContext"; // Import useAuth
 
 const steps = [
   { label: "Order Placed", timestamp: "Apr 18, 10:30 AM" },
@@ -10,7 +11,64 @@ const steps = [
   { label: "Delivered", timestamp: "" },
 ];
 
-const DeliveryTimeline = ({ currentStep }) => {
+const DeliveryTimeline = ({ currentStep: initialStep, orderId }) => {
+  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState("");
+  const { hasRole, token } = useAuth(); // Get hasRole and token from AuthContext
+  
+  // Check if user is NGO or volunteer
+  const canConfirmDelivery = hasRole('ngo') || hasRole('volunteer');
+  
+  const handleConfirmDelivery = async () => {
+    if (!orderId) {
+      setConfirmationMessage("Order ID is missing");
+      return;
+    }
+    
+    setIsConfirming(true);
+    setConfirmationMessage("");
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/orders/${orderId}/confirm-delivery`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: 'delivered',
+          deliveredAt: new Date().toISOString()
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Update the current step to "Delivered" (index 4)
+        setCurrentStep(4);
+        
+        // Update the timestamp for the last step
+        steps[4].timestamp = new Date().toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        });
+        
+        setConfirmationMessage("Delivery confirmed successfully!");
+      } else {
+        setConfirmationMessage(`Failed to confirm delivery: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error confirming delivery:", error);
+      setConfirmationMessage("Network error. Please try again.");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-colour2">
       <div className="flex w-full flex-1 flex-col overflow-hidden border border-neutral-200 bg-colour2 md:flex-row">
@@ -31,7 +89,7 @@ const DeliveryTimeline = ({ currentStep }) => {
                   <h2 className="text-2xl font-merriweather font-semibold text-colour4">
                     Delivery Timeline
                   </h2>
-                  <p className="text-gray-500 text-sm mt-1">Order #DFD2204</p>
+                  <p className="text-gray-500 text-sm mt-1">Order #{orderId || "DFD2204"}</p>
                 </div>
                 <div className="bg-colour1 text-white px-4 py-2 rounded-full text-sm font-medium">
                   {currentStep < 4 ? "In Progress" : "Completed"}
@@ -96,13 +154,34 @@ const DeliveryTimeline = ({ currentStep }) => {
                   </div>
                 )}
                 
-                {currentStep === 4 && (
-                  <button className="px-6 py-2 bg-colour1 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 shadow-sm">
-                    <CheckCircle className="w-5 h-5" />
-                    Confirm Delivery
+                {/* Confirm Delivery Button - Only visible for NGO or volunteer users when delivery is in progress */}
+                {currentStep === 3 && canConfirmDelivery && (
+                  <button 
+                    onClick={handleConfirmDelivery}
+                    disabled={isConfirming}
+                    className="px-6 py-2 bg-colour1 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isConfirming ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-5 h-5" />
+                        Confirm Delivery
+                      </>
+                    )}
                   </button>
                 )}
               </div>
+              
+              {/* Confirmation message */}
+              {confirmationMessage && (
+                <div className={`mt-4 p-3 rounded-md ${confirmationMessage.includes('Failed') || confirmationMessage.includes('error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                  {confirmationMessage}
+                </div>
+              )}
             </div>
             
             {/* Additional information card */}

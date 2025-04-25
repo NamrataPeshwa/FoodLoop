@@ -11,9 +11,10 @@ const UserProfile = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const navigate = useNavigate();
+  console.log(localStorage.getItem('userRole'));
 
   // Get user role from sessionStorage (in real implementation)
-  const userRole = sessionStorage.getItem('userRole') || 'donor';
+  const userRole = localStorage.getItem('userRole') || 'donor';
 
   useEffect(() => {
     // Simulate fetching user data

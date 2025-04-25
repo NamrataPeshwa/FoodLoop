@@ -30,7 +30,12 @@ class ApiConstants {
   static const String impactUrl = '$baseUrl/impact';
   static const String impactStatistics = '$baseUrl/impact/stats';
 
-  static const String joyLoopUrl = '$baseUrl/joy';
+  static const String joyLoopUrl = '$baseUrl/joyloop';
+  static const String joyMoments = '$joyLoopUrl/joy-moments';
+  static const String joySpreaders = '$joyLoopUrl/joy-spreaders';
+  static const String topDonors = '$joyLoopUrl/top-donors';
+  static const String joyPost = '$joyLoopUrl/post';
+  static const String joyGet = '$joyLoopUrl/get';
 
 }
 

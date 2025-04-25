@@ -4,6 +4,7 @@ import { generatePackagingText, generatePackagingImage } from "../utils/geminiIm
 
 export const getPackagingSuggestions = async (req, res) => {
   try {
+    console.log("route hit");
     const { listingId } = req.params;
 
     const listing = await FoodListing.findById(listingId).populate("donor");

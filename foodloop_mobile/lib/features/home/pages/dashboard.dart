@@ -96,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Show modal bottom sheet for profile/more options
   void _showProfileMenu() async{
-    _userProfile = await _authService.getUserProfile();
+    _userProfile = _userProfile['user'];
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {

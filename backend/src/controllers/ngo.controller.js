@@ -8,7 +8,7 @@ export const claimDonation = async (req, res) => {
     console.log("🔍 Claiming donation ID:", req.params.id);
     console.log("👤 Authenticated user:", req.user);
 
-    const listing = await FoodListing.findById(req.params.id);
+    const listing = await FoodListing.findById(req.params.id).populate('donor', 'name email');
 
     if (!listing) {
       console.log("❌ Listing not found");
@@ -30,11 +30,20 @@ export const claimDonation = async (req, res) => {
     await listing.save();
     console.log("✅ Listing updated");
 
+    // Partial certificate data
+    const partialCertificate = {
+      donorName: listing.donor.name,
+      weight: listing.weight,
+      location: `Lat: ${listing.location.coordinates[1]}, Lng: ${listing.location.coordinates[0]}`,
+      timestamp: new Date(),
+    };
+
     const transaction = new Transaction({
       foodListing: listing._id,
-      donor: listing.donor,
+      donor: listing.donor._id,
       ngo: req.user._id,
       volunteer: listing.volunteer || null,
+      certificateData: partialCertificate,
       timeline: [{ status: 'requested', by: 'ngo', at: new Date() }],
     });
 

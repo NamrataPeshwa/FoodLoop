@@ -115,6 +115,7 @@ class _AvailableDonationsScreenState extends State<AvailableDonationsScreen> {
                   return DonationCard(
                     donation: donation,
                     onTap: () {
+                      print('Donation tapped: ${donation}'); // Debug output
                       // Navigate to donation details screen
                       Navigator.pushNamed(
                         context, 
