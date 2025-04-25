@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [show, setShow] = useState(false);
+
   const iconRef = useRef(null);
   const chatRef = useRef(null);
   const [messages, setMessages] = useState([
@@ -9,7 +11,13 @@ const ChatbotWidget = () => {
   ]);
   const [input, setInput] = useState("");
 
-  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShow(true);
+    }, 5000); // 2000ms = 2 seconds
+
+    return () => clearTimeout(timer); // cleanup on unmount
+  }, []);
 
   const toggleChat = () => {
     setIsOpen(prev => !prev);
@@ -71,13 +79,17 @@ const ChatbotWidget = () => {
   return (
     <>
       {/* Chat Icon Button */}
+      {show ? (
+        <>
+        
+      
       <button
   ref={iconRef}
   className="fixed bottom-6 right-6 z-50 w-24 h-24 bg-transparent flex flex-col items-center justify-center group"
   onClick={toggleChat}
   aria-label="Open Chatbot"
 >
-  {/* Tooltip */}
+ 
   <div 
     className="mb-4 text-sm text-amber-950 font-bold font-merriweather bg-colour1 px-1 py-1 rounded translate-y-20 shadow-md
                transition-all duration-500 ease-in-out transform opacity-100 
@@ -93,9 +105,6 @@ const ChatbotWidget = () => {
   />
 </button>
 
-
-
-      {/* Chat Window */}
       {isOpen && (
         <div
           
@@ -138,6 +147,8 @@ const ChatbotWidget = () => {
           </div>
         </div>
       )}
+      </>
+    ) : null}
     </>
   );
 };

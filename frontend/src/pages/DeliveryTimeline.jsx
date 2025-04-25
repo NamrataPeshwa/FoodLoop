@@ -325,7 +325,7 @@ const DeliveryTimeline = () => {
         {/* Main content area */}
         <div className="flex flex-1 flex-col overflow-y-auto">
           <div className="flex flex-col items-center py-8 px-4 bg-gradient-to-b from-colour2 to-white">
-            <h1 className="text-3xl font-Birthstone text-4xl md:text-5xl font-bold text-colour1 mb-2">
+            <h1 className=" font-Birthstone text-4xl md:text-5xl font-bold text-colour1 mb-2">
               Delivery Status
             </h1>
             <p className="font-merriweather text-colour4 mb-6">Track your food donation journey in real-time</p>
