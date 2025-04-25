@@ -21,6 +21,7 @@ import {
 import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
 import Header from "../components/Header";
+import ChatbotWidget from "../Components/ui/ChatbotUI";
 const Dashboard = () => {
  
   // const [visible, setVisible] = useState(true);
@@ -584,6 +585,7 @@ const Dashboard = () => {
                   </a>
                 </div>
               </div>
+              <ChatbotWidget/>
 
               {/* Footer area */}
               <footer className="mt-12 text-center text-sm text-gray-500">

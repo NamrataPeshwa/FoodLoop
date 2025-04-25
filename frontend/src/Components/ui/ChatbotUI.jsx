@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-
+import gsap from "gsap";
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const iconRef = useRef(null);
@@ -13,7 +13,7 @@ const ChatbotWidget = () => {
     if (isOpen) {
       gsap.fromTo(
         chatRef.current,
-        { y: 100, opacity: 0 },
+        { y: 300 },
         { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }
       );
     }
