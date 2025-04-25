@@ -68,7 +68,7 @@ export const matchFoodListings = async (req, res) => {
       // 2) Skip if already has a pending or confirmed transaction
       const existingTx = await Transaction.findOne({
         foodListing: listing._id,
-        status:     { $in: ['requested', 'confirmed'] }
+        status:     { $in: ['pending', 'confirmed'] }
       });
       if (existingTx) continue;
 
