@@ -9,7 +9,6 @@ import {
   getRecentDonations,
   getUpcomingDistributions,
 } from "../services/dashboardService";
-import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
 import {
   IconHeartHandshake,
@@ -21,9 +20,9 @@ import {
 } from "@tabler/icons-react";
 import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
+import Header from "../components/Header";
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState("overview");
+ 
   // const [visible, setVisible] = useState(true);
   // const [lastScrollY, setLastScrollY] = useState(0);
   const comp = useRef(null);
@@ -32,16 +31,7 @@ const Dashboard = () => {
   const buttonRef = useRef(null);
 
 
-  const handleAvatarClick = () => {
-    navigate("/joyloop");
-  };
 
-  const handleProfileClick = () => {
-    navigate("/profile");
-  };
-  const toggleWarningPopup = () => {
-    setShowPopup(!showPopup);
-  };
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -371,116 +361,7 @@ const Dashboard = () => {
           {/* Main content area */}
           <div className="flex flex-col w-full overflow-y-auto">
             {/* Header area - FIXED AT TOP OF MAIN CONTENT */}
-            <header className="sticky top-0 z-40 bg-[#FFA725] shadow-md">
-              <div className="flex items-center justify-between px-6">
-                <h1 className="text-xl font-bold text-white">
-                  FoodLoop Dashboard
-                </h1>
-                <div className="flex items-center">
-                  <div className="relative">
-                    <button
-                      ref={buttonRef}
-                      className="rounded-full p-2 hover:bg-orange-100/20 transition-all"
-                      onClick={toggleWarningPopup}
-                    >
-                      <IconAlertCircle className="h-8 w-8" />
-                    </button>
-
-                    {showPopup && (
-                      <div
-                        ref={popupRef}
-                        className="absolute top-10 right-0 bg-white text-gray-800 p-8 rounded-lg shadow-lg w-72 z-50 border border-amber-200"
-                      >
-                        <h3 className="font-bold text-lg mb-2 text-amber-600">
-                          Security Policies
-                        </h3>
-                        <ul className="space-y-2 text-sm">
-                          <li>• All donations are verified by our team</li>
-                          <li>• Food safety protocols must be followed</li>
-                          <li>• Personal information is protected</li>
-                          <li>• Report suspicious activity immediately</li>
-                          <li>
-                            • Review our full guidelines before distributing
-                          </li>
-                        </ul>
-                        <button
-                          className="mt-3 text-xs text-amber-600 hover:text-amber-800"
-                          onClick={() => setShowPopup(false)}
-                        >
-                          Close
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                 
-                    <ButtonWithAvatar/>
-                   
-                      
-                  <div className="relative ml-2">
-                    <button
-                      className="flex items-center bg-amber-500 hover:bg-amber-600 text-white py-2 px-1 rounded-full transition-all"
-                      onClick={handleProfileClick}
-                    >
-                      <User className="h-6 w-6 px-1" />
-                      <span className="px-1">My Account</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tab navigation */}
-              <div className="flex px-6 border-b border-[#FFF5E4]/20">
-                <button
-                  onClick={() => setSelectedTab("overview")}
-                  className={`px-4 py-3 text-sm font-medium ${
-                    selectedTab === "overview"
-                      ? "border-b-2 border-white text-white"
-                      : "text-[#FFF5E4]/80 hover:text-white"
-                  }`}
-                >
-                  Overview
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedTab("donations");
-                    navigate("/Listings");
-                  }}
-                  className={`px-4 py-3 text-sm font-medium ${
-                    selectedTab === "donations"
-                      ? "border-b-2 border-white text-white"
-                      : "text-[#FFF5E4]/80 hover:text-white"
-                  }`}
-                >
-                  Donations
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedTab("daily");
-                    navigate("/recurring");
-                  }}
-                  className={`px-4 py-3 text-sm font-medium ${
-                    selectedTab === "daily"
-                      ? "border-b-2 border-white text-white"
-                      : "text-[#FFF5E4]/80 hover:text-white"
-                  }`}
-                >
-                  Feed Daily
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedTab("camps");
-                  }}
-                  className={`px-4 py-3 text-sm font-medium ${
-                    selectedTab === "camps"
-                      ? "border-b-2 border-white text-white"
-                      : "text-[#FFF5E4]/80 hover:text-white"
-                  }`}
-                >
-                  Relief Camps
-                </button>
-              </div>
-            </header>
+            <Header/>
 
             <div className="h-[700px] md:h-[800px] relative w-full bg-black overflow-hidden">
               <div
