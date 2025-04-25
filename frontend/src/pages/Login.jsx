@@ -81,7 +81,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex h-screen relative overflow-hidden">
+    <div className="flex h-screen font-merriweather relative overflow-hidden">
       {/* Background image carousel with opacity */}
       <div className="absolute inset-0 z-0">
         {backgroundImages.map((img, index) => (

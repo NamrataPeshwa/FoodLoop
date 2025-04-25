@@ -21,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
+import ChatbotWidget from "../Components/ui/ChatbotUI";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("overview");
@@ -703,6 +704,7 @@ const Dashboard = () => {
                   </a>
                 </div>
               </div>
+              <ChatbotWidget/>
 
               {/* Footer area */}
               <footer className="mt-12 text-center text-sm text-gray-500">
