@@ -9,15 +9,7 @@ const ChatbotWidget = () => {
   ]);
   const [input, setInput] = useState("");
 
-  useEffect(() => {
-    if (isOpen) {
-      gsap.fromTo(
-        chatRef.current,
-        { y: 300 },
-        { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }
-      );
-    }
-  }, [isOpen]);
+  
 
   const toggleChat = () => {
     setIsOpen(prev => !prev);
@@ -80,21 +72,36 @@ const ChatbotWidget = () => {
     <>
       {/* Chat Icon Button */}
       <button
-        ref={iconRef}
-        className="fixed bottom-6 right-6 z-50 w-24 h-24 bg-transparent flex items-center justify-center"
-        onClick={toggleChat}
-        aria-label="Open Chatbot"
-      >
-        <img src="./mas1.png" alt="Chat icon" />
-      </button>
+  ref={iconRef}
+  className="fixed bottom-6 right-6 z-50 w-24 h-24 bg-transparent flex flex-col items-center justify-center group"
+  onClick={toggleChat}
+  aria-label="Open Chatbot"
+>
+  {/* Tooltip */}
+  <div 
+    className="mb-4 text-sm text-amber-950 font-bold font-merriweather bg-colour1 px-1 py-1 rounded translate-y-20 shadow-md
+               transition-all duration-500 ease-in-out transform opacity-100 
+               group-hover:opacity-0 group-hover:-translate-y-2"
+  >
+    Chat with us!
+  </div>
+
+  <img
+    src="./mas1.png"
+    alt="Chat icon"
+    className="transition-transform translate-y-20 duration-300 ease-in-out  group-hover:-translate-y-2 group-hover:scale-110"
+  />
+</button>
+
+
 
       {/* Chat Window */}
       {isOpen && (
         <div
-          ref={chatRef}
+          
           className="fixed bottom-24 right-6 w-80 h-96 bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-40"
         >
-          <div className="bg-purple-600 text-white p-4 text-lg font-semibold">
+          <div className="bg-colour1 text-white p-4 text-lg font-semibold">
             🤖 FoodLoop AI Chat
           </div>
           
