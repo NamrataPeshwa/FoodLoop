@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:foodloop_mobile/features/donations/services/joy_loop_service.dart';
+import 'package:foodloop_mobile/features/donations/widgets/joy_moment_card.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -121,110 +122,38 @@ class _JoyLoopsScreenState extends State<JoyLoopsScreen> with SingleTickerProvid
     }
   }
   
-  Widget _buildJoyMomentsList() {
-    if (_joyMoments.isEmpty) {
-      return Center(
-        child: Text('No joy moments yet. Be the first to share!'),
-      );
-    }
-    
-    return ListView.builder(
-      itemCount: _joyMoments.length,
-      itemBuilder: (context, index) {
-        final moment = _joyMoments[index];
-        
-        // Safe getter function to handle null or missing properties
-        String getValue(dynamic obj, String key, [String defaultValue = '']) {
-          if (obj == null) return defaultValue;
-          if (obj is! Map) return defaultValue;
-          return obj[key]?.toString() ?? defaultValue;
-        }
-        
-        // Safely get nested properties
-        String donorName = 'Anonymous';
-        if (moment != null && moment is Map) {
-          if (moment.containsKey('donor') && moment['donor'] != null) {
-            if (moment['donor'] is Map) {
-              donorName = getValue(moment['donor'], 'name', 'Anonymous');
-            } else if (moment['donor'] is String) {
-              donorName = moment['donor'];
-            }
-          } else if (moment.containsKey('name')) {
-            donorName = getValue(moment, 'name', 'Anonymous');
-          }
-        }
-        
-        // Get caption and image safely
-        String caption = '';
-        if (moment is Map) {
-          caption = getValue(moment, 'caption', '');
-          if (caption.isEmpty) {
-            caption = getValue(moment, 'content', ''); // Alternative key name
-          }
-        }
-        
-        String imageUrl = '';
-        if (moment is Map) {
-          imageUrl = getValue(moment, 'image', '');
-          if (imageUrl.isEmpty) {
-            imageUrl = getValue(moment, 'media', ''); // Alternative key name
-          }
-        }
-        
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                  child: Icon(Icons.person),
-                ),
-                title: Text(donorName),
-                subtitle: Text('Shared a joy moment'),
-              ),
-              if (caption.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(caption),
-                ),
-              if (imageUrl.isNotEmpty)
-                Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) => 
-                    Center(child: Icon(Icons.broken_image, size: 100)),
-                ),
-              Padding(
-                padding: EdgeInsets.all(8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.favorite_border),
-                      label: Text('Like'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.comment),
-                      label: Text('Comment'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.share),
-                      label: Text('Share'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+Widget _buildJoyMomentsList() {
+  if (_joyMoments.isEmpty) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.sentiment_dissatisfied, size: 60, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            'No joy moments yet',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-        );
-      },
+          const SizedBox(height: 8),
+          Text(
+            'Be the first to share!',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+        ],
+      ),
     );
   }
+  
+  return ListView.builder(
+    itemCount: _joyMoments.length,
+    itemBuilder: (context, index) {
+      final moment = _joyMoments[index];
+      
+      // Use our new card widget
+      return JoyMomentCard(moment: moment);
+    },
+  );
+}
   
   Widget _buildDonorsList() {
     if (_topDonors.isEmpty) {

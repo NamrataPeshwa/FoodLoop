@@ -72,22 +72,67 @@ class _DonationCardState extends State<DonationCard> {
     // Get coordinates
     List<double>? coordinates;
     if (widget.donation['location'] != null) {
-      final locationData = widget.donation['location'];
-      if (locationData is Map && locationData.containsKey('coordinates')) {
-        final coords = locationData['coordinates'];
+      // Check if location is a string with Lat/Lng format
+      if (widget.donation['location'] is String &&
+          widget.donation['location'].toString().contains('Lat:') &&
+          widget.donation['location'].toString().contains('Lng:')) {
+        try {
+          final locationStr = widget.donation['location'].toString();
+          final latStr = RegExp(
+            r'Lat: ([\d\.]+)',
+          ).firstMatch(locationStr)?.group(1);
+          final lngStr = RegExp(
+            r'Lng: ([\d\.]+)',
+          ).firstMatch(locationStr)?.group(1);
+
+          if (latStr != null && lngStr != null) {
+            coordinates = [
+              double.parse(lngStr),
+              double.parse(latStr),
+            ]; // [lng, lat]
+          }
+        } catch (e) {
+          print('Error parsing location string: $e');
+        }
+      }
+      // Check if location is a Map with coordinates
+      else if (widget.donation['location'] is Map &&
+          widget.donation['location']['coordinates'] != null) {
+        final coords = widget.donation['location']['coordinates'];
         if (coords is List && coords.length == 2) {
           try {
-            // Convert each element to double, regardless of original type
             coordinates = [
               double.parse(coords[0].toString()),
               double.parse(coords[1].toString()),
             ];
           } catch (e) {
-            print('Error parsing coordinates: $e');
-            coordinates = null;
+            print('Error parsing coordinates from map: $e');
           }
         }
       }
+      // Check if location has direct latitude/longitude fields
+      else if (widget.donation.containsKey('lat') &&
+          widget.donation.containsKey('lng')) {
+        try {
+          coordinates = [
+            double.parse(widget.donation['lng'].toString()),
+            double.parse(widget.donation['lat'].toString()),
+          ];
+        } catch (e) {
+          print('Error parsing direct lat/lng: $e');
+        }
+      }
+    }
+
+    // Add logging to help debug
+    if (coordinates != null) {
+      print(
+        'DonationCard extracted coordinates: $coordinates for donation: ${widget.donation['_id']}',
+      );
+    } else {
+      print(
+        'Failed to extract coordinates for donation: ${widget.donation['_id']}, location data: ${widget.donation['location']}',
+      );
     }
 
     // Get the image URL(s) from the donation
@@ -106,10 +151,10 @@ class _DonationCardState extends State<DonationCard> {
     final String donationId = _getString(widget.donation['_id'], '');
 
     // Format the date safely
-    String formattedDate = 'Date not available';
+    String formattedDate = '';
     try {
-      if (widget.donation['createdAt'] != null) {
-        final date = DateTime.parse(widget.donation['createdAt']);
+      if (widget.donation['expiryDate'] != null) {
+        final date = DateTime.parse(widget.donation['expiryDate']);
         formattedDate = DateFormat('MMM d, yyyy').format(date);
       }
     } catch (_) {
@@ -117,8 +162,7 @@ class _DonationCardState extends State<DonationCard> {
     }
 
     bool canClaim =
-        !isLoading &&
-        (userRole == 'NGO' || userRole == 'volunteer') ;
+        !isLoading && (userRole == 'NGO' || userRole == 'volunteer');
 
     return Card(
       elevation: 3,

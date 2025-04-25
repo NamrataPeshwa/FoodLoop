@@ -11,7 +11,15 @@ class JoyLoopService {
   
   Future<List<dynamic>> getJoyMoments() async {
   try {
-    final response = await http.get(Uri.parse(ApiConstants.joyGet));
+    final token = await _authService.getAuthToken();
+    
+    final response = await http.get(
+      Uri.parse(ApiConstants.joyMoments),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
     
     log('Joy moments response status: ${response.statusCode}');
     
@@ -19,20 +27,24 @@ class JoyLoopService {
       final data = jsonDecode(response.body);
       log('Joy moments raw data type: ${data.runtimeType}');
       
-      // Handle different response formats
-      if (data is List) {
-        return data; // Already a list, return directly
-      } else if (data is Map<String, dynamic>) {
-        // Log keys to help debug
-        log('Joy moments response keys: ${data.keys.toList()}');
+      // Handle the specific response structure you're receiving
+      if (data is Map<String, dynamic> && 
+          data.containsKey('success') && 
+          data.containsKey('data') && 
+          data['data'] is Map<String, dynamic> &&
+          data['data'].containsKey('momentOfDay')) {
         
-        // Try to extract list from various possible structures
+        return data['data']['momentOfDay'] as List<dynamic>;
+      }
+      
+      // Fallback to standard formats
+      if (data is List) {
+        return data;
+      } else if (data is Map<String, dynamic>) {
         if (data.containsKey('data') && data['data'] is List) {
           return data['data'] as List;
-        } else if (data.containsKey('moments') && data['moments'] is List) {
+        } else if (data.containsKey('moments')) {
           return data['moments'] as List;
-        } else if (data.containsKey('joyMoments') && data['joyMoments'] is List) {
-          return data['joyMoments'] as List;
         } else {
           // Look for any list in the response
           for (var key in data.keys) {
@@ -40,15 +52,11 @@ class JoyLoopService {
               return data[key] as List;
             }
           }
-          // If no list found, return empty list
-          log('No list found in response, returning empty list');
-          return [];
         }
       }
       
-      // If we get here, the format is unexpected
-      log('Unexpected joy moments data format: ${data.runtimeType}');
-      return []; // Return empty list as fallback
+      log('No suitable list found in response');
+      return [];
     } else {
       throw Exception('Failed to load joy moments: ${response.statusCode}');
     }
@@ -60,7 +68,15 @@ class JoyLoopService {
   
   Future<List<dynamic>> getTopDonors() async {
     try {
-      final response = await http.get(Uri.parse(ApiConstants.topDonors));
+      final token = await _authService.getAuthToken();
+    
+    final response = await http.get(
+      Uri.parse(ApiConstants.topDonors),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
       
       log('Top donors response: ${response.statusCode}');
       

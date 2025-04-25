@@ -7,6 +7,8 @@ import 'package:foodloop_mobile/features/donations/pages/donationscreen.dart';
 import 'package:foodloop_mobile/features/donations/pages/joyloopscreen.dart';
 import 'package:foodloop_mobile/features/donations/screens/available_donations_screen.dart';
 import 'package:foodloop_mobile/features/donations/screens/donation_map_screen.dart';
+import 'package:foodloop_mobile/features/donations/screens/my_transactions_screen.dart';
+import 'package:foodloop_mobile/features/donations/screens/transaction_details_screen.dart';
 import 'package:foodloop_mobile/features/home/pages/dashboard.dart';
 import 'package:foodloop_mobile/features/maps/FoodMapScreen.dart';
 
@@ -39,6 +41,7 @@ Future<void> main() async {
   //   print("Error loading .env file: $e");
   //   // Continue without env file for now
   // }
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(FoodLoopApp());
 }
 
@@ -90,6 +93,13 @@ class FoodLoopApp extends StatelessWidget {
               ModalRoute.of(context)!.settings.arguments
                   as Map<String, dynamic>;
           return DonationMapScreen(args: args);
+        },
+        '/my-transactions': (context) => const MyTransactionsScreen(),
+        '/transaction-details': (context) {
+          final args =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>;
+          return TransactionDetailsScreen(transaction: args);
         },
       },
     );
