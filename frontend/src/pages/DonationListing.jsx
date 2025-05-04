@@ -97,7 +97,7 @@ const DonationCard = ({ donation, userRole, onClaim }) => {
 };
 
 const DonationList = () => {
-  const userRole = sessionStorage.getItem("userRole");
+  const userRole = localStorage.getItem("userRole");
   console.log(userRole);
   const handleClaim = async (donationId) => {
     try {
