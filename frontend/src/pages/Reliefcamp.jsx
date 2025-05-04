@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ReliefMaps from "./ReliefMaps";
 import ReliefCampCard from "./ReliefCampCard";
-import Header from "../components/Header";
+import Header from "../Components/Header";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
 const images = ["dis1.jpg", "dis2.jpg"];
 // static data, comment after intr.

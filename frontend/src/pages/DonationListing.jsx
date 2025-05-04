@@ -4,7 +4,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
-import Header from "../components/Header";
+import Header from "../Components/Header";
 import axios from "axios";
 
 const DonationCard = ({ donation, userRole, onClaim }) => {

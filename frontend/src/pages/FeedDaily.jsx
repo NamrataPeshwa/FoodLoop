@@ -1,8 +1,8 @@
 import React from "react";
-import RecurringForm from "../components/ui/RecurringForm";
-import ExistingReminders from "../components/ui/ExistingReminders";
+import RecurringForm from "../Components/ui/RecurringForm";
+import ExistingReminders from "../Components/ui/ExistingReminders";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
-import Header from "../components/Header";
+import Header from "../Components/Header";
 
 const FeedDaily = () => {
   return (
