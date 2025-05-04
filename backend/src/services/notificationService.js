@@ -13,7 +13,7 @@ export const sendSMS = async (to, message) => {
     await client.messages.create({
       body: message,
       from: fromNumber,
-      to: "+91${to}"
+      to: `+91${to}`
     });
     return true;
   } catch (err) {
