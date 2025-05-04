@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
+import Header from "../Components/Header"; 
 import ButtonWithAvatar from "../Components/MainPage/HoverButton";
+
 import { FoodDonationGlobe } from "../Components/MainPage/globe";
 import {
   getDashboardStats,
@@ -20,7 +22,7 @@ import {
 } from "@tabler/icons-react";
 import gsap from "gsap";
 import { useLayoutEffect, useRef } from "react";
-import Header from "../components/Header";
+
 import ChatbotWidget from "../Components/ui/ChatbotUI";
 const Dashboard = () => {
  
