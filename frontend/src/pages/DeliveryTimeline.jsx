@@ -1,78 +1,73 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, Clock, Circle, Info, ChevronRight, Award } from "lucide-react";
-import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
+import { 
+  CheckCircle, 
+  Clock, 
+  Circle, 
+  ChevronRight, 
+  Award, 
+  Search,
+  Calendar,
+  Filter,
+  ArrowDownUp,
+  Package
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { FoodDistributionSidebar } from "../Components/MainPage/Sidebar";
+import TimelineModal from "../Components/MainPage/TimelineModel"; // Adjust path as needed
 
-// Status mapping to user-friendly labels
+// Wherever your statusLabels object is defined
 const statusLabels = {
-  'pending': 'Order Placed',
-  'requested': 'Processing',
-  'picked_up': 'Order Picked Up',
-  'in_transit': 'Out for Delivery',
-  'delivered': 'Delivered',
-  'confirmed': 'Verified & Completed'
+  requested: "Requested",
+  processing: "Processing",
+  picked_up: "Picked Up",
+  in_transit: "In Transit",
+  delivered: "Delivered",
+  confirmed: "Confirmed",
+  on_chain: "Verified on Blockchain", // Add this line
+  // any other statuses you have...
 };
 
-// Status descriptions
-const statusDescriptions = {
-  'pending': 'Your donation has been confirmed.',
-  'requested': 'NGO has requested pickup of your donation.',
-  'picked_up': 'Food has been picked up from your location.',
-  'in_transit': 'Food is on the way to the recipient.',
-  'delivered': 'Food has been successfully delivered.',
-  'confirmed': 'Delivery verified and NFT has been minted.'
+// Status colors for visual indicators
+const statusColors = {
+  'pending': 'bg-yellow-500',
+  'requested': 'bg-blue-500',
+  'picked_up': 'bg-purple-500',  
+  'in_transit': 'bg-orange-500',
+  'delivered': 'bg-teal-500',
+  'confirmed': 'bg-green-500'
 };
 
-// Status transition rules based on user role
-const allowedTransitions = {
-  'donor': {
-    'pending': ['requested']
-  },
-  'ngo': {
-    'pending': ['requested'],
-    'picked_up': ['in_transit'],
-    'in_transit': ['delivered'],
-    'delivered': ['confirmed']
-  },
-  'volunteer': {
-    'requested': ['picked_up'],
-    'picked_up': ['in_transit'],
-    'in_transit': ['delivered']
-  },
-  'admin': {
-    'pending': ['requested', 'picked_up', 'in_transit', 'delivered', 'confirmed'],
-    'requested': ['pending', 'picked_up', 'in_transit', 'delivered', 'confirmed'],
-    'picked_up': ['pending', 'requested', 'in_transit', 'delivered', 'confirmed'],
-    'in_transit': ['pending', 'requested', 'picked_up', 'delivered', 'confirmed'],
-    'delivered': ['pending', 'requested', 'picked_up', 'in_transit', 'confirmed'],
-    'confirmed': ['pending', 'requested', 'picked_up', 'in_transit', 'delivered']
-  }
-};
-
-const DeliveryTimeline = () => {
-  const { orderId } = useParams();
+const TransactionsList = () => {
   const navigate = useNavigate();
-  const [timelineEvents, setTimelineEvents] = useState([]);
-  const [currentStatus, setCurrentStatus] = useState("pending");
+  const { token, hasRole, user , authLoading } = useAuth();
+  const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [showActionMenu, setShowActionMenu] = useState(null);
-  const [showNftModal, setShowNftModal] = useState(false);
-  const [nftData, setNftData] = useState(null);
-  const { hasRole, token, user } = useAuth();
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortField, setSortField] = useState("date");
+  const [sortDirection, setSortDirection] = useState("desc");
+  
+  // Add these missing state variables
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineError, setTimelineError] = useState(null);
+  const [timeline, setTimeline] = useState([]);
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
   
   // Get user's role
   const userRole = hasRole('admin') ? 'admin' : 
                   hasRole('ngo') ? 'ngo' : 
                   hasRole('volunteer') ? 'volunteer' : 
                   hasRole('donor') ? 'donor' : null;
-
+  
   // Format date to readable string
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
@@ -81,240 +76,144 @@ const DeliveryTimeline = () => {
     });
   };
 
-  // Fetch timeline events from API
+  // Fetch transactions from API
   useEffect(() => {
-    const fetchTimelineEvents = async () => {
-      if (!orderId) {
-        setIsLoading(false);
-        return;
-      }
-
+    if (authLoading) return; // wait for auth to load
+    const fetchTransactions = async () => {
+      setIsLoading(true);
+      setError(null);
+  
       try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/orders/${orderId}/timeline`, {
+        const endpoint = `${import.meta.env.VITE_BACKEND_API}/api/transaction/user`; // no userId in URL
+
+        console.log("API Endpoint:", endpoint);
+        const response = await fetch(endpoint, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
-        if (response.ok) {
-          const data = await response.json();
-          setTimelineEvents(data.events);
-          
-          // Find the latest status
-          if (data.events && data.events.length > 0) {
-            const latestEvent = [...data.events].sort((a, b) => 
-              new Date(b.timestamp) - new Date(a.timestamp)
-            )[0];
-            setCurrentStatus(latestEvent.status);
-          }
-        } else {
-          console.error("Failed to fetch timeline events");
+  
+        if (!response.ok) {
+          throw new Error(`Failed to fetch transactions: ${response.status}`);
         }
+  
+        const data = await response.json();
+        console.log('Fetched transactions:', data);
+        setTransactions(data); // No need for data.orders, your backend returns an array
       } catch (error) {
-        console.error("Error fetching timeline:", error);
+        console.error("Error fetching transactions:", error);
+        setError(error.message || "Failed to load transactions");
       } finally {
         setIsLoading(false);
       }
     };
-
-    fetchTimelineEvents();
-  }, [orderId, token]);
-
-  // Prepare steps based on timeline events
-  const prepareTimelineSteps = () => {
-    // Define the status order
-    const statusOrder = ['pending', 'requested', 'picked_up', 'in_transit', 'delivered', 'confirmed'];
-    
-    // Create a map of status -> event for quick lookup
-    const eventsByStatus = {};
-    timelineEvents.forEach(event => {
-      // If there are multiple events with the same status, use the latest one
-      if (!eventsByStatus[event.status] || 
-          new Date(event.timestamp) > new Date(eventsByStatus[event.status].timestamp)) {
-        eventsByStatus[event.status] = event;
-      }
-    });
-    
-    // Create steps array based on status order
-    return statusOrder.map(status => {
-      const event = eventsByStatus[status];
-      
-      return {
-        status: status,
-        label: statusLabels[status],
-        timestamp: event ? formatDate(event.timestamp) : "",
-        by: event ? event.by : "",
-        note: event ? event.note : ""
-      };
-    });
-  };
-
-  const steps = prepareTimelineSteps();
-
-  // Get the index of the current status
-  const getCurrentStepIndex = () => {
-    const statusOrder = ['pending', 'requested', 'picked_up', 'in_transit', 'delivered', 'confirmed'];
-    return statusOrder.indexOf(currentStatus);
-  };
-
-  const currentStepIndex = getCurrentStepIndex();
-
-  // Check if a status transition is allowed for the current user
-  const canUpdateToStatus = (targetStatus) => {
-    if (!userRole || !allowedTransitions[userRole]) return false;
-    
-    const allowed = allowedTransitions[userRole][currentStatus] || [];
-    return allowed.includes(targetStatus);
-  };
-
-  // Handle clicking on a step to show action menu
-  const handleStepClick = (index) => {
-    // Only show action menu if this is a future step that's adjacent to current step
-    const statusOrder = ['pending', 'requested', 'picked_up', 'in_transit', 'delivered', 'confirmed'];
-    const clickedStatus = statusOrder[index];
-    
-    if (canUpdateToStatus(clickedStatus)) {
-      setShowActionMenu(showActionMenu === index ? null : index);
+    console.log("Token:", token);
+    console.log("User ID:", user?.id);
+    // fetchTransactions();
+    if (!authLoading && token && user?.id) {
+      fetchTransactions();
+    }
+  }, [ authLoading , token, user?.id]);
+  
+  // Handle sort toggle
+  const toggleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      setShowActionMenu(null);
-    }
-  };
-
-  // Update status when clicked
-  const handleUpdateStatus = async (newStatus) => {
-    if (!orderId) {
-      setStatusMessage("Order ID is missing");
-      return;
-    }
-    
-    if (!canUpdateToStatus(newStatus)) {
-      setStatusMessage(`You don't have permission to update to ${statusLabels[newStatus]}`);
-      return;
-    }
-    
-    setIsUpdating(true);
-    setStatusMessage("");
-    setShowActionMenu(null);
-    
-    try {
-      // Regular status update endpoint
-      const endpoint = newStatus === 'confirmed' 
-        ? `${import.meta.env.VITE_BACKEND_API}/api/orders/${orderId}/confirm-delivery`
-        : `${import.meta.env.VITE_BACKEND_API}/api/orders/${orderId}/update-status`;
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          status: newStatus,
-          timestamp: new Date().toISOString(),
-          by: userRole,
-          note: `Status updated to ${newStatus} by ${userRole}`
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Add the new event to the timeline
-        const newEvent = {
-          status: newStatus,
-          timestamp: new Date().toISOString(),
-          by: userRole,
-          note: `Status updated to ${newStatus} by ${userRole}`
-        };
-        
-        setTimelineEvents([...timelineEvents, newEvent]);
-        setCurrentStatus(newStatus);
-        
-        // If this was a confirmation, we got back NFT data
-        if (newStatus === 'confirmed' && data.nftData) {
-          setNftData(data.nftData);
-          setShowNftModal(true);
-          setStatusMessage(`NFT minted successfully!`);
-        } else {
-          setStatusMessage(`Updated to ${statusLabels[newStatus]} successfully!`);
-        }
-      } else {
-        setStatusMessage(`Failed to update status: ${data.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      setStatusMessage("Network error. Please try again.");
-    } finally {
-      setIsUpdating(false);
+      setSortField(field);
+      setSortDirection("asc");
     }
   };
   
-  // Calculate shortened hash for display
-  const shortenHash = (hash) => {
-    if (!hash) return "";
-    return `${hash.substring(0, 6)}...${hash.substring(hash.length - 4)}`;
-  };
-
-  // NFT Modal component
-  const NftSuccessModal = () => {
-    if (!nftData) return null;
+  // Process and filter/sort transactions
+  const processedTransactions = () => {
+    if (!transactions.length) return [];
     
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 animate-fadeIn">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-              <Award className="h-10 w-10 text-green-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-colour4 mb-2">NFT Minted Successfully!</h3>
-            <p className="text-gray-600 mb-6">Your contribution to food redistribution has been recorded on the blockchain</p>
-            
-            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <div className="mb-3">
-                <p className="text-sm text-gray-500">NFT Token ID</p>
-                <p className="font-medium">{nftData.tokenId}</p>
-              </div>
-              <div className="mb-3">
-                <p className="text-sm text-gray-500">Transaction Hash</p>
-                <div className="flex items-center gap-2">
-                  <p className="font-medium font-mono">{shortenHash(nftData.transactionHash)}</p>
-                  <button 
-                    onClick={() => navigator.clipboard.writeText(nftData.transactionHash)}
-                    className="text-xs text-colour1 hover:text-amber-700"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Blockchain</p>
-                <p className="font-medium">{nftData.blockchain || "Sepolia Testnet"}</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              {nftData.explorerUrl && (
-                <a 
-                  href={nftData.explorerUrl} 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 bg-colour4 hover:bg-green-700 text-white py-2 px-4 rounded-md font-medium transition-colors duration-200"
-                >
-                  View on Explorer
-                </a>
-              )}
-              <button
-                onClick={() => setShowNftModal(false)}
-                className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-md font-medium transition-colors duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return transactions
+      // Filter by search term
+      .filter(transaction => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          transaction.id.toString().includes(searchLower) ||
+          (transaction.foodType && transaction.foodType.toLowerCase().includes(searchLower)) ||
+          (transaction.recipient && transaction.recipient.toLowerCase().includes(searchLower)) ||
+          (transaction.donor && transaction.donor.toLowerCase().includes(searchLower))
+        );
+      })
+      // Filter by status
+      .filter(transaction => {
+        if (filterStatus === "all") return true;
+        return transaction.status === filterStatus;
+      })
+      // Sort by selected field
+      .sort((a, b) => {
+        let comparison = 0;
+        
+        if (sortField === "date") {
+          comparison = new Date(a.updatedAt || a.createdAt) - new Date(b.updatedAt || b.createdAt);
+        } else if (sortField === "id") {
+          comparison = a.id.localeCompare(b.id);
+        } else if (sortField === "status") {
+          const statusOrder = ['pending', 'requested', 'picked_up', 'in_transit', 'delivered', 'confirmed'];
+          comparison = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+        }
+        
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
   };
+  
+  // Navigate to transaction details
+  const handleViewTransaction = async (transactionId) => {
+    if (!transactionId) {
+      console.log('No transaction ID provided');
+      return;
+    }
+  
+    try {
+      setTimelineLoading(true);
+      setTimelineError(null);
+  
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/api/transaction/orders/${transactionId}/timeline`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      console.log('Timeline data:', data);
+  
+      // Set timeline data to state
+      setTimeline(data.events || []);
+      setSelectedTransactionId(transactionId);
+      
+      // Set the data needed for the modal
+      setSelectedTransaction({
+        id: data.id,
+        currentStatus: data.currentStatus,
+        events: data.events || []
+      });
+      
+      // Show the modal
+      setShowTimelineModal(true);
+      
+    } catch (error) {
+      console.error('Error fetching timeline:', error);
+      setTimelineError(error.message || 'Failed to load timeline');
+    } finally {
+      setTimelineLoading(false);
+    }
+  };
+  
+  // Get status indicator classes based on status
+  const getStatusIndicator = (status) => {
+    return `${statusColors[status] || 'bg-gray-400'} h-3 w-3 rounded-full`;
+  };
+  
+  const filteredTransactions = processedTransactions();
 
   return (
     <div className="flex h-screen bg-colour2">
@@ -324,302 +223,227 @@ const DeliveryTimeline = () => {
         
         {/* Main content area */}
         <div className="flex flex-1 flex-col overflow-y-auto">
-          <div className="flex flex-col items-center py-8 px-4 bg-gradient-to-b from-colour2 to-white">
-            <h1 className=" font-Birthstone text-4xl md:text-5xl font-bold text-colour1 mb-2">
-              Delivery Status
-            </h1>
-            <p className="font-merriweather text-colour4 mb-6">Track your food donation journey in real-time</p>
-            
-            {isLoading ? (
-              <div className="w-full max-w-2xl mx-auto flex justify-center p-10">
-                <div className="w-10 h-10 border-4 border-colour1 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              <div className="w-full max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-6 border border-colour3">
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-colour3">
-                  <div>
-                    <h2 className="text-2xl font-merriweather font-semibold text-colour4">
-                      Delivery Timeline
-                    </h2>
-                    <p className="text-gray-500 text-sm mt-1">Order #{orderId || "DFD2204"}</p>
+          <div className="flex flex-col py-8 px-4 bg-gradient-to-b from-colour2 to-white">
+            <div className="max-w-6xl mx-auto w-full">
+              <h1 className="font-Birthstone text-4xl md:text-5xl font-bold text-colour1 mb-2 text-center">
+                Food Donation Transactions
+              </h1>
+              <p className="font-merriweather text-colour4 mb-8 text-center">
+                View and manage all food donation transactions
+              </p>
+              
+              {/* Filters and search */}
+              <div className="bg-white shadow-md rounded-xl p-4 border border-colour3 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Search */}
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search by ID, food type, donor..."
+                      className="block w-full pl-10 pr-3 py-2 border border-colour3 rounded-md focus:ring-colour1 focus:border-colour1"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
-                  <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-                    currentStatus === 'confirmed' 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-colour1 text-white'
-                  }`}>
-                    {currentStatus === 'confirmed' ? 'Completed' : 'In Progress'}
+                  
+                  {/* Status filter */}
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Filter className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <select
+                      className="block w-full pl-10 pr-3 py-2 border border-colour3 rounded-md focus:ring-colour1 focus:border-colour1"
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="pending">Order Placed</option>
+                      <option value="requested">Processing</option>
+                      <option value="picked_up">Order Picked Up</option>
+                      <option value="in_transit">Out for Delivery</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="confirmed">Verified & Completed</option>
+                    </select>
+                  </div>
+                  
+                  {/* Sort options */}
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <ArrowDownUp className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <select
+                      className="block w-full pl-10 pr-3 py-2 border border-colour3 rounded-md focus:ring-colour1 focus:border-colour1"
+                      value={`${sortField}-${sortDirection}`}
+                      onChange={(e) => {
+                        const [field, direction] = e.target.value.split('-');
+                        setSortField(field);
+                        setSortDirection(direction);
+                      }}
+                    >
+                      <option value="date-desc">Date (Newest first)</option>
+                      <option value="date-asc">Date (Oldest first)</option>
+                      <option value="id-asc">ID (Ascending)</option>
+                      <option value="id-desc">ID (Descending)</option>
+                      <option value="status-asc">Status (Pending to Completed)</option>
+                      <option value="status-desc">Status (Completed to Pending)</option>
+                    </select>
                   </div>
                 </div>
-                
-                {/* Role indicator - helpful for users to know what actions they can take */}
-                {userRole && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm">
-                    <p className="text-gray-700">
-                      You are logged in as: <span className="font-semibold uppercase">{userRole}</span>
-                      {userRole !== 'admin' && (
-                        <span className="ml-1">
-                          {userRole === 'donor' ? ' - You can submit new donations' : 
-                           userRole === 'ngo' ? ' - You can request pickups and confirm deliveries' : 
-                           userRole === 'volunteer' ? ' - You can update pickup and delivery status' : ''}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                )}
-                
-                {/* Timeline */}
-                <ol className="relative border-l-[0.25rem] border-colour3 ml-4">
-                  {steps.map((step, index) => {
-                    const statusOrder = ['pending', 'requested', 'picked_up', 'in_transit', 'delivered', 'confirmed'];
-                    const stepStatus = statusOrder[index];
-                    const isCompleted = index <= currentStepIndex;
-                    const isCurrent = index === currentStepIndex;
-                    const isClickable = canUpdateToStatus(stepStatus);
-                    
-                    return (
-                      <li 
-                        key={index} 
-                        className={`mb-8 ml-6 font-merriweather relative ${isClickable ? 'cursor-pointer group' : ''}`}
-                        onClick={isClickable ? () => handleStepClick(index) : undefined}
+              </div>
+              
+              {/* Transactions list */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-colour3">
+                  <thead className="bg-colour2 bg-opacity-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Food Details</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Donor/Recipient</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200 font-merriweather">
+                    {filteredTransactions.map((transaction) => (
+                      <tr
+                        key={transaction._id}
+                        className="hover:bg-amber-50 cursor-pointer transition-colors"
                       >
-                        {/* Status indicator */}
-                        <span className={`absolute -left-4 flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 ${
-                          isCompleted ? "border-colour4" : isCurrent ? "border-colour1" : "border-colour3"
-                        } shadow-sm ${isClickable ? 'group-hover:ring-2 group-hover:ring-colour1 group-hover:ring-opacity-50' : ''}`}>
-                          {isCompleted ? (
-                            <CheckCircle className="w-6 h-6 text-colour4" />
-                          ) : isCurrent ? (
-                            <Clock className="w-6 h-6 text-colour1 animate-pulse" />
-                          ) : (
-                            <Circle className={`w-6 h-6 ${isClickable ? 'text-colour1 opacity-70' : 'text-gray-300'}`} />
-                          )}
-                        </span>
-                        
-                        {/* Step content */}
-                        <div className={`ml-2 ${
-                          isClickable ? 'group-hover:bg-amber-50 px-3 py-2 -mx-3 -my-2 rounded-lg transition-colors duration-150' : ''
-                        }`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-colour4">#{transaction._id}</div>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-gray-900">
+                            {transaction.foodListing?.predictedCategory || "Mixed Meals"}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {transaction.foodListing?.weight
+                              ? `${transaction.foodListing.weight} kg`
+                              : "8 servings"}
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4">
+                          <div className="text-sm">
+                            <div className="font-medium text-gray-900">
+                              {transaction.donor?.name || "Generous Kitchen"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              To: {transaction.ngo?.name || transaction.volunteer?.name || "Recipient"}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 text-gray-400 mr-1" />
+                            <span className="text-sm text-gray-600">
+                              {formatDate(transaction.updatedAt || transaction.createdAt || new Date())}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <h3
-                              className={`text-lg font-medium ${
-                                isCompleted
-                                  ? "text-colour4"
-                                  : isCurrent
-                                  ? "text-colour1"
-                                  : isClickable
-                                  ? "text-colour1 opacity-80"
-                                  : "text-gray-400"
-                              }`}
-                            >
-                              {step.label}
-                            </h3>
-                            {isClickable && (
-                              <ChevronRight className="w-4 h-4 text-colour1 group-hover:opacity-100 opacity-60" />
+                            <span className={getStatusIndicator(transaction.status)}></span>
+                            <span className="text-sm font-medium">
+                              {statusLabels[transaction.status] || "Unknown"}
+                            </span>
+                            {transaction.status === "confirmed" && (
+                              <Award className="h-4 w-4 text-green-600" />
                             )}
                           </div>
-                          
-                          {step.timestamp && (
-                            <p className="text-sm text-gray-500">{step.timestamp}</p>
-                          )}
-                          
-                          {step.by && step.timestamp && (
-                            <p className="text-xs text-gray-400">Updated by: {step.by}</p>
-                          )}
-                          
-                          {isCurrent && (
-                            <p className="text-sm text-colour1 mt-1 italic">
-                              {statusDescriptions[step.status]}
-                            </p>
-                          )}
-                          
-                          {step.note && (
-                            <div className="flex items-start mt-1 text-sm text-gray-600">
-                              <Info className="min-w-4 h-4 mr-1 mt-0.5" />
-                              <p>{step.note}</p>
-                            </div>
-                          )}
-                          
-                          {/* Action menu for updating status */}
-                          {showActionMenu === index && (
-                            <div className="mt-2 p-3 bg-white border border-colour3 rounded-lg shadow-lg">
-                              <p className="text-sm text-gray-600 mb-2">
-                                Update status to <span className="font-semibold">{step.label}?</span>
-                              </p>
-                              {/* Special message for confirmation step */}
-                              {stepStatus === 'confirmed' && (
-                                <div className="p-2 bg-amber-50 text-amber-800 text-sm rounded mb-2">
-                                  <p className="flex items-center">
-                                    <Info className="w-4 h-4 mr-1" />
-                                    This action will mint an NFT to permanently record this donation on the blockchain
-                                  </p>
-                                </div>
-                              )}
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUpdateStatus(stepStatus);
-                                  }}
-                                  disabled={isUpdating}
-                                  className={`px-4 py-1.5 text-white rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-1 shadow-sm disabled:opacity-50 ${
-                                    stepStatus === 'confirmed' 
-                                      ? 'bg-colour4 hover:bg-green-700' 
-                                      : 'bg-colour1 hover:bg-amber-600'
-                                  }`}
-                                >
-                                  {isUpdating ? (
-                                    <>
-                                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                      {stepStatus === 'confirmed' ? 'Minting...' : 'Updating...'}
-                                    </>
-                                  ) : (
-                                    <>{stepStatus === 'confirmed' ? 'Confirm & Mint NFT' : 'Confirm'}</>
-                                  )}
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowActionMenu(null);
-                                  }}
-                                  className="px-4 py-1.5 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-                
-                <div className="mt-6 pt-4 border-t border-colour3">
-                  {statusMessage && (
-                    <div className={`mb-4 p-3 rounded-md ${statusMessage.includes('Failed') || statusMessage.includes('error') || statusMessage.includes('permission') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-                      {statusMessage}
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between items-center">
-                    {currentStatus === 'confirmed' ? (
-                      <div className="flex items-center gap-2 text-green-600">
-                        <CheckCircle className="w-5 h-5" />
-                        <span className="font-medium font-merriweather">Delivery verified and completed</span>
-                      </div>
-                    ) : (
-                      <div className="text-gray-500 text-sm font-merriweather">
-                        {timelineEvents.length > 0 ? (
-                          `Last updated: ${formatDate(timelineEvents[timelineEvents.length - 1].timestamp)}`
-                        ) : (
-                          "Awaiting updates"
-                        )}
-                      </div>
-                    )}
-                    
-                    {currentStatus !== 'confirmed' && userRole && (
-                      <p className="text-sm text-colour1 italic">
-                        Click on an available step to update the status
-                      </p>
-                    )}
-                  </div>
-                </div>
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button
+                            className="px-4 py-1 bg-colour1 text-white text-sm rounded-md hover:bg-amber-600 transition-colors shadow-sm"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent row click
+                              handleViewTransaction(transaction._id);
+                            }}
+                          >
+                            View Timeline
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-            
-            {/* Additional information card */}
-            {!isLoading && (
-              <div className="w-full max-w-2xl mx-auto mt-6 bg-white shadow-lg rounded-xl p-6 border border-colour3">
-                <h3 className="text-xl font-Birthstone text-2xl font-semibold text-colour4 mb-4">Delivery Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-merriweather">
-                  <div>
-                    <p className="text-sm text-colour4">Recipient</p>
-                    <p className="font-medium">Helping Hands Foundation</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-colour4">Contact</p>
-                    <p className="font-medium">+1 (555) 123-4567</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-colour4">Delivery Address</p>
-                    <p className="font-medium">123 Hope Street, Charity Avenue</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-colour4">Food Type</p>
-                    <p className="font-medium">Mixed meals - 8 servings</p>
-                  </div>
+              
+              {/* Loading and error states */}
+              {isLoading && (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-colour1"></div>
+                  <p className="mt-2 text-colour4">Loading transactions...</p>
                 </div>
-                
-                <div className="mt-4 pt-4 border-t border-colour3">
-                  <p className="text-sm text-colour4 font-merriweather">Special Instructions</p>
-                  <p className="text-gray-700 font-merriweather">Please maintain food temperature. Call recipient 10 minutes before arrival.</p>
+              )}
+              
+              {error && (
+                <div className="text-center py-8">
+                  <p className="text-red-500">Error: {error}</p>
                 </div>
+              )}
+              
+              {!isLoading && !error && filteredTransactions.length === 0 && (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-gray-400 mx-auto" />
+                  <p className="mt-2 text-lg text-colour4">No transactions found</p>
+                </div>
+              )}
+              
+              {/* Role-specific action button */}
+              {userRole === 'donor' && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={() => navigate('/create-donation')}
+                    className="px-6 py-3 bg-colour4 text-white font-medium rounded-md shadow-md hover:bg-green-700 transition-colors"
+                  >
+                    Create New Donation
+                  </button>
+                </div>
+              )}
+              
+              {/* Inspirational quote */}
+              <div className="mt-10 mb-6 text-center">
+                <p className="font-rouge text-2xl italic text-colour4">
+                  "Every transaction is a story of generosity and hope"
+                </p>
               </div>
-            )}
-            
-            {/* NFT information card - only shown when confirmed */}
-            {currentStatus === 'confirmed' && nftData && !showNftModal && (
-              <div className="w-full max-w-2xl mx-auto mt-6 bg-white shadow-lg rounded-xl p-6 border border-colour3">
-                <div className="flex items-center gap-3 mb-4">
-                  <Award className="h-8 w-8 text-green-600" />
-                  <h3 className="text-xl font-Birthstone text-2xl font-semibold text-colour4">NFT Certificate</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-merriweather">
-                  <div>
-                    <p className="text-sm text-colour4">NFT Token ID</p>
-                    <p className="font-medium">{nftData.tokenId}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-colour4">Blockchain</p>
-                    <p className="font-medium">{nftData.blockchain || "Sepolia Testnet"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-colour4">Transaction Hash</p>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium font-mono">{shortenHash(nftData.transactionHash)}</p>
-                      <button 
-                        onClick={() => navigator.clipboard.writeText(nftData.transactionHash)}
-                        className="text-xs text-colour1 hover:text-amber-700"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm text-colour4">Minted On</p>
-                    <p className="font-medium">{formatDate(nftData.mintedAt || new Date())}</p>
-                  </div>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-colour3 flex justify-end">
-                  {nftData.explorerUrl && (
-                    <a 
-                      href={nftData.explorerUrl} 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-colour4 hover:bg-green-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200"
-                    >
-                      View on Blockchain Explorer
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Inspirational quote */}
-            <div className="mt-8 mb-4 text-center">
-              <p className="font-rouge text-2xl italic text-colour4">"Every meal shared is a smile served"</p>
             </div>
           </div>
         </div>
       </div>
+      {selectedTransaction && (
+        <TimelineModal
+          isOpen={showTimelineModal}
+          onClose={() => setShowTimelineModal(false)}
+          transactionId={selectedTransaction.id}
+          initialStatus={selectedTransaction.currentStatus}
+          initialEvents={selectedTransaction.events}
+        />
+      )}
+      {timelineLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-50">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-colour1"></div>
+          <p className="mt-2 text-colour4">Loading timeline...</p>
+        </div>
+      )}
+      {timelineError && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-50">
+          <p className="text-red-500">Error: {timelineError}</p>
+        </div>
+      )}
       
-      {/* NFT Success Modal */}
-      {showNftModal && <NftSuccessModal />}
+  
     </div>
   );
 };
 
-export default DeliveryTimeline;
+export default TransactionsList;
