@@ -42,7 +42,15 @@ const donationTransactionSchema = new Schema({
   // high‑level status for quick queries
   status: {
     type: String,
-    enum: ['pending','requested','confirmed','rejected','on_chain'],
+    enum: ['pending',      // just created/matched
+    'requested',    // NGO has requested pickup
+    'picked_up',    // volunteer picked up
+    'in_transit',   // on the way
+    'delivered',    // delivered
+    'confirmed',    // NFT minted
+    'rejected',     // someone rejected
+    'on_chain'      // blockchain storage complete,
+    ],
     default: 'pending'
   },
 
