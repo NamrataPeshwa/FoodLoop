@@ -26,7 +26,7 @@ export const getUserProfile = async (req, res) => {
       donations = await Transaction.find({ donor: userId })
   .sort({ createdAt: -1 })
   .populate('foodListing', 'foodType weight')
-  .populate('ngo', 'name address');
+  .populate('ngo', 'name address organizationName');
 
       totalDonations = donations.length;
       console.log(donations)
@@ -62,25 +62,34 @@ export const getUserProfile = async (req, res) => {
       },
       donations: donations.map(donation => ({
         _id: donation._id,
-        foodListing: {
-          foodType: donation.foodListing.foodType,
-          weight: donation.foodListing.weight
-        },
+        foodListing: donation.foodListing
+          ? {
+              foodType: donation.foodListing.foodType,
+              weight: donation.foodListing.weight,
+              date: donation.createdAt.toLocaleString(),
+            }
+          : {
+              foodType: donation.certificateData?.foodType || "Unknown",
+              weight: donation.certificateData?.weight || "Unknown",
+              date: donation.createdAt.toLocaleString(),
+            },
         ngo: {
-          name: donation.ngo.name,
-          address: donation.ngo.address
+          name: donation.ngo?.organizationName || "Unknown NGO",
+          address: donation.ngo?.address || "No Address",
         },
         transactionHash: donation.transactionHash,
         certificateData: {
-          transactionHash: donation.certificateData.transactionHash,
-          nftTokenId: donation.certificateData.nftTokenId,
-          donorName: donation.certificateData.donorName,
-          donorEmail: donation.certificateData.donorEmail,
-          foodType: donation.certificateData.foodType,
-          weight: donation.certificateData.weight,
-          location: donation.certificateData.location,
-          timestamp: donation.certificateData.timestamp,
-          date: new Date(donation.certificateData.timestamp).toLocaleString()
+          transactionHash: donation.certificateData?.transactionHash || "Not Available",
+          nftTokenId: donation.certificateData?.nftTokenId || "Not Available",
+          donorName: donation.certificateData?.donorName || "Anonymous",
+          donorEmail: donation.certificateData?.donorEmail || "Hidden",
+          foodType: donation.certificateData?.foodType || "Unknown",
+          weight: donation.certificateData?.weight || "Unknown",
+          location: donation.certificateData?.location || "Unknown",
+          timestamp: donation.certificateData?.timestamp || "Not Available",
+          date: donation.certificateData?.timestamp
+            ? new Date(donation.certificateData.timestamp).toLocaleString()
+            : 'Not Available',
         }
       }))
     };
