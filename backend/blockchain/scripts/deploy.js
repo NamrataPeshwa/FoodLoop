@@ -1,4 +1,7 @@
-const hre = require("hardhat");
+import hre from "hardhat";
+import { config } from "dotenv";
+config({ path: "../src/.env" });
+import fs from "fs";
 
 async function main() {
   console.log("Fetching FoodLoopNFT factory...");
@@ -16,6 +19,21 @@ async function main() {
   const loop = await FoodLoop.deploy(nft.address);
   await loop.deployed();
   console.log("✅ Main Contract deployed to:", loop.address);
+
+  // ✅ Now that both are defined, write to file
+  fs.writeFileSync(
+    "./deployedAddresses.json",
+    JSON.stringify(
+      {
+        nftAddress: nft.address,
+        foodLoopAddress: loop.address,
+      },
+      null,
+      2
+    )
+  );
+
+  console.log("📁 Contract addresses written to deployedAddresses.json");
 }
 
 main().catch((error) => {
