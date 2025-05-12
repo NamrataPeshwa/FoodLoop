@@ -1,44 +1,54 @@
+// transactions.routes.js
+
 import express from "express";
 import {
   matchFoodListings,
-  confirmDeliveryAndMintNFT
- 
+  confirmDeliveryAndMintNFT,
+  getUserTransactions,
+  getOrderTimeline,
+  updateOrderStatus,
+  rejectParticipation
 } from "../controllers/transactions.controller.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
-import { getUserTransactions ,  
-  getOrderTimeline, 
-  updateOrderStatus , rejectParticipation} from "../controllers/transactions.controller.js";
 
 const router = express.Router();
 
+
+
+// Match food listings
+router.post("/match", matchFoodListings);
+
+
+// Get user transactions
+router.get('/user', authMiddleware, getUserTransactions); 
+// Confirm delivery and mint NFT
 router.post(
   "/confirm-delivery/:transactionId",
   authMiddleware,
   confirmDeliveryAndMintNFT
 );
 
+
+// Update transaction status
 router.patch(
-  '/:transactionId/status',
+  '/orders/:transactionId/status',
   authMiddleware,
   updateOrderStatus
 );
-router.get('/', authMiddleware, getUserTransactions);
-router.post("/match", matchFoodListings);
-// Routes for blockchain confirmation
-router.post('/transactions/confirm/:transactionId', authMiddleware, confirmDeliveryAndMintNFT);
 
-// Routes for order timeline
-router.get('/orders/:orderId/timeline', authMiddleware, getOrderTimeline);
+// Get transaction timeline
+router.get(
+  '/orders/:orderId/timeline',
+  authMiddleware,
+  getOrderTimeline
+);
 
-// Routes for updating order status
-// router.put('/orders/:orderId/update-status', 
-//   authMiddleware, 
-//   validationRules.updateOrderStatus, 
-//   validate, 
-//   updateOrderStatus
-// );
-router.post('/reject/:transactionId/:userId', rejectParticipation);
-
+// Reject participation in a transaction
+router.post(
+  '/reject/:transactionId/:userId',
+  authMiddleware,
+  rejectParticipation
+);
 
 export default router;
