@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, use } from "react";
 import { loginUser, signupUser, logoutUser } from "../services/authService";
 
 const AuthContext = createContext();
@@ -7,20 +7,19 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [tempUserData, setTempUserData] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
-      // Try to load user data from sessionStorage if available
-      const userData = sessionStorage.getItem("userData");
+      
+      const userData = localStorage.getItem("user");
       if (userData) {
         setUser(JSON.parse(userData));
-      } else {
-        // Here you might want to fetch user data from the API using the token
-        // fetchUserProfile(storedToken).then(data => setUser(data));
-      }
+      } 
     }
+    setAuthLoading(false);
   }, []);
 
   // Initial signup - stores basic info temporarily and moves to onboarding
@@ -103,13 +102,14 @@ export const AuthProvider = ({ children }) => {
     console.log("Login response:", response.user);
     if (response.token) {
       setToken(response.token);
+      setUser(response.user); // ✅ FIX: set user state here
       localStorage.setItem("token", response.token);
       sessionStorage.setItem("token",response.token)
       localStorage.setItem("userRole", response.user.role);
       
       // Set user in state and sessionStorage
-      setUser(response.user);
-      localStorage.setItem("userData", JSON.stringify(response.user));
+      
+      localStorage.setItem("user", JSON.stringify(response.user));
       
       // Store role in sessionStorage if available
       if (response.user && response.user.role) {
@@ -126,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
-    sessionStorage.removeItem("userData");
+    sessionStorage.removeItem("user");
     sessionStorage.removeItem("userRole");
   };
 
@@ -145,7 +145,8 @@ export const AuthProvider = ({ children }) => {
       completeSignup,
       getUserData,
       logout,
-      hasRole
+      hasRole,
+      authLoading // add this
     }}>
       {children}
     </AuthContext.Provider>
