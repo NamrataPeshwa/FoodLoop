@@ -335,7 +335,7 @@ const UserProfile = () => {
                 {currentDonations.map((donation, index) => (
                   <tr key={donation._id} className={index % 2 === 0 ? 'bg-colour2 bg-opacity-30' : ''}>
                     <td className="p-4">
-                      {new Date(donation.certificateData.timestamp).toLocaleDateString()}
+                      {donation.foodListing.date}
                     </td>
                     <td className="p-4">{donation.foodListing.foodType}</td>
                     <td className="p-4">{donation.foodListing.weight} kg</td>
@@ -411,7 +411,7 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Donation Date:</p>
-                  <p className="text-gray-700">{new Date(selectedCertificate.timestamp).toLocaleDateString()}</p>
+                  <p className="text-gray-700">{selectedCertificate.date}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Location:</p>
