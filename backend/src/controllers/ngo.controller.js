@@ -9,7 +9,7 @@ export const claimDonation = async (req, res) => {
     console.log("🔍 Claiming donation ID:", req.params.id);
     console.log("👤 Authenticated user:", req.user);
 
-    const listing = await FoodListing.findById(req.params.id).populate('donor', 'name email');
+    const listing = await FoodListing.findById(req.params.id).populate('donor', 'name email contactNumber');
 
     if (!listing) {
       return res.status(404).json({ error: "Donation not found" });
@@ -26,7 +26,6 @@ export const claimDonation = async (req, res) => {
     let assignedVolunteer = null;
 
     if (req.body.requestVolunteer) {
-      // Find nearest volunteer
       assignedVolunteer = await findNearestVolunteer(listing.location);
       if (assignedVolunteer) {
         listing.volunteer = assignedVolunteer._id;
@@ -38,12 +37,26 @@ export const claimDonation = async (req, res) => {
 
     await listing.save();
 
+  // Prepare partial certificateData (finalized later during delivery)
+const certificateData = {
+  transactionHash: "pending",
+  nftTokenId: "pending",
+  donorName: listing.donor.name,
+  donorEmail: listing.donor.email,
+  foodType: listing.foodType,
+  weight: listing.weight,
+  location: listing.fullAddress || `Lat: ${listing.location.coordinates[1]}, Lng: ${listing.location.coordinates[0]}`,
+  timestamp: new Date(),  // final delivery time will be updated later
+  date: new Date().toLocaleDateString()
+};
+
     const transaction = new Transaction({
       foodListing: listing._id,
       donor: listing.donor._id,
       ngo: req.user._id,
       volunteer: assignedVolunteer ? assignedVolunteer._id : null,
       timeline: [{ status: "requested", by: "ngo", at: new Date() }],
+      certificateData // partial data stored now
     });
 
     await transaction.save();
