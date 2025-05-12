@@ -32,6 +32,7 @@
 
             // Save token
             localStorage.setItem("token", data.jwt);
+            localStorage.setItem("user", JSON.stringify(data.user)); // ✅ Add this line
 
             // Save minimal user info (for onboarding)
             sessionStorage.setItem(
