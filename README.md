@@ -101,7 +101,7 @@ MongoDB >= 4.0.0
 ### Installation
 1. Clone the repository
 ```bash
-git clone https://github.com/Sujithkb24/Mindfull---Student-Mental-Wellness-Platform.git
+git clone https://github.com/Hitanshi-Singh/FoodLoop.git
 
 ```
 
