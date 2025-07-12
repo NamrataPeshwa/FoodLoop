@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, User, Lock, Bell, Shield, CreditCard, HelpCircle, Loader, ChevronRight, Mail, Phone, MapPin, Globe, ArrowLeft } from 'lucide-react';
 import UILoader from '../Components/ui/Loader';
 import { useNavigate } from 'react-router-dom';

@@ -6,8 +6,11 @@ export const getUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
     console.log('User ID:', userId);
+    console.log('Role:', req.user.role);
+
     // Fetch the user details from the database
     const user = await User.findById(userId).lean(); // lean for plain JS object
+    console.log('User details:', user.role);
 
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -20,10 +23,13 @@ export const getUserProfile = async (req, res) => {
     // Fetch donations data for 'donor' role
     if (user.role === 'donor') {
 
-      donations = await Transaction.find({ donor: userId }).sort({ createdAt: -1 });
-
+      donations = await Transaction.find({ donor: userId })
+  .sort({ createdAt: -1 })
+  .populate('foodListing', 'foodType weight')
+  .populate('ngo', 'name address organizationName');
 
       totalDonations = donations.length;
+      console.log(donations)
 
       if (donations.length > 0) {
         const firstDonationDate = donations[donations.length - 1].createdAt;
@@ -56,25 +62,34 @@ export const getUserProfile = async (req, res) => {
       },
       donations: donations.map(donation => ({
         _id: donation._id,
-        foodListing: {
-          foodType: donation.foodListing.foodType,
-          weight: donation.foodListing.weight
-        },
+        foodListing: donation.foodListing
+          ? {
+              foodType: donation.foodListing.foodType,
+              weight: donation.foodListing.weight,
+              date: donation.createdAt.toLocaleString(),
+            }
+          : {
+              foodType: donation.certificateData?.foodType || "Unknown",
+              weight: donation.certificateData?.weight || "Unknown",
+              date: donation.createdAt.toLocaleString(),
+            },
         ngo: {
-          name: donation.ngo.name,
-          address: donation.ngo.address
+          name: donation.ngo?.organizationName || "Unknown NGO",
+          address: donation.ngo?.address || "No Address",
         },
         transactionHash: donation.transactionHash,
         certificateData: {
-          transactionHash: donation.certificateData.transactionHash,
-          nftTokenId: donation.certificateData.nftTokenId,
-          donorName: donation.certificateData.donorName,
-          donorEmail: donation.certificateData.donorEmail,
-          foodType: donation.certificateData.foodType,
-          weight: donation.certificateData.weight,
-          location: donation.certificateData.location,
-          timestamp: donation.certificateData.timestamp,
-          date: new Date(donation.certificateData.timestamp).toLocaleString()
+          transactionHash: donation.certificateData?.transactionHash || "Not Available",
+          nftTokenId: donation.certificateData?.nftTokenId || "Not Available",
+          donorName: donation.certificateData?.donorName || "Anonymous",
+          donorEmail: donation.certificateData?.donorEmail || "Hidden",
+          foodType: donation.certificateData?.foodType || "Unknown",
+          weight: donation.certificateData?.weight || "Unknown",
+          location: donation.certificateData?.location || "Unknown",
+          timestamp: donation.certificateData?.timestamp || "Not Available",
+          date: donation.certificateData?.timestamp
+            ? new Date(donation.certificateData.timestamp).toLocaleString()
+            : 'Not Available',
         }
       }))
     };

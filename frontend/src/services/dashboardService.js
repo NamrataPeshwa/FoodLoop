@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_BACKEND_API;
 
-const getAuthToken = () => {
+export const getAuthToken = () => {
   
   const token = localStorage.getItem("token");  // Check if this is available
 
@@ -72,5 +72,25 @@ export const createFoodRequest = async (requestData) => {
   } catch (error) {
     console.error("Error creating food request:", error);
     throw error;
+  }
+};
+
+export const createRecurForm = async (formData) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/recurring/create`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json", // ✅ Add this
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
+    console.log(response);
+    return response.data;
+  } catch (e) {
+    console.error("Error creating recurring donation:", e);
+    throw e;
   }
 };

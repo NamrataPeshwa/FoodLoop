@@ -1,30 +1,54 @@
+// transactions.routes.js
+
 import express from "express";
 import {
   matchFoodListings,
-  confirmDeliveryAndMintNFT
- 
+  confirmDeliveryAndMintNFT,
+  getUserTransactions,
+  getOrderTimeline,
+  updateOrderStatus,
+  rejectParticipation
 } from "../controllers/transactions.controller.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
-import { updateTransactionStatus } from "../controllers/transactions.controller.js";
-import { getUserTransactions , confirmParticipation , rejectParticipation} from "../controllers/transactions.controller.js";
+
 
 const router = express.Router();
 
+
+
+// Match food listings
+router.post("/match", matchFoodListings);
+
+
+// Get user transactions
+router.get('/user', authMiddleware, getUserTransactions); 
+// Confirm delivery and mint NFT
 router.post(
   "/confirm-delivery/:transactionId",
   authMiddleware,
   confirmDeliveryAndMintNFT
 );
 
-router.patch(
-  '/:transactionId/status',
-  authMiddleware,
-  updateTransactionStatus
-);
-router.get('/', authMiddleware, getUserTransactions);
-router.post("/match", matchFoodListings);
-router.post('/confirm/:transactionId/:userId', confirmParticipation);
-router.post('/reject/:transactionId/:userId', rejectParticipation);
 
+// Update transaction status
+router.patch(
+  '/orders/:transactionId/status',
+  authMiddleware,
+  updateOrderStatus
+);
+
+// Get transaction timeline
+router.get(
+  '/orders/:orderId/timeline',
+  authMiddleware,
+  getOrderTimeline
+);
+
+// Reject participation in a transaction
+router.post(
+  '/reject/:transactionId/:userId',
+  authMiddleware,
+  rejectParticipation
+);
 
 export default router;

@@ -94,6 +94,35 @@ export const createDonation = async (req, res) => {
   }
 };
 
+export const cancelDonation = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user._id;
+
+  try {
+    const donation = await FoodListing.findById(id);
+
+    if (!donation) {
+      return res.status(404).json({ message: 'Donation not found' });
+    }
+
+    // Only donor can cancel & only if status is pending
+    if (donation.donor.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to cancel this donation' });
+    }
+
+    if (donation.status !== 'pending') {
+      return res.status(400).json({ message: 'Only pending donations can be cancelled' });
+    }
+
+    await FoodListing.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: 'Donation cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling donation:', error);
+    return res.status(500).json({ message: 'Server error while cancelling donation' });
+  }
+};
+
 export const getDonations = async (req, res) => {
   try {
     const matchedListings = await Transaction.find().distinct('foodListing');
@@ -105,6 +134,7 @@ export const getDonations = async (req, res) => {
     console.log("Fetched donations:", donations);
 
     const formattedDonations = donations.map(donation => ({
+      _id: donation._id, // ✅ Add this line
       foodType: donation.foodType || 'Food',
       name: donation.donor?.name || 'Anonymous',
       tags: donation.items?.flatMap(item => item.name) || [],
@@ -124,7 +154,7 @@ export const getDonations = async (req, res) => {
 };
 export const getUserDonations = async (req, res) => {
     try {
-        const userId = req.user.userId;
+        const userId = req.user._id;
 
         // Fetch donations and populate foodListing and certificateData
         const donations = await Transaction.find({ donor: userId })

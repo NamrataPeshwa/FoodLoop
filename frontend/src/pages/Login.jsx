@@ -12,7 +12,7 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login, googleSignIn } = useAuth();
+  const { login, googleSignIn, hasRole } = useAuth();
   const navigate = useNavigate();
 
   // Background images that will rotate
@@ -38,10 +38,12 @@ const Login = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        const userRole = sessionStorage.getItem('userRole');
-        if (userRole === 'admin') {
+        // Use the hasRole function from AuthContext instead of directly accessing storage
+        if (hasRole('admin')) {
+          console.log("Admin role detected, navigating to admin page");
           navigate("/admin");
         } else {
+          console.log("Regular user detected, navigating to dashboard");
           navigate("/dashboard");
         }
       }
@@ -79,7 +81,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex h-screen relative overflow-hidden">
+    <div className="flex h-screen font-merriweather relative overflow-hidden">
       {/* Background image carousel with opacity */}
       <div className="absolute inset-0 z-0">
         {backgroundImages.map((img, index) => (
@@ -97,17 +99,23 @@ const Login = () => {
       </div>
       
       {/* Content */}
-      <div className="w-full flex justify-center items-center z-10">
-  <div className="transform scale-90 w-full max-w-md p-8">
-          <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+      <div className="w-full flex  justify-center items-center z-10">
+    
+        <div className="transform scale-90 absolute w-full max-w-md ">
+        <img
+    src="./mas1.png" 
+    alt="Mascot"
+    className="absolute -top-11 md:-left-20 -left-16  md:w-44 w-22 md:h-32 h-20 m-4 z-20 animate-float"
+  />
+          <div className="bg-white shadow-xl  rounded-lg overflow-hidden">
             {showForgotPassword ? (
               <ForgotPassword 
                 onBack={handleBackFromForgotPassword} 
                 initialEmail={email} 
               />
             ) : (
-              <div className="p-8">
-                <div className="text-center mb-8">
+              <div className="p-4 ">
+                <div className="text-center  mb-8">
                   <h2 className="text-3xl font-bold text-green-600">Welcome Back</h2>
                   <p className="text-gray-600 mt-2">Login to your FoodLoop account</p>
                 </div>

@@ -108,23 +108,26 @@ class _AvailableDonationsScreenState extends State<AvailableDonationsScreen> {
             } else {
               // Display the list of available donations
               return ListView.builder(
-                padding: const EdgeInsets.only(top: 8, bottom: 16),
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  final donation = snapshot.data![index];
-                  return DonationCard(
-                    donation: donation,
-                    onTap: () {
-                      // Navigate to donation details screen
-                      Navigator.pushNamed(
-                        context, 
-                        '/donation-details',
-                        arguments: donation,
-                      );
-                    },
-                  );
-                },
-              );
+  padding: const EdgeInsets.only(top: 8, bottom: 16),
+  itemCount: snapshot.data!.length,
+  itemBuilder: (context, index) {
+    final donation = snapshot.data![index];
+    
+    // Log the donation format to help debug
+    print('Donation ${index}: ${donation['_id']}, location: ${donation['location']}');
+    
+    return DonationCard(
+      donation: donation,
+      onTap: () {
+        Navigator.pushNamed(
+          context, 
+          '/donation-details',
+          arguments: donation,
+        );
+      },
+    );
+  },
+);
             }
           },
         ),

@@ -27,9 +27,12 @@
               window.location.href = "/";
               return;
             }
+       
+          
 
             // Save token
             localStorage.setItem("token", data.jwt);
+            localStorage.setItem("user", JSON.stringify(data.user)); // ✅ Add this line
 
             // Save minimal user info (for onboarding)
             sessionStorage.setItem(
@@ -41,6 +44,7 @@
     avatar: data.user.avatar || "",
   })
 );
+localStorage.setItem("userRole", data.user.role);
             //Check if onboarding is needed
             if (!data.user.profileCompleted) {
               window.location.href = "/onboard";

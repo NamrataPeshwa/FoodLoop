@@ -34,16 +34,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final userProfile = await _authService.getUserProfile();
       final impactStats = await _impactService.getImpactStats();
-      
+
       log('User profile loaded: $userProfile'); // Debug output
-      
+
       setState(() {
         _userProfile = userProfile['user'];
         _impactStats = impactStats;
-        log('Impact stats loaded: $_impactStats'); // Add debug output for impact stats
-        log('Updated user profile: $_userProfile'); // Add debug to verify state update
       });
-      
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -52,7 +49,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() => _isLoading = false);
     }
   }
-
 
   // Handle navigation when a bottom navigation item is tapped
   void _onItemTapped(int index) {
@@ -70,8 +66,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _selectedIndex = 1;
         });
-          print(_userProfile);
-          Navigator.pushNamed(context, '/available-donation');
+        print(_userProfile);
+        Navigator.pushNamed(context, '/available-donation');
         break;
       case 2: // Dashboard
         setState(() {
@@ -83,20 +79,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _selectedIndex = 3;
         });
-        Navigator.pushNamed(context, '/demo-map');
+        _showProfileMenu();
         break;
       case 4: // Profile/More
         setState(() {
           _selectedIndex = 4;
         });
-        _showProfileMenu();
+        Navigator.pushNamed(context, '/map');
         break;
     }
   }
 
   // Show modal bottom sheet for profile/more options
-  void _showProfileMenu() async{
-    _userProfile = await _authService.getUserProfile();
+  void _showProfileMenu() async {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -124,6 +119,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               ),
             ListTile(
+              leading: const Icon(Icons.receipt),
+              title: const Text('My Transactions'),
+              onTap: () {
+                Navigator.pushNamed(context, '/my-transactions');
+              },
+            ),
+            ListTile(
               leading: Icon(Icons.logout),
               title: Text('Logout'),
               onTap: () async {
@@ -137,6 +139,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
   }
+
   Widget _buildImpactCard() {
     return Card(
       elevation: 4,
@@ -179,6 +182,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -187,11 +191,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Text(
             'FoodLoop Dashboard',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24, 
-              fontWeight: FontWeight.w500
-              
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
           ),
         ),
         backgroundColor: AppPallete.gradient1,
@@ -213,17 +213,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Recent Donations',
+                              'Welcome, ${_userProfile['name'] ?? 'User'}!',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Divider(),
                           ],
                         ),
                       ),
                     ),
+
                     SizedBox(height: 16),
                     // Conditional rendering based on user role
                     if (_userProfile['role'] == 'donor')
@@ -244,15 +244,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                               Divider(),
                               ListTile(
-                                leading: Icon(Icons.volunteer_activism, color: Colors.orange),
+                                leading: Icon(
+                                  Icons.volunteer_activism,
+                                  color: Colors.orange,
+                                ),
                                 title: Text('Your Donations'),
                                 trailing: Text(
                                   _userProfile['donations'].toString(),
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                               ElevatedButton(
-                                onPressed: () => Navigator.pushNamed(context, '/donate'),
+                                onPressed:
+                                    () =>
+                                        Navigator.pushNamed(context, '/donate'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppPallete.gradient1,
                                   foregroundColor: Colors.white,
@@ -263,7 +271,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       )
-                    else if (_userProfile['role'] == 'NGO' || _userProfile['role'] == 'volunteer')
+                    else if (_userProfile['role'] == 'NGO' ||
+                        _userProfile['role'] == 'volunteer')
                       // NGO-specific dashboard widget
                       Card(
                         elevation: 4,
@@ -272,20 +281,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ListTile(
-                                leading: Icon(Icons.assignment_turned_in, color: AppPallete.gradient1),
-                                title: Text('Claimed Donations'),
-                                trailing: Text(
-                                  '${_impactStats['ngoClaimedDonations'] ?? 0}',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              if (_userProfile['role'] == 'NGO' ||
+                                  _userProfile['role'] == 'volunteer')
+                                ListTile(
+                                  leading: Icon(
+                                    Icons.assignment_turned_in,
+                                    color: AppPallete.gradient1,
+                                  ),
+                                  title: Text('My transactions'),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.arrow_forward_ios),
+                                    onPressed: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/my-transactions',
+                                      );
+                                    },
+                                  ),
                                 ),
-                              ),
-                              
                             ],
                           ),
                         ),
                       ),
                     SizedBox(height: 16),
+                    // Impact card
+                    // _buildImpactCard(),
+                    // Food Donation Carousel\
+                    _buildCarouselItem(
+                      icon: Icons.food_bank,
+                      title: "Food Donation",
+                      description:
+                          "Donate food to help reduce hunger and waste",
+                      color: Colors.red.shade100,
+                      iconColor: Colors.red,
+                    ),
+                    _buildCarouselItem(
+                      icon: Icons.inventory_2,
+                      title: "Donate Surplus",
+                      description:
+                          "Share your extra food to help those in need",
+                      color: Colors.orange.shade100,
+                      iconColor: Colors.orange,
+                    ),
+                    _buildCarouselItem(
+                      icon: Icons.delivery_dining,
+                      title: "We Collect",
+                      description:
+                          "Our volunteers pick up and verify donations",
+                      color: Colors.green.shade100,
+                      iconColor: Colors.green,
+                    ),
+                    _buildCarouselItem(
+                      icon: Icons.people,
+                      title: "Feed Communities",
+                      description:
+                          "Your donation reaches people who need it most",
+                      color: Colors.blue.shade100,
+                      iconColor: Colors.blue,
+                    ),
+                    _buildCarouselItem(
+                      icon: Icons.eco,
+                      title: "Reduce Waste",
+                      description: "Help the planet by reducing food waste",
+                      color: Colors.purple.shade100,
+                      iconColor: Colors.purple,
+                    ),
+
                     SizedBox(height: 16),
                   ],
                 ),
@@ -303,16 +364,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.restaurant),
-            label:  _userProfile['role'] == 'donor'? 'Donate' : 'Donations',
+            label: _userProfile['role'] == 'donor' ? 'Donate' : 'Donations',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
-          const BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Map'),
-          const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          // const BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Map'),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildCarouselItem({
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+    required Color iconColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                height: 60,
+                width: 60,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Icon(icon, size: 32, color: iconColor),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(description, style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
+  

@@ -1,48 +1,94 @@
 import User from '../models/user.model.js';
 import FoodListing from '../models/listing.model.js';
 import Transaction from '../models/transaction.model.js';
+import { sendSMS } from "../services/notificationService.js";
+import { findNearestVolunteer } from "../utils/volunteerMatcher.js";
 
-// Claim a donation: sets listing to 'requested' and creates a Transaction with timeline
 export const claimDonation = async (req, res) => {
   try {
-    const listing = await FoodListing.findById(req.params.id);
+    console.log("🔍 Claiming donation ID:", req.params.id);
+    console.log("👤 Authenticated user:", req.user);
 
-    // Ensure listing exists and is pending
-    if (!listing || listing.status !== 'pending') {
-      return res.status(400).json({ error: 'Donation not available for claim' });
+    const listing = await FoodListing.findById(req.params.id).populate('donor', 'name email contactNumber');
+
+    if (!listing) {
+      return res.status(404).json({ error: "Donation not found" });
     }
 
-    // Update listing status and assign NGO
-    listing.status = 'requested';
+    if (listing.status !== "pending") {
+      return res.status(400).json({ error: "Donation not available for claim" });
+    }
+
+    // Update listing with claim details
+    listing.status = "requested";
     listing.ngoId = req.user._id;
 
-    // Optional: assign volunteer if provided
-    if (req.body.volunteerId) {
-      listing.volunteer = req.body.volunteerId;
+    let assignedVolunteer = null;
+
+    if (req.body.requestVolunteer) {
+      assignedVolunteer = await findNearestVolunteer(listing.location);
+      if (assignedVolunteer) {
+        listing.volunteer = assignedVolunteer._id;
+        console.log(`📍 Assigned volunteer: ${assignedVolunteer.name}`);
+      } else {
+        console.warn("⚠️ No nearby volunteer found");
+      }
     }
 
     await listing.save();
 
-    // Create a new Transaction record
+  // Prepare partial certificateData (finalized later during delivery)
+const certificateData = {
+  transactionHash: "pending",
+  nftTokenId: "pending",
+  donorName: listing.donor.name,
+  donorEmail: listing.donor.email,
+  foodType: listing.foodType,
+  weight: listing.weight,
+  location: listing.fullAddress || `Lat: ${listing.location.coordinates[1]}, Lng: ${listing.location.coordinates[0]}`,
+  timestamp: new Date(),  // final delivery time will be updated later
+  date: new Date().toLocaleDateString()
+};
+
     const transaction = new Transaction({
       foodListing: listing._id,
-      donor: listing.donor,
+      donor: listing.donor._id,
       ngo: req.user._id,
-      volunteer: listing.volunteer || null,
+      volunteer: assignedVolunteer ? assignedVolunteer._id : null,
+      timeline: [{ status: "requested", by: "ngo", at: new Date() }],
+      certificateData // partial data stored now
     });
 
-    // Push the NGO 'requested' event onto the timeline
-    transaction.timeline.push({ status: 'requested', by: 'ngo' });
     await transaction.save();
 
-    return res.status(200).json({
-      message: 'Donation claimed and transaction created successfully',
+    // ✅ Send SMS notifications
+    const transactionId = transaction._id.toString();
+
+    await sendSMS(
+      listing.donor.contactNumber,
+      `🎉 Hi ${listing.donor.name}, your donation (ID: ${transactionId}) has been claimed! Thank you for your generosity.`
+    );
+
+    await sendSMS(
+      req.user.contactNumber,
+      `✅ Hi ${req.user.name}, you’ve successfully claimed donation (ID: ${transactionId}).`
+    );
+
+    if (assignedVolunteer) {
+      await sendSMS(
+        assignedVolunteer.contactNumber,
+        `🚚 Hi ${assignedVolunteer.name}, you’ve been confirmed to deliver donation (ID: ${transactionId}).`
+      );
+    }
+
+    res.status(200).json({
+      message: "Donation claimed and transaction created successfully",
       listing,
       transaction,
     });
   } catch (error) {
-    console.error('Error claiming donation:', error);
-    return res.status(500).json({ error: 'Error claiming donation' });
+    console.error("🚨 Error in claimDonation:", error);
+    res.status(500).json({ error: "Error claiming donation" });
   }
 };
 
@@ -81,4 +127,3 @@ export const updatePreferences = async (req, res) => {
       res.status(500).json({ success: false, message: 'Internal server error' });
     }
   };
-  
